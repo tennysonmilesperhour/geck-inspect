@@ -362,7 +362,8 @@ export default function Breeder() {
         <div className="text-center max-w-md space-y-3">
           <h1 className="text-2xl font-bold">You blocked this breeder</h1>
           <p className="text-slate-400 text-sm">Their page, posts, photos and listings are hidden for you. You can unblock them in Settings.</p>
-          <Button asChild><Link to={createPageUrl('Settings')}>Open Settings</Link></Button>
+          {/* Straight to the blocked list (Data and privacy tab). */}
+          <Button asChild><Link to="/Settings#blocked-users">Open Settings</Link></Button>
         </div>
       </div>
     );

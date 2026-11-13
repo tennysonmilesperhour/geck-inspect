@@ -117,7 +117,9 @@ function StatCard({ icon: Icon, label, value, sub }) {
   );
 }
 
-export default function Portfolio() {
+// `embedded`: shown as the "My collection" tab of Prices (src/pages/Market.jsx),
+// which has its own title and page metadata. The estimate note stays.
+export default function Portfolio({ embedded = false }) {
   const { user, isLoadingAuth } = useAuth();
   const [geckos, setGeckos] = useState([]);
   const [morphAverages, setMorphAverages] = useState(new Map());
@@ -219,7 +221,7 @@ export default function Portfolio() {
     return [...groups.values()].sort((a, b) => b.total - a.total).slice(0, 5);
   }, [portfolio]);
 
-  const seo = (
+  const seo = embedded ? null : (
     <Seo
       title="Collection Portfolio"
       description="See what your crested gecko collection is worth, track the trend over time, and see which morphs drive the value."
@@ -229,18 +231,15 @@ export default function Portfolio() {
     />
   );
 
-  const header = (
-    <PageHeader
-      icon={Wallet}
-      title="Collection Portfolio"
-      description={
-        <>
-          <Info className="inline-block w-3.5 h-3.5 mr-1.5 align-[-0.125em]" aria-hidden="true" />
-          Values are estimates from public marketplace listings and your own listed prices, not formal appraisals.
-        </>
-      }
-    />
+  const estimateNote = (
+    <>
+      <Info className="inline-block w-3.5 h-3.5 mr-1.5 align-[-0.125em]" aria-hidden="true" />
+      Values are estimates from public marketplace listings and your own listed prices, not formal appraisals.
+    </>
   );
+  const header = embedded
+    ? <p className="mb-4 text-sm text-slate-400">{estimateNote}</p>
+    : <PageHeader icon={Wallet} title="Collection Portfolio" description={estimateNote} />;
 
   if (loading || isLoadingAuth) {
     return (

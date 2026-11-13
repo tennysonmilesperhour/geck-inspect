@@ -241,7 +241,8 @@ export default function PublicProfile() {
                         Their profile, posts, photos and listings are hidden for you. You can unblock them in Settings.
                     </p>
                     <Button asChild className="mt-4">
-                        <Link to={createPageUrl('Settings')}>Open Settings</Link>
+                        {/* Straight to the blocked list (Data and privacy tab). */}
+                        <Link to="/Settings#blocked-users">Open Settings</Link>
                     </Button>
                 </div>
             </div>

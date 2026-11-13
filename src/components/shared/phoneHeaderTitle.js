@@ -9,9 +9,9 @@ import { NAV_REGISTRY } from '@/lib/navItems';
  * The name is the one the menu uses for the page (the registry in
  * src/lib/navItems.js, which the menu's labels come from), then the quick
  * search's name for a page that is not in the menu, so a page is never
- * given one more name here. Today is the phone's home and shows the "Geck Inspect"
- * wordmark instead, as does any page with no name (null from this
- * function).
+ * given one more name here (the Dashboard is "Overview", /Market is
+ * "Prices"). Today is the home and shows the "Geck Inspect" wordmark
+ * instead, as does any page with no name (null from this function).
  */
 const REGISTRY_LABELS = Object.fromEntries(
   NAV_REGISTRY
@@ -20,10 +20,15 @@ const REGISTRY_LABELS = Object.fromEntries(
 );
 
 // Pages in neither the menu nor the quick search, by their own headings.
+// The last three are tabs of Prices for a member; only the demo still
+// opens them as pages.
 const OTHER_LABELS = {
   geckodetail: 'Gecko record',
   calculator: 'Genetics Calculator',
   adminpanel: 'Admin Panel',
+  portfolio: 'Collection Portfolio',
+  marketplacebuy: 'Gecko Marketplace',
+  marketplacesell: 'Seller Console',
 };
 
 /**

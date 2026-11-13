@@ -151,7 +151,8 @@ export default function CollectionInvite() {
                 </div>
               </div>
               <div className="flex items-center justify-end gap-2">
-                <Link to={createPageUrl('Settings')}>
+                {/* Shared collections are on the Data and privacy tab. */}
+                <Link to="/Settings#collections">
                   <Button variant="outline" className="border-slate-600 text-slate-300">
                     Settings
                   </Button>

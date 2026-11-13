@@ -170,7 +170,7 @@ export default function SoldTransferStep({ gecko, onClose }) {
         <div className="space-y-3 text-sm">
           {price !== '' && (
             <p className="text-slate-300">
-              The sale price ({money(price)}) goes on the transfer, so the sale stays in your Business Tools after the
+              The sale price ({money(price)}) goes on the transfer, so the sale stays on your Business page after the
               buyer accepts.
             </p>
           )}

@@ -31,7 +31,6 @@ import { Label } from '@/components/ui/label';
 import GeckoCard from '../components/my-geckos/GeckoCard';
 import ArchiveStatusChip from '@/components/my-geckos/ArchiveStatusChip';
 import GeckoForm from '../components/my-geckos/GeckoForm';
-import WeighInMode from '../components/my-geckos/WeighInMode';
 import QuickAddGecko from '../components/my-geckos/QuickAddGecko';
 import CSVImportModal from '../components/my-geckos/CSVImportModal';
 import { saveQuickGecko } from '../components/my-geckos/quickGeckoSave';
@@ -123,7 +122,6 @@ export default function MyGeckosPage() {
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [selectedGecko, setSelectedGecko] = useState(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-    const [isWeighInOpen, setIsWeighInOpen] = useState(false);
     const [viewMode, setViewMode] = useState('card'); // 'card' or 'list'
     const [activeTab, setActiveTab] = useState('collection'); // 'collection' or 'transfers'
     // The "Default Sort" in this page's settings panel is remembered on
@@ -697,7 +695,7 @@ export default function MyGeckosPage() {
     if (!user && !isLoading) {
         return (
             <React.Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><LoadingSpinner /></div>}>
-                <LoginPortal requiredFeature="My Gecko Collection" />
+                <LoginPortal requiredFeature="My Geckos" />
             </React.Suspense>
         );
     }
@@ -714,7 +712,7 @@ export default function MyGeckosPage() {
             <div className="max-w-7xl mx-auto">
                 <PageHeader
                     icon={LayoutGrid}
-                    title={showArchived ? 'Archived Geckos' : 'My Gecko Collection'}
+                    title={showArchived ? 'Archived Geckos' : 'My Geckos'}
                     description="Manage your geckos, track their lineage, and plan breedings."
                     settings={
                         <PageSettingsPanel title="Collection Settings">
@@ -867,7 +865,7 @@ export default function MyGeckosPage() {
                             </DropdownMenu>
                             <Button
                                 variant="outline"
-                                onClick={() => setIsWeighInOpen(true)}
+                                onClick={() => navigate('/log?type=weight&all=1&from=%2FMyGeckos')}
                                 title="Record weights for all geckos in one pass"
                                 disabled={geckos.filter(g => !g.archived).length === 0}
                             >
@@ -889,7 +887,7 @@ export default function MyGeckosPage() {
                             <Button
                                 variant="outline"
                                 className="sm:hidden shrink-0"
-                                onClick={() => setIsWeighInOpen(true)}
+                                onClick={() => navigate('/log?type=weight&all=1&from=%2FMyGeckos')}
                                 title="Record weights for all geckos in one pass"
                                 disabled={geckos.filter(g => !g.archived).length === 0}
                             >
@@ -1496,15 +1494,6 @@ export default function MyGeckosPage() {
                             setArchiveDialogGeckoId(geckoId);
                         }}
                         onDelete={handleDelete}
-                    />
-                )}
-
-                {isWeighInOpen && (
-                    <WeighInMode
-                        geckos={geckos.filter(g => !g.archived && canWriteGecko(g, user, memberships))}
-                        weightRecords={weightRecords}
-                        onClose={() => setIsWeighInOpen(false)}
-                        onSaved={() => loadGeckos()}
                     />
                 )}
 

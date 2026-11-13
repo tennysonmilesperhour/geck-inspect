@@ -24,6 +24,21 @@ import { myRowIds } from '@/lib/memberReads';
 import { USER_BADGE_MEMBER_COLUMNS } from '@/lib/memberColumns';
 import { getSupabase } from '@/lib/supabaseLazy';
 
+// The rank ladders below (an emoji and a title per count, such as "Pro
+// Breeder" at 30 geckos) and the "Earned Badges" card are hidden since 13
+// November 2026 (experience review K8, decision 5): the design system
+// says "not cute, not gamified". The ladders and their card are kept, and
+// SHOW_RANK_LADDERS brings them back. The profile says one plain line in
+// their place (keepingLine).
+const SHOW_RANK_LADDERS = false;
+
+/** "Member since 2024, 34 geckos": the plain line that replaced the ladders. */
+const keepingLine = (user, geckos) => {
+    const year = user?.created_date ? new Date(user.created_date).getFullYear() : NaN;
+    const count = `${geckos} ${geckos === 1 ? 'gecko' : 'geckos'}`;
+    return Number.isFinite(year) ? `Member since ${year}, ${count}` : count;
+};
+
 const USER_LEVELS = [
   { geckos: 1, title: "New Collector", badge: "🥚" }, { geckos: 2, title: "Gecko Keeper", badge: "🦎" },
   { geckos: 5, title: "Hobbyist", badge: "🌿" }, { geckos: 10, title: "Enthusiast", badge: "⭐" },
@@ -611,8 +626,8 @@ function MyProfileScreen() {
                                 </Card>
                             ) : (
                             <>
-                            {/* Achievement Progress */}
-                            <Card>
+                            {/* Achievement Progress (hidden, see SHOW_RANK_LADDERS) */}
+                            {SHOW_RANK_LADDERS && <Card>
                                 <CardHeader>
                                     <CardTitle className="text-xl text-slate-100">Achievement Progress</CardTitle>
                                 </CardHeader>
@@ -660,10 +675,10 @@ function MyProfileScreen() {
                                         levelKey="morphs"
                                     />
                                 </CardContent>
-                            </Card>
+                            </Card>}
 
-                            {/* Earned Badges */}
-                            {userBadges.length > 0 && (
+                            {/* Earned Badges (hidden with the ladders) */}
+                            {SHOW_RANK_LADDERS && userBadges.length > 0 && (
                                 <Card>
                                     <CardHeader>
                                         <CardTitle className="text-xl text-slate-100">Earned Badges</CardTitle>
@@ -688,6 +703,7 @@ function MyProfileScreen() {
                             <Card>
                                 <CardHeader><CardTitle className="text-slate-200">About</CardTitle></CardHeader>
                                 <CardContent className="space-y-4">
+                                    <p className="text-sm text-slate-400">{keepingLine(user, userStats.geckos)}</p>
                                     <p className="text-slate-300">{user.bio || 'No bio provided.'}</p>
                                     {(user.city || user.state_province || user.country) && (
                                         <p className="text-sm text-slate-400 flex items-center gap-1">

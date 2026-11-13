@@ -11,27 +11,61 @@ import {
   pwaLaunchTarget,
 } from '@/lib/pwaLaunch';
 
-describe('where an installed app opens', () => {
-  it('opens on Today on a phone, from the new start address and from old installs', () => {
-    expect(pwaLaunchTarget('/Today', '', true)).toBeNull();
-    expect(pwaLaunchTarget('/', '', true)).toBe('/Today');
-    expect(pwaLaunchTarget('/Messages', '', true)).toBe('/Today');
-    expect(pwaLaunchTarget('/MyGeckos', '', true)).toBe('/Today');
-    expect(pwaLaunchTarget('/MyGeckos/', '', true)).toBe('/Today');
+// One home on every device (experience review C1, decision 2).
+describe('the one home screen', () => {
+  it('is Today, whatever the window', () => {
+    const win = (phone) => ({ matchMedia: () => ({ matches: phone }) });
+    expect(memberHome()).toBe('/Today');
+    expect(memberHome(win(true))).toBe('/Today');
+    expect(memberHome(win(false))).toBe('/Today');
+    expect(memberHome({})).toBe('/Today');
   });
 
-  it('keeps desktop installs opening on My Geckos, even with the new start address', () => {
-    expect(pwaLaunchTarget('/Today', '', false)).toBe('/MyGeckos');
-    expect(pwaLaunchTarget('/', '', false)).toBe('/MyGeckos');
-    expect(pwaLaunchTarget('/Messages', '', false)).toBe('/MyGeckos');
-    expect(pwaLaunchTarget('/MyGeckos', '', false)).toBeNull();
+  // Every way in asks memberHome(): no other file names the home page.
+  const src = (file) => readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
+
+  it('decides where a sign-in, a password reset and an email link land', () => {
+    expect(src('components/auth/LoginPortal.jsx')).toContain('authContinuationPath(continuation) : memberHome()');
+    expect(src('components/auth/SetNewPassword.jsx')).toContain('|| memberHome()');
+    expect(src('lib/emailLinkAuth.js')).toContain('memberHome(win)');
+    expect(src('App.jsx')).toContain('<Navigate to={target || memberHome()} replace />');
+  });
+
+  it('decides "/" for a signed-in member or a demo guest, and leaves the landing page to signed-out visitors', () => {
+    const app = src('App.jsx');
+    expect(app).toContain('<Navigate to={`${memberHome()}${search}`} replace />');
+    expect(app).toContain('<Route path="/" element={<HomeRedirect />} />');
+    // The signed-out route set still shows the landing page at "/".
+    expect(app).toContain('<Route path="/" element={<Home />} />');
+    expect(app).not.toContain('MainPage');
+  });
+
+  it('decides where the logo and the menu home link lead, with no phone redirect left in the shell', () => {
+    const layout = src('Layout.jsx');
+    // The logo in the phone menu and in the laptop sidebar, and the home link.
+    expect(layout.match(/<Link to=\{memberHome\(\)\} aria-label="Geck Inspect, home"/g)).toHaveLength(2);
+    expect(layout).toContain('const homeUrl = memberHome();');
+    expect(layout).not.toContain('createPageUrl("Dashboard")');
+    expect(layout).not.toContain("createPageUrl('Dashboard')");
+    expect(layout).not.toContain('navigate(`/Today');
+  });
+});
+
+describe('where an installed app opens', () => {
+  it('opens on Today on every device, from the new start address and from old installs', () => {
+    expect(pwaLaunchTarget('/Today', '')).toBeNull();
+    expect(pwaLaunchTarget('/', '')).toBe('/Today');
+    expect(pwaLaunchTarget('/Messages', '')).toBe('/Today');
+    expect(pwaLaunchTarget('/MyGeckos', '')).toBe('/Today');
+    expect(pwaLaunchTarget('/MyGeckos/', '')).toBe('/Today');
   });
 
   it('leaves deep links and other pages alone', () => {
-    expect(pwaLaunchTarget('/MyGeckos', '?id=g1', true)).toBeNull();
-    expect(pwaLaunchTarget('/Today', '?retired=Promote', false)).toBeNull();
-    expect(pwaLaunchTarget('/log', '?type=feeding', true)).toBeNull();
-    expect(pwaLaunchTarget('/Breeding', '', false)).toBeNull();
+    expect(pwaLaunchTarget('/MyGeckos', '?id=g1')).toBeNull();
+    expect(pwaLaunchTarget('/Today', '?retired=Promote')).toBeNull();
+    expect(pwaLaunchTarget('/log', '?type=feeding')).toBeNull();
+    expect(pwaLaunchTarget('/Breeding', '')).toBeNull();
+    expect(pwaLaunchTarget('/Dashboard', '')).toBeNull();
   });
 });
 
@@ -54,21 +88,22 @@ function fakeWindow({ path = '/', search = '', hash = '', installed = true, phon
 }
 
 describe('the launch handler', () => {
-  it('sends a desktop install opening at the manifest start address to My Geckos, once', () => {
-    const win = fakeWindow({ path: '/Today', phone: false });
+  it('sends an old desktop install opening at /MyGeckos to Today, once', () => {
+    const win = fakeWindow({ path: '/MyGeckos', phone: false });
     const go = vi.fn();
-    expect(handlePwaLaunch(win, go)).toBe('/MyGeckos');
-    expect(go).toHaveBeenCalledWith('/MyGeckos');
+    expect(handlePwaLaunch(win, go)).toBe('/Today');
+    expect(go).toHaveBeenCalledWith('/Today');
     expect(win.store.get(LAUNCH_HANDLED_KEY)).toBe('1');
-    // Later in the session the member can open Today on purpose.
+    // Later in the session the member can open My Geckos on purpose.
     go.mockClear();
     expect(handlePwaLaunch(win, go)).toBeNull();
     expect(go).not.toHaveBeenCalled();
   });
 
-  it('keeps a phone on Today, and moves an old phone install to it', () => {
+  it('keeps an install on Today on a phone and on a desktop, and moves an old phone install to it', () => {
     const go = vi.fn();
     expect(handlePwaLaunch(fakeWindow({ path: '/Today', phone: true }), go)).toBeNull();
+    expect(handlePwaLaunch(fakeWindow({ path: '/Today', phone: false }), go)).toBeNull();
     expect(go).not.toHaveBeenCalled();
     expect(handlePwaLaunch(fakeWindow({ path: '/MyGeckos', phone: true }), go)).toBe('/Today');
     // An iPhone home-screen app reports navigator.standalone.
@@ -77,17 +112,17 @@ describe('the launch handler', () => {
 
   it('does nothing in a browser tab, after the first open, or without session storage', () => {
     const go = vi.fn();
-    expect(handlePwaLaunch(fakeWindow({ path: '/Today', installed: false }), go)).toBeNull();
-    expect(handlePwaLaunch(fakeWindow({ path: '/Today', handled: true }), go)).toBeNull();
-    expect(handlePwaLaunch(fakeWindow({ path: '/Today', storageThrows: true }), go)).toBeNull();
+    expect(handlePwaLaunch(fakeWindow({ path: '/MyGeckos', installed: false }), go)).toBeNull();
+    expect(handlePwaLaunch(fakeWindow({ path: '/MyGeckos', handled: true }), go)).toBeNull();
+    expect(handlePwaLaunch(fakeWindow({ path: '/MyGeckos', storageThrows: true }), go)).toBeNull();
     expect(go).not.toHaveBeenCalled();
   });
 
   it('pendingPwaLaunch tells where the handler will go without handling it', () => {
-    const win = fakeWindow({ path: '/Today', phone: false });
-    expect(pendingPwaLaunch(win)).toBe('/MyGeckos');
+    const win = fakeWindow({ path: '/MyGeckos', phone: false });
+    expect(pendingPwaLaunch(win)).toBe('/Today');
     expect(win.store.has(LAUNCH_HANDLED_KEY)).toBe(false);
-    expect(pendingPwaLaunch(fakeWindow({ path: '/Today', installed: false }))).toBeNull();
+    expect(pendingPwaLaunch(fakeWindow({ path: '/MyGeckos', installed: false }))).toBeNull();
   });
 
   it('uses the same phone width as the tab bar', () => {
@@ -101,10 +136,9 @@ describe('the launch handler', () => {
 describe('the web manifest', () => {
   const manifest = JSON.parse(readFileSync(new URL('../../../public/manifest.json', import.meta.url), 'utf8'));
 
-  it('starts on Today, and a desktop install opening there goes to its old home', () => {
-    expect(manifest.start_url).toBe('/Today');
-    expect(pwaLaunchTarget(manifest.start_url, '', true)).toBeNull();
-    expect(pwaLaunchTarget(manifest.start_url, '', false)).toBe('/MyGeckos');
+  it('starts on the home screen, so an install opening there stays', () => {
+    expect(manifest.start_url).toBe(memberHome());
+    expect(pwaLaunchTarget(manifest.start_url, '')).toBeNull();
   });
 
   // Without an id a browser identifies the installed app by its start
@@ -116,24 +150,24 @@ describe('the web manifest', () => {
 });
 
 describe('the first screen to warm for a signed-in member', () => {
-  it('is Today on a phone and the Dashboard on a desktop at "/"', () => {
-    expect(firstScreenPage('/', true)).toBe('Today');
-    expect(firstScreenPage('/', false)).toBe('Dashboard');
+  it('is Today at "/", the home', () => {
+    expect(firstScreenPage('/')).toBe('Today');
+    expect(firstScreenPage('')).toBe('Today');
   });
 
   it('is the page itself for Today, Dashboard and My Geckos', () => {
-    expect(firstScreenPage('/Today', true)).toBe('Today');
-    expect(firstScreenPage('/Today/', false)).toBe('Today');
-    expect(firstScreenPage('/Dashboard', true)).toBe('Dashboard');
-    expect(firstScreenPage('/MyGeckos', false)).toBe('MyGeckos');
-    expect(firstScreenPage('/Breeding', true)).toBeNull();
+    expect(firstScreenPage('/Today')).toBe('Today');
+    expect(firstScreenPage('/Today/')).toBe('Today');
+    expect(firstScreenPage('/Dashboard')).toBe('Dashboard');
+    expect(firstScreenPage('/MyGeckos')).toBe('MyGeckos');
+    expect(firstScreenPage('/Breeding')).toBeNull();
   });
 
   it('follows the installed app to where the launch handler sends it', () => {
     const phoneLaunch = fakeWindow({ path: '/', phone: true });
-    expect(firstScreenPage(pendingPwaLaunch(phoneLaunch) || '/', true)).toBe('Today');
-    const desktopLaunch = fakeWindow({ path: '/Today', phone: false });
-    expect(firstScreenPage(pendingPwaLaunch(desktopLaunch) || '/Today', false)).toBe('MyGeckos');
+    expect(firstScreenPage(pendingPwaLaunch(phoneLaunch) || '/')).toBe('Today');
+    const desktopLaunch = fakeWindow({ path: '/MyGeckos', phone: false });
+    expect(firstScreenPage(pendingPwaLaunch(desktopLaunch) || '/MyGeckos')).toBe('Today');
   });
 });
 
@@ -141,8 +175,8 @@ describe('App.jsx uses these helpers', () => {
   const app = readFileSync(new URL('../../App.jsx', import.meta.url), 'utf8');
   const warm = app.match(/function warmFirstScreen\(\) \{[\s\S]*?\n\}/)?.[0] || '';
 
-  it('warms Today, not the Dashboard, for the phone home, with the launch handler phone test', () => {
-    expect(warm).toContain('firstScreenPage(pendingPwaLaunch(window) || path, isPhoneScreen(window))');
+  it('warms Today for the home, and the page itself for the Dashboard and My Geckos', () => {
+    expect(warm).toContain('firstScreenPage(pendingPwaLaunch(window) || path)');
     expect(warm).toMatch(/page === 'Today'\) import\('\.\/pages\/Today'\)/);
     expect(warm).toMatch(/page === 'Dashboard'\) import\('\.\/pages\/Dashboard'\)/);
   });
@@ -157,17 +191,7 @@ describe('App.jsx uses these helpers', () => {
     const win = fakeWindow({ path: '/MyGeckos', hash: '#access_token=abc&refresh_token=def&type=signup', phone: true });
     expect(handlePwaLaunch(win, go)).toBeNull();
     expect(go).not.toHaveBeenCalled();
-    expect(pwaLaunchTarget('/', '', true, '#access_token=abc')).toBeNull();
-    expect(pwaLaunchTarget('/MyGeckos', '', true, '#')).toBe('/Today');
-  });
-});
-
-
-describe('where a member lands after signing in', () => {
-  const win = (phone) => ({ matchMedia: () => ({ matches: phone }) });
-  it('is Today on a phone and My Geckos on a larger screen', () => {
-    expect(memberHome(win(true))).toBe('/Today');
-    expect(memberHome(win(false))).toBe('/MyGeckos');
-    expect(memberHome({})).toBe('/MyGeckos');
+    expect(pwaLaunchTarget('/', '', '#access_token=abc')).toBeNull();
+    expect(pwaLaunchTarget('/MyGeckos', '', '#')).toBe('/Today');
   });
 });

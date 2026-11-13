@@ -169,7 +169,7 @@ export default function HusbandryHistory({
               </ul>
             ) : (
               <p className="text-slate-500 text-xs">
-                No feedings logged yet. Mark fed on the Dashboard, Batch Husbandry, Field Mode or + Event all log here.
+                No feedings logged yet. Feedings logged from Today, the Log tab, Field Mode or + Event all show here.
               </p>
             )}
           </div>

@@ -948,7 +948,7 @@ export default function SettingsPage() {
                         <SwitchSetting
                             id="keeper_mode"
                             label="Keeper mode"
-                            description="Removes pages like Breeding, Lineage, and Business Tools from your sidebar so your geckos, the care guide, and Morph ID stay front and center. Applies right away on this device and never touches your data."
+                            description="Removes pages like Breeding, Lineage, and Business from your sidebar so your geckos, the care guide, and Morph ID stay front and center. Applies right away on this device and never touches your data."
                             checked={keeperMode}
                             onCheckedChange={handleKeeperModeChange}
                             status={keeperStatus}

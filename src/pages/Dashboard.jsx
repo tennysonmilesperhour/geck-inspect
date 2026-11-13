@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { lazy } from '@/lib/lazyWithRetry';
 import { useAuth } from '@/lib/AuthContext';
 import '@/styles/dashboard-home.css';
@@ -7,19 +7,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import Seo from '@/components/seo/Seo';
 import usePageSettings from '@/hooks/usePageSettings';
 import { User, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from '@/entities/all';
-import { api } from '@/api/appClient';
 import { supabase } from '@/lib/supabaseClient';
 import { isGuestMode } from '@/lib/guestMode';
 import {
     Users,
     GitBranch,
     MessageSquare,
-    Newspaper,
     Egg,
     Flame,
     Camera,
     Crown,
-    Eye,
     SlidersHorizontal,
     Plus,
 } from 'lucide-react';
@@ -31,12 +28,10 @@ import EnclosureClimate from '../components/iot/EnclosureClimate';
 import { IOT_SENSORS_ENABLED } from '@/lib/iotClient';
 import CommunityPulse from '../components/dashboard/CommunityPulse';
 import { default as GeckoOfTheDayComponent } from '../components/dashboard/GeckoOfTheDay';
-import MyStoreButton from '../components/dashboard/MyStoreButton';
 import LiveFeed from '../components/dashboard/LiveFeed';
 import WelcomeShelf from '../components/dashboard/WelcomeShelf';
 import IncubatorTimeline from '../components/dashboard/IncubatorTimeline';
 import IdNeedsPanel from '../components/dashboard/IdNeedsPanel';
-import ChangeLogModal from '../components/changelog/ChangeLogModal';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -45,7 +40,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import ReferralLinkCard from '@/components/shared/ReferralLinkCard';
 import FirstGeckoStarter from '@/components/onboarding/FirstGeckoStarter';
 import { useRoleQuestion } from '@/components/onboarding/RoleQuestion';
-import SignOutButton from '@/components/auth/SignOutButton';
 import { readPendingGecko } from '@/lib/firstGeckoFlow';
 import { createPageUrl, getDisplayName } from '@/utils';
 import { format } from 'date-fns';
@@ -140,6 +134,13 @@ async function loadHatcheryCounts(email) {
     return { hatched, incubating, total, plans };
 }
 
+/**
+ * The Overview: the member's own numbers, what is due, values and the
+ * collection, then the community and breeding sections. It is reached
+ * from Today's toggle and the quick search; Today is the home on every
+ * device since 13 November 2026 (experience review C1, C2, C4, C5).
+ * The file and the address keep the name Dashboard.
+ */
 export default function Dashboard() {
     const navigate = useNavigate();
     // A gecko kept in the guest demo and not saved yet (My Geckos saves it).
@@ -147,7 +148,11 @@ export default function Dashboard() {
     const [dashPrefs, updateDashPrefs] = usePageSettings('dashboard_prefs', {
         showGeckoOfTheDay: true,
         showFeaturedBreeders: true,
-        showCommunityPulse: true,
+        // Off unless the member switches it on in "Customize home"
+        // (decision 7): with few members active a week the feed was
+        // mostly "A keeper uploaded a photo", above the member's own
+        // animals. A choice saved on this device before the change is kept.
+        showCommunityPulse: false,
         showHatchery: true,
         compactStats: false,
         showLiveFeed: true,
@@ -157,8 +162,6 @@ export default function Dashboard() {
     });
     const [showCustomize, setShowCustomize] = useState(false);
     const [selectedImageData, setSelectedImageData] = useState(null);
-    const [showChangelog, setShowChangelog] = useState(false);
-    const [changelogGlowing, setChangelogGlowing] = useState(false);
 
     // Data loading goes through react-query (launch review F47). Each
     // block is cached by the shared QueryClient, so leaving the dashboard
@@ -196,26 +199,6 @@ export default function Dashboard() {
         enabled: Boolean(email),
     });
     const hatcheryStats = hatcheryQuery.data ?? EMPTY_HATCHERY;
-
-    // Unread changelog indicator
-    const changelogQuery = useQuery({
-        queryKey: ['dashboard', 'changelog-latest'],
-        queryFn: () => api.entities.ChangeLog.filter({ is_published: true }, '-published_date', 1).catch(() => []),
-        staleTime: 10 * 60 * 1000,
-    });
-    useEffect(() => {
-        const latest = changelogQuery.data?.[0];
-        if (!latest) return;
-        const lastRead = localStorage.getItem('changelog_last_read');
-        if (!lastRead || new Date(latest.published_date) > new Date(lastRead)) {
-            setChangelogGlowing(true);
-        }
-    }, [changelogQuery.data]);
-    useEffect(() => {
-        const handler = () => setChangelogGlowing(false);
-        window.addEventListener('changelog_read', handler);
-        return () => window.removeEventListener('changelog_read', handler);
-    }, []);
 
     const isLoading = isLoadingAuth || communityQuery.isLoading;
 
@@ -261,8 +244,8 @@ export default function Dashboard() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-emerald-950/30 to-slate-900 relative overflow-hidden">
             <Seo
-                title="Dashboard"
-                description="Your crested gecko breeding dashboard, track your collection, hatchery stats, community activity, and gecko of the day."
+                title="Overview"
+                description="Your crested gecko collection at a glance: what is due, your numbers, values, hatchery and community activity."
                 path="/Dashboard"
                 noIndex
                 keywords={['gecko dashboard', 'breeding tracker', 'hatchery stats']}
@@ -274,9 +257,11 @@ export default function Dashboard() {
 
             <div className="relative z-10 p-4 md:p-8">
                 <div className="max-w-7xl mx-auto space-y-6 dashboard-home">
-                    {/* HERO STRIP, personal greeting + live mini stats */}
+                    {/* HERO STRIP: the greeting, the member's own numbers and
+                        one primary action. The slow moving glow that sat
+                        behind it is gone (experience review K7: motion
+                        should answer an action). */}
                     <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/60 via-slate-900/80 to-slate-950/80 backdrop-blur-sm dashboard-card-hover">
-                        <div className="absolute inset-0 dashboard-aurora opacity-50 pointer-events-none" />
                         <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
                         <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -287,19 +272,19 @@ export default function Dashboard() {
                                         <Flame className="w-3.5 h-3.5" />
                                         {todayLabel}
                                     </div>
-                                    <div className="inline-flex items-center rounded-full border border-slate-700/80 bg-slate-900/80 p-0.5 text-xs font-semibold">
+                                    {/* The same pair of names as the toggle on Today. */}
+                                    <nav aria-label="Home views" className="inline-flex items-center rounded-full border border-slate-700/80 bg-slate-900/80 p-0.5 text-xs font-semibold">
                                         <Link
                                             to="/Today"
-                                            className="rounded-full px-3 py-1 text-slate-400 transition-colors hover:text-slate-100"
+                                            className="relative touch-hit rounded-full px-3 py-1 text-slate-400 transition-colors hover:text-slate-100"
                                         >
-                                            Daily Care
+                                            Today
                                         </Link>
-                                        <span className="rounded-full bg-emerald-600 px-3 py-1 text-white shadow-sm">
+                                        <span aria-current="page" className="rounded-full bg-emerald-600 px-3 py-1 text-white shadow-sm">
                                             Overview
                                         </span>
-                                    </div>
+                                    </nav>
                                 </div>
-                                <SignOutButton className="border-slate-600 bg-slate-900/60 text-slate-100 hover:bg-slate-800 backdrop-blur-sm" />
                             </div>
                             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 md:gap-6">
                                 <div className="space-y-2 md:space-y-3">
@@ -307,26 +292,36 @@ export default function Dashboard() {
                                         {greeting}{firstName ? `, ${firstName}` : ''}
                                     </h1>
                                     <p className="text-slate-300 text-sm max-w-2xl leading-relaxed">
-                                        {(personalStats.geckos > 0 || !user || isGuestMode()) ? (
+                                        {/* A member reads their own numbers first
+                                            (experience review C2). The demo and
+                                            signed-out visitors keep the community
+                                            line, which is what they have to look at. */}
+                                        {user && !isGuestMode() && hasGeckos ? (
+                                            <>
+                                                You keep{' '}
+                                                <span className="font-bold text-white">{personalStats.geckos.toLocaleString()}</span>{' '}
+                                                crested {personalStats.geckos === 1 ? 'gecko' : 'geckos'}.{' '}
+                                                {hatcheryStats.incubating > 0 && (
+                                                    <>
+                                                        <span className="text-amber-300">{hatcheryStats.incubating}</span>{' '}
+                                                        {hatcheryStats.incubating === 1 ? 'egg is' : 'eggs are'} incubating
+                                                        {hatcheryStats.plans > 0 ? ' and ' : '.'}
+                                                    </>
+                                                )}
+                                                {hatcheryStats.plans > 0 && (
+                                                    <>
+                                                        <span className="text-emerald-300">{hatcheryStats.plans}</span>{' '}
+                                                        breeding {hatcheryStats.plans === 1 ? 'plan is' : 'plans are'} in motion.
+                                                    </>
+                                                )}
+                                            </>
+                                        ) : (!user || isGuestMode()) ? (
                                             <>
                                                 Right now,{' '}
                                                 <span className="font-bold text-white">{stats.users.toLocaleString()}</span>{' '}
                                                 keepers are tracking{' '}
                                                 <span className="font-bold text-white">{stats.geckos.toLocaleString()}</span>{' '}
-                                                crested geckos together.{' '}
-                                                {hatcheryStats.incubating > 0 && (
-                                                    <>
-                                                        <span className="text-amber-300">{hatcheryStats.incubating}</span>{' '}
-                                                        {hatcheryStats.incubating === 1 ? 'egg is' : 'eggs are'} warming up,{' '}
-                                                    </>
-                                                )}
-                                                {hatcheryStats.plans > 0 && (
-                                                    <>
-                                                        and{' '}
-                                                        <span className="text-emerald-300">{hatcheryStats.plans}</span>{' '}
-                                                        breeding {hatcheryStats.plans === 1 ? 'plan is' : 'plans are'} in motion.
-                                                    </>
-                                                )}
+                                                crested geckos together.
                                             </>
                                         ) : (
                                             'Welcome to Geck Inspect. Everything on this page fills in as your collection grows.'
@@ -343,48 +338,22 @@ export default function Dashboard() {
                                             <Plus className="w-4 h-4 mr-2" />Log care
                                         </Button>
                                     )}
+                                    {/* One primary action and a quiet way to the
+                                        collection (experience review C4). Sign out is
+                                        in Settings and the quick search, "What's new"
+                                        in the menu footer, My Store under Quick links
+                                        below and in the quick search, and the profile
+                                        preview in Settings (Data and privacy). A brand
+                                        new account sees neither button: the first-gecko
+                                        card is its next step. */}
                                     {user && !isFirstRun && (
-                                        <Link to={createPageUrl('MyGeckos')}>
-                                            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg shadow-emerald-500/20">
+                                        <Button asChild variant="outline" className="border-slate-600 bg-slate-900/60 text-slate-100 hover:bg-slate-800">
+                                            <Link to={createPageUrl('MyGeckos')}>
                                                 <GitBranch className="w-4 h-4 mr-2" />
-                                                My Collection
-                                            </Button>
-                                        </Link>
+                                                My Geckos
+                                            </Link>
+                                        </Button>
                                     )}
-                                    {/* Store and profile previews have nothing to show
-                                        before the first gecko, so a brand new account sees
-                                        one clear next step instead of four buttons. */}
-                                    {user && !isFirstRun && <MyStoreButton user={user} />}
-                                    {user?.id && !isFirstRun && (
-                                        <a
-                                            href={`/PublicProfile?userId=${user.id}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            <Button
-                                                variant="outline"
-                                                className="border-slate-600 bg-slate-900/60 text-slate-100 hover:bg-slate-800 backdrop-blur-sm"
-                                            >
-                                                <Eye className="w-4 h-4 mr-2" />
-                                                Preview profile
-                                            </Button>
-                                        </a>
-                                    )}
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setShowChangelog(true)}
-                                        className={`border-slate-600 bg-slate-900/60 text-slate-100 hover:bg-slate-800 backdrop-blur-sm ${
-                                            changelogGlowing
-                                                ? 'ring-2 ring-emerald-400 shadow-[0_0_16px_4px_rgba(52,211,153,0.4)] animate-pulse'
-                                                : ''
-                                        }`}
-                                    >
-                                        <Newspaper className="w-4 h-4 mr-2" />
-                                        What's New
-                                        {changelogGlowing && (
-                                            <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-slate-950" />
-                                        )}
-                                    </Button>
                                 </div>
                             </div>
                         </div>
@@ -607,7 +576,8 @@ export default function Dashboard() {
                                             {[
                                                 { label: 'Genetics Calculator', href: '/calculator' },
                                                 { label: 'Season Planner', href: '/ProjectManager' },
-                                                { label: 'Lineage Tree', href: '/Lineage' },
+                                                { label: 'Lineage', href: '/Lineage' },
+                                                { label: 'My Store', href: '/MyStore' },
                                             ].map((l) => (
                                                 <Link
                                                     key={l.label}
@@ -651,7 +621,6 @@ export default function Dashboard() {
                     onClose={() => setSelectedImageData(null)}
                 /></Suspense>
             )}
-            <ChangeLogModal isOpen={showChangelog} onClose={() => setShowChangelog(false)} />
         </div>
     );
 }

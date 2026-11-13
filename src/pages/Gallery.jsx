@@ -148,7 +148,7 @@ export default function Gallery() {
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <Seo
-                title="Image Gallery"
+                title="Community Gallery"
                 description="Browse stunning crested gecko photos from breeders worldwide. Filter by morph, color, and trait to find your favorite cresties."
                 path="/Gallery"
                 keywords={['gecko photos', 'crested gecko gallery', 'morph photos', 'reptile images']}
@@ -156,7 +156,7 @@ export default function Gallery() {
             <div className="max-w-7xl mx-auto">
                 <PageHeader
                     icon={Images}
-                    title="Image Gallery"
+                    title="Community Gallery"
                     description="Explore user-submitted gecko images. Use the filters to find specific morphs and traits."
                     settings={
                         <PageSettingsPanel title="Gallery Settings">

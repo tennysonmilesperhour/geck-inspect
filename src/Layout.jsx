@@ -1,6 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useRef, Suspense } from "react";
 import { lazy } from "@/lib/lazyWithRetry";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "@/styles/layout-theme.css";
 import { initialsAvatarUrl } from "@/components/shared/InitialsAvatar";
 import { createPageUrl, getDisplayName } from "@/utils";
@@ -8,13 +8,18 @@ import { api } from '@/api/appClient';
 import { countNavNotifications } from '@/lib/navNotifications';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
-import { loadedProfileId } from '@/lib/loadedProfileId';
 import { APP_LOGO_ICON_URL } from '@/lib/constants';
 import { swapToFallback } from '@/lib/imgFallback';
 import {
-  Database, Users, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, ChevronRight, Pin, PinOff, Home, Camera, MessageSquare
+  Database, Users, Search, Settings, UserPlus, Shield, Mail, Menu, Star, Newspaper, ChevronDown, ChevronRight, Pin, PinOff, Camera, MessageSquare, LogOut
 } from "lucide-react";
-import TutorialModal from "@/components/tutorial/TutorialModal";
+// The 24-step menu tour and the changelog load only when one is opened.
+// Nothing in the app offers the tour since 13 November 2026 (experience
+// review H8): the first-gecko flow and the empty states teach better. Its
+// code and steps are kept, and an 'open_tutorial' window event still
+// opens it.
+const TutorialModal = lazy(() => import("@/components/tutorial/TutorialModal"));
+const ChangeLogModal = lazy(() => import("@/components/changelog/ChangeLogModal"));
 import {
   browserAnswersToUpload,
   readOnboarding,
@@ -54,21 +59,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import UserBadge from "@/components/ui/UserBadge";
 import TierBadge, { tierRingClass, tierKeyFor } from "@/components/ui/TierBadge";
 
 
 // Non-React concerns extracted from this file as part of the hairball
-// cleanup, pure JS cache + rate-limit helpers, and the static
-// navigation / level-progression constants.
+// cleanup: pure JS cache + rate-limit helpers. The rank ladders in
+// src/lib/layoutConstants.js are no longer read here (see the note where
+// the menu footer is drawn).
 import { dataCache, retryApiCall } from '@/lib/layoutCache';
 import { loadPageConfigs } from '@/lib/pageConfigs';
-import {
-  MILESTONES,
-  USER_LEVELS,
-  EXPERT_LEVELS,
-  COMMUNITY_LEVELS,
-} from '@/lib/layoutConstants';
 import { startVisiblePolling } from '@/lib/pagePolling';
 import { AppShellContext } from '@/lib/appShell';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -76,13 +75,16 @@ import MfaStepUpGate from '@/components/auth/MfaStepUpGate';
 import {
   NAV_ICON_MAP,
   FAVORITES_MAX,
+  HOME_PAGE,
   flattenNavItems,
   groupNavItems,
   buildNavItems,
   keeperNavItems,
+  navPagePath,
   PHONE_TABS,
   KEEPER_MODE_STORAGE_KEY,
 } from '@/lib/navItems';
+import { memberHome } from '@/lib/pwaLaunch';
 // The Log tab's sheet. Loaded with the shell, not lazily, so the tab
 // works with no signal (the dialog code is already here for the command
 // palette).
@@ -94,20 +96,15 @@ import { listenForPushRotation, syncPushSubscription } from '@/lib/webPush';
 
 function LayoutContent({ children, currentPageName: _currentPageName }) {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { user, isGuest } = useAuth();
+  const { user, isGuest, logout } = useAuth();
   const sidebarRef = useRef(null);
-  const [imageCount, setImageCount] = useState(0);
-  const [userLevel, setUserLevel] = useState(null);
-  const [imageLevel, setImageLevel] = useState(null);
-  const [communityLevel, setCommunityLevel] = useState(null);
-  const [_pinnedPosts, setPinnedPosts] = useState([]);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [recentNotifications, setRecentNotifications] = useState([]);
   const [appLogo, setAppLogo] = useState(null);
   const [pageConfigs, setPageConfigs] = useState([]);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showChangelog, setShowChangelog] = useState(false);
   const [isSidebarLocked, setIsSidebarLocked] = useState(() => {
     try { return localStorage.getItem('sidebar_locked') === '1'; }
     catch { return false; }
@@ -159,7 +156,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     try { return new Set(JSON.parse(localStorage.getItem('nav_collapsed_groups') || '[]')); }
     catch { return new Set(); }
   });
-  // The App Tutorial unfolds a group before pointing at a tile in it.
+  // The menu tour (TutorialModal) unfolds a group before pointing at a tile in it.
   useEffect(() => {
     const onOpen = (e) => setCollapsedGroups((prev) => {
       if (!prev.has(e.detail)) return prev;
@@ -186,20 +183,14 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   const [mainScrollEl, setMainScrollEl] = useState(null);
   const [bottomNavHidden, setBottomNavHidden] = useHideOnScroll(mainScrollEl, { resetKey: location.pathname });
 
-  // Phones open on Today, the first tab (review item E3 25). Only the bare
-  // "/" a cold open, a sign-in or the phone app lands on is moved; the
-  // Dashboard stays one tap away in the menu, and wider screens keep it as
-  // home.
-  useEffect(() => {
-    if (location.pathname !== '/') return;
-    if (!window.matchMedia?.('(max-width: 767px)').matches) return;
-    navigate(`/Today${location.search}`, { replace: true });
-  }, []);
+  // "/" is not handled here any more: the router sends it to the home
+  // screen on every device (HomeRedirect in src/App.jsx, memberHome in
+  // src/lib/pwaLaunch.js).
 
   // The Log tab's sheet (feeding, weigh-in, shed or Field Mode).
   const [logSheetOpen, setLogSheetOpen] = useState(false);
   // Any page can open it: window.dispatchEvent(new CustomEvent('open_log_sheet')).
-  // The Dashboard's "Log care" button does, so a laptop gets the same four
+  // The Overview's "Log care" button does, so a laptop gets the same four
   // choices as the phone's Log tab.
   useEffect(() => {
     const open = () => setLogSheetOpen(true);
@@ -271,22 +262,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     syncPushSubscription(user.email).catch(() => {});
     return listenForPushRotation(user.email);
   }, [isGuest, user?.email]);
-
-  const getUserLevel = (geckoCount) => {
-    return [...USER_LEVELS].reverse().find((level) => geckoCount >= level.geckos) || USER_LEVELS[0];
-  };
-
-  const _getNextLevel = (geckoCount) => {
-    return USER_LEVELS.find((level) => geckoCount < level.geckos);
-  };
-
-  const getImageLevel = (imageCount) => {
-    return [...EXPERT_LEVELS].reverse().find((level) => imageCount >= level.points) || EXPERT_LEVELS[0];
-  };
-
-  const getCommunityLevel = (postCount) => {
-    return [...COMMUNITY_LEVELS].reverse().find((level) => postCount >= level.points) || COMMUNITY_LEVELS[0];
-  };
 
   useEffect(() => {
     setAppLogo(APP_LOGO_ICON_URL);
@@ -454,105 +429,20 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     }
   }, [user]);
 
-  // Sidebar data: contributions, levels, images, page configs.
-  // User comes from useAuth(), no separate fetch needed.
+  // The sidebar's pages. One request shared with the router
+  // (src/lib/pageConfigs.js), not a second one of its own. This effect
+  // also used to count the member's geckos, photos and posts, and every
+  // photo in the community, for the rank badge in the menu footer. The
+  // badge is hidden (see the footer), so those four requests are gone.
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-
-        // Load page configs: one request shared with the router
-        // (src/lib/pageConfigs.js), not a second one of its own.
-        try {
-          setPageConfigs(await loadPageConfigs());
-        } catch (error) {
-          console.log("Could not load page configs:", error);
-          setPageConfigs([]);
-        }
-
-        // Load user-specific data with very heavy caching. Photos and posts
-        // are counted by the owner's profile id (members cannot filter on
-        // created_by, an email, on those tables), so this waits until the
-        // profile has loaded.
-        const ownerId = loadedProfileId(user);
-        if (user && (isGuest || ownerId)) {
-          let userContributions = dataCache.get(`user_contributions_${user.email}`);
-          if (!userContributions && dataCache.canMakeRequest(`user_contributions_${user.email}`)) {
-            try {
-              dataCache.markRequestMade(`user_contributions_${user.email}`);
-
-              // Count-only queries: the level badges need numbers, not
-              // every row the user owns. Guest mode keeps the mock entity
-              // path so the demo sidebar still looks populated.
-              const countOwned = (entity, table, column = 'owner_profile_id', value = ownerId) => isGuest
-                ? api.entities[entity].filter({ created_by: user.email }).then((rows) => (rows || []).length)
-                : supabase
-                    .from(table)
-                    .select('id', { count: 'exact', head: true })
-                    .eq(column, value)
-                    .then(({ count }) => count || 0);
-              const results = await Promise.allSettled([
-                retryApiCall(() => countOwned('Gecko', 'geckos', 'created_by', user.email)),
-                retryApiCall(() => countOwned('GeckoImage', 'gecko_images')),
-                retryApiCall(() => countOwned('ForumPost', 'forum_posts'))
-              ]);
-
-              userContributions = {
-                geckoCount: results[0].status === 'fulfilled' ? results[0].value : 0,
-                imageCount: results[1].status === 'fulfilled' ? results[1].value : 0,
-                postCount: results[2].status === 'fulfilled' ? results[2].value : 0
-              };
-              dataCache.set(`user_contributions_${user.email}`, userContributions);
-            } catch (error) {
-              console.log("Could not load user contributions (rate limited):", error);
-              userContributions = { geckoCount: 0, imageCount: 0, postCount: 0 };
-            }
-          }
-
-          if (userContributions) {
-            const level = getUserLevel(userContributions.geckoCount);
-            setUserLevel({ ...level, geckoCount: userContributions.geckoCount });
-
-            const imageLevelData = getImageLevel(userContributions.imageCount);
-            setImageLevel({ ...imageLevelData, imageCount: userContributions.imageCount });
-
-            const communityLevelData = getCommunityLevel(userContributions.postCount);
-            setCommunityLevel({ ...communityLevelData, contributionCount: userContributions.postCount });
-          }
-        }
-
-        // Community image total for the milestone badge. A head-only
-        // count instead of downloading every gecko_images row (each one
-        // carries a 768-float embedding) just to read .length.
-        let imageTotal = dataCache.get('gecko_images_count');
-        if (imageTotal == null && dataCache.canMakeRequest('gecko_images_count')) {
-          try {
-            dataCache.markRequestMade('gecko_images_count');
-            const { count } = await retryApiCall(() =>
-              supabase.from('gecko_images').select('id', { count: 'exact', head: true })
-            );
-            imageTotal = count || 0;
-            dataCache.set('gecko_images_count', imageTotal);
-          } catch (error) {
-            console.log("Could not count images (rate limited):", error);
-            imageTotal = dataCache.get('gecko_images_count') || 0;
-          }
-        }
-
-        if (imageTotal > 0) {
-          setImageCount(imageTotal);
-        } else {
-          setImageCount(0);
-        }
-
-        // Skip pinned posts to reduce API calls
-        setPinnedPosts([]);
-
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      }
-    };
-
-    fetchData();
+    let cancelled = false;
+    loadPageConfigs()
+      .then((configs) => { if (!cancelled) setPageConfigs(configs); })
+      .catch((error) => {
+        console.log("Could not load page configs:", error);
+        if (!cancelled) setPageConfigs([]);
+      });
+    return () => { cancelled = true; };
   }, [user]);
 
   // Live sidebar updates when an admin toggles a page in PageManagement.
@@ -652,68 +542,30 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     setLoginPromptFeature(featureName);
   };
 
-  const nextMilestone = MILESTONES.find((m) => imageCount < m.count);
-  const goalCount = nextMilestone ? nextMilestone.count : 100000;
-  const _progressPercent = Math.min(100, imageCount / goalCount * 100);
-
-  const getSidebarBadge = () => {
-    if (!user) return null;
-
-    const pref = user.sidebar_badge_preference || 'collection';
-
-    if (pref === 'collection' && userLevel) {
-      return {
-        badge: userLevel.badge,
-        title: userLevel.title,
-        count: userLevel.geckoCount,
-        label: "geckos"
-      };
-    }
-    if (pref === 'ai_training' && imageLevel) {
-      return {
-        badge: imageLevel.badge,
-        title: imageLevel.title,
-        count: imageLevel.imageCount,
-        label: 'images'
-      }
-    }
-    if (pref === 'community' && communityLevel) {
-      return {
-        badge: communityLevel.badge,
-        title: communityLevel.title,
-        count: communityLevel.contributionCount,
-        label: 'contributions'
-      }
-    }
-    if (userLevel) {
-      return {
-        badge: userLevel.badge,
-        title: userLevel.title,
-        count: userLevel.geckoCount,
-        label: "geckos"
-      };
-    }
-
-    return null;
-  }
-
-  const sidebarBadge = getSidebarBadge();
   const navEventCounts = countNavNotifications(recentNotifications, isGuest ? null : user?.email);
+  // The Dashboard is the home's Overview and has no menu entry of its own,
+  // so its unread events (and those that link to "/") count on the home link.
+  if (navEventCounts.Dashboard) {
+    navEventCounts[HOME_PAGE] = (navEventCounts[HOME_PAGE] || 0) + navEventCounts.Dashboard;
+    delete navEventCounts.Dashboard;
+  }
   const eventLabel = (page, label) => navEventCounts[page] ? `${label}, ${navEventCounts[page]} unread ${navEventCounts[page] === 1 ? 'event' : 'events'}` : label;
   const eventBadge = (page) => navEventCounts[page] > 0 && <span aria-hidden="true" className="nav-event-count">{navEventCounts[page] > 99 ? '99+' : navEventCounts[page]}</span>;
 
   // The sidebar's items from the page_config rows, less the breeder pages
   // in Keeper mode (src/lib/navItems.js, buildNavItems and keeperNavItems;
-  // the rules are described there). Keeper mode also trims the Favorites
-  // grid, which resolves against this list. Only the menu is trimmed;
-  // direct URLs to those pages still load.
+  // the rules are described there). Only the menu is trimmed; direct URLs
+  // to those pages still load.
   const rawNavItems = keeperNavItems(buildNavItems(pageConfigs), keeperMode);
 
-  // Favorite pages, user picks up to FAVORITES_MAX pages in Settings.
-  // Those get a prominent 2x2 grid at the top of the sidebar and are
-  // hidden from their original category section so they don't appear
-  // twice. Stored on auth.user_metadata + profiles.favorite_page_names.
-  const favoritePageNames = Array.isArray(user?.favorite_page_names)
+  // Favorite pages: hidden since 13 November 2026 (experience review H7).
+  // A member could pin up to FAVORITES_MAX of the menu's 12 pages into a
+  // 2x2 grid above those same 12 pages, and a menu that short needs no
+  // shortcuts to itself. The picker in Settings is hidden too. The code
+  // and every saved choice (profiles.favorite_page_names) are kept:
+  // setting SHOW_FAVORITES to true brings the grid back as it was.
+  const SHOW_FAVORITES = false;
+  const favoritePageNames = SHOW_FAVORITES && Array.isArray(user?.favorite_page_names)
     ? user.favorite_page_names.slice(0, FAVORITES_MAX)
     : [];
   const favoriteSet = new Set(favoritePageNames);
@@ -726,7 +578,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     .filter(Boolean);
 
   // Strip favorites from the normal sections so they aren't rendered
-  // twice.
+  // twice. With the grid hidden nothing is stripped, so a member's old
+  // favorites show in their usual place.
   const navItems = {
     collection: rawNavItems.collection.filter((i) => !favoriteSet.has(i.page_name)),
     tools: rawNavItems.tools.filter((i) => !favoriteSet.has(i.page_name)),
@@ -739,29 +592,32 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   // category and still show up under its section.
   const navGroups = groupNavItems(flattenNavItems(navItems));
 
-  // Persistent Dashboard tile. The section tabs (Manage/Discover) don't
-  // include the dashboard, and the only other way back was clicking the
-  // logo, which isn't obvious. This gives every page a clearly labeled
-  // one-click path home, above the section nav.
+  // The home link above the groups: Today, the one home on every device
+  // (experience review C1; the same address the logo opens). The Dashboard
+  // sat here until 13 November 2026; it is now Today's "Overview".
   const renderHomeLink = () => {
-    const dashUrl = createPageUrl('Dashboard');
-    const isActive = location.pathname === dashUrl;
+    const homeUrl = memberHome();
+    const home = allNavFlat.find((item) => item.page_name === HOME_PAGE);
+    const label = home?.display_name || HOME_PAGE;
+    const HomeIcon = NAV_ICON_MAP[home?.icon] || Database;
+    const isActive = location.pathname === homeUrl;
     return (
       <div className="px-2 mb-2">
         <Link
-          to={dashUrl}
-          aria-label={eventLabel('Dashboard', 'Dashboard')}
-          title={eventLabel('Dashboard', 'Dashboard')}
-          data-new-events={navEventCounts.Dashboard > 0 || undefined}
-          data-tutorial-id="Dashboard"
-          data-tutorial-label="Dashboard"
+          to={homeUrl}
+          aria-label={eventLabel(HOME_PAGE, label)}
+          title={eventLabel(HOME_PAGE, label)}
+          aria-current={isActive ? 'page' : undefined}
+          data-new-events={navEventCounts[HOME_PAGE] > 0 || undefined}
+          data-tutorial-id={HOME_PAGE}
+          data-tutorial-label={label}
           className={`group flex items-center rounded-md px-2 py-2 touch:min-h-11 text-xs font-medium transition-colors duration-200 sidebar-nav-item ${
             isActive ? 'active' : 'text-gray-300 hover:bg-gray-700 hover:text-foreground'
           }`}
         >
-          <Home className="mr-2 h-5 w-5 flex-shrink-0" />
-          <span className="truncate">Dashboard</span>
-          {eventBadge('Dashboard')}
+          <HomeIcon className="mr-2 h-5 w-5 flex-shrink-0" />
+          <span className="truncate">{label}</span>
+          {eventBadge(HOME_PAGE)}
         </Link>
       </div>
     );
@@ -776,7 +632,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         </div>
         <div className="grid grid-cols-2 gap-2">
           {favoriteItems.map((item) => {
-            const itemUrl = createPageUrl(item.page_name);
+            const itemUrl = navPagePath(item.page_name);
             const isActive = location.pathname === itemUrl;
             const IconComponent = NAV_ICON_MAP[item.icon] || Database;
             const handleNavClick = (e) => {
@@ -824,7 +680,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         {title && <div className="text-xs font-semibold text-sage-700 uppercase tracking-wider px-4 py-2">{title}</div>}
         <nav className="space-y-1 px-2">
           {items.map((item) => {
-            const itemUrl = createPageUrl(item.page_name);
+            const itemUrl = navPagePath(item.page_name);
             const isActive = location.pathname === itemUrl;
             
             const handleNavClick = (e) => {
@@ -859,19 +715,10 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 <IconComponent className="mr-2 h-5 w-5 flex-shrink-0" />
                 <span className="truncate">{item.display_name}</span>
                 {eventBadge(item.page_name)}
-                {/* Guests keep `user` set (GUEST_USER) so the "Login"
-                    marker below doesn't trigger; instead we flag pages
-                    gated behind auth as view-only so the visitor knows
-                    upfront which tabs they can actually use. Not on the
-                    phone menu, which says it once, in a line at the top. */}
-                {isGuest && item.requires_auth && (
-                  <span
-                    className="hidden md:inline ml-auto shrink-0 text-xs font-bold uppercase tracking-wider text-yellow-200 bg-yellow-400/15 border border-yellow-300/30 rounded px-1.5 py-0.5"
-                    title="Guests can view this page but cannot save changes"
-                  >
-                    view only
-                  </span>
-                )}
+                {/* Guests keep `user` set (GUEST_USER), so the "Login"
+                    marker below doesn't trigger. The demo no longer puts a
+                    "view only" pill on each item: both menus say it once,
+                    in a line at the top (demoLine). */}
                 {item.requires_auth && !user && (
                   <span className="ml-auto text-xs text-sage-500">Login</span>
                 )}
@@ -885,7 +732,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   // One sidebar, grouped (replaced the Manage / Discover tabs 6 Oct 2026).
   const renderNavGroups = () => navGroups.map((group) => {
-    const holdsCurrent = group.items.some((i) => location.pathname === createPageUrl(i.page_name));
+    const holdsCurrent = group.items.some((i) => location.pathname === navPagePath(i.page_name));
     const open = holdsCurrent || !collapsedGroups.has(group.id);
     return (
       <div key={group.id} className="mb-1">
@@ -904,6 +751,31 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       </div>
     );
   });
+
+  // The demo says once that nothing is saved, at the top of the phone menu
+  // and of the laptop sidebar (where it folds away with the rail).
+  const demoLine = (className) => isGuest && (
+    <p className={`rounded-md border border-amber-300/25 bg-amber-400/10 px-3 py-2 text-xs text-amber-100 ${className}`}>
+      Demo: look around, nothing is saved.
+    </p>
+  );
+
+  // The menu footer's "What's new" (it left the Overview's hero on 13
+  // November 2026). Wrapped in a div like the other footer buttons, which
+  // the collapsed rail's styles rely on.
+  const renderWhatsNew = (labelClass = '') => (
+    <div className="block">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setShowChangelog(true)}
+        className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm"
+      >
+        <Newspaper className="w-4 h-4 mr-2 flex-shrink-0" />
+        <span className={labelClass}>What&apos;s new</span>
+      </Button>
+    </div>
+  );
 
   // The phone header's title: the open page's menu name, or null on Today,
   // where the wordmark shows (experience review B6).
@@ -935,7 +807,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             and even 3% of see-through left ghost text on a dark surface. */}
         <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-slate-900 md:hidden z-50">
           <SidebarHeader className="border-b border-emerald-800/40 px-6 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))]">
-          <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-emerald-700/40 hover:bg-emerald-800/30 transition-colors duration-200">
+          <Link to={memberHome()} aria-label="Geck Inspect, home" className="flex items-center gap-2 px-3 py-2 rounded-lg border border-emerald-700/40 hover:bg-emerald-800/30 transition-colors duration-200">
           {appLogo && (
             <img 
               src={appLogo}
@@ -953,11 +825,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           <SidebarBody ref={sidebarRef} className="flex-1 overflow-y-auto custom-scrollbar">
             {/* The demo says once that nothing is saved, in place of a
                 "view only" pill on every item. */}
-            {isGuest && (
-              <p className="mx-4 mt-3 rounded-md border border-amber-300/25 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
-                Demo: look around, nothing is saved.
-              </p>
-            )}
+            {demoLine('mx-4 mt-3')}
             <div className="px-4 pt-2 pb-3 md:hidden">
               <InstallAppButton />
             </div>
@@ -1041,17 +909,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                   <span className="truncate">Membership</span>
                 </Button>
               </Link>
-              <div className="block">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowTutorial(true)}
-                  className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm"
-                >
-                  <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
-                  App Tutorial
-                </Button>
-              </div>
+              {renderWhatsNew()}
               {/* Phones have no floating feedback button; this opens the
                   same form (FeedbackWidget listens for the event). */}
               {user && (
@@ -1071,26 +929,38 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 </div>
               )}
 
+              {/* The rank badge (an emoji and a title by gecko count, such
+                  as "Pro Breeder") is hidden since 13 November 2026
+                  (experience review K8, decision 5): the design system
+                  says "not cute, not gamified". The ladders are kept in
+                  src/lib/layoutConstants.js and src/components/ui/UserBadge.jsx.
+                  The plan badge beside the member's name stays. */}
               {user ?
-                <div className="space-y-3">
-                  {sidebarBadge && (
-                    <UserBadge
-                      badge={sidebarBadge.badge}
-                      title={sidebarBadge.title}
-                      count={sidebarBadge.count}
-                      label={sidebarBadge.label}
-                    />
-                  )}
-
-                  <Link to={createPageUrl("Settings")} className="block">
+                // Settings and Log out share one row, so the footer is no
+                // taller than before and the menu keeps its room on a phone.
+                // Log out left the Overview's hero on 13 November 2026; the
+                // menu is where people look for it. A demo guest has no
+                // account to leave.
+                <div className="flex gap-2">
+                  <Link to={createPageUrl("Settings")} className="block flex-1 min-w-0">
                     <Button
                       variant="outline"
                       size="sm"
                       className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
-                      <Settings className="w-4 h-4 mr-2" />
-                      Settings
+                      <Settings className="w-4 h-4 mr-2 flex-shrink-0" />
+                      <span className="truncate">Settings</span>
                     </Button>
                   </Link>
+                  {!isGuest && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { logout().catch((error) => console.error('Logout failed:', error)); }}
+                      className="flex-1 min-w-0 justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
+                      <LogOut className="w-4 h-4 mr-2 flex-shrink-0" />
+                      <span className="truncate">Log out</span>
+                    </Button>
+                  )}
                 </div> :
                 null}
             </div>
@@ -1123,7 +993,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           <div className="flex flex-col h-full desktop-sidebar-inner mobile-sidebar-glass bg-emerald-950/25 backdrop-blur-sm border-r border-emerald-800/40">
             <div className="flex flex-grow flex-col overflow-y-auto overflow-x-hidden custom-scrollbar pt-5" ref={sidebarRef}>
               <div className="flex items-center flex-shrink-0 px-3 mb-4 desktop-sidebar-logo">
-                <Link to={createPageUrl("Dashboard")} className="flex items-center gap-3 w-full px-3 py-3 rounded-xl border border-emerald-700/40 bg-emerald-900/20 hover:bg-emerald-800/40 transition-colors duration-200">
+                <Link to={memberHome()} aria-label="Geck Inspect, home" className="flex items-center gap-3 w-full px-3 py-3 rounded-xl border border-emerald-700/40 bg-emerald-900/20 hover:bg-emerald-800/40 transition-colors duration-200">
                   {appLogo && (
                     <img
                       src={appLogo}
@@ -1137,6 +1007,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                   <span className="text-lg font-extrabold tracking-tight text-emerald-100 sidebar-collapse-hide whitespace-nowrap" style={{ fontFamily: "'Montserrat', system-ui, sans-serif", letterSpacing: '-0.02em' }}>Geck Inspect</span>
                 </Link>
               </div>
+
+              {demoLine('sidebar-collapse-hide mx-4 mb-4')}
 
               <div className="px-4 mb-4 sidebar-user-block">
                 {user ? (
@@ -1205,31 +1077,10 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       <span className="truncate sidebar-collapse-hide">Membership</span>
                     </Button>
                   </Link>
-                  <div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowTutorial(true)}
-                    className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm"
-                  >
-                    <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
-                    <span className="sidebar-collapse-hide">App Tutorial</span>
-                  </Button>
-                  </div>
+                  {renderWhatsNew('sidebar-collapse-hide')}
 
                   {user ?
                     <div className="space-y-3">
-                      {sidebarBadge && (
-                        <div className="sidebar-collapse-hide">
-                          <UserBadge
-                            badge={sidebarBadge.badge}
-                            title={sidebarBadge.title}
-                            count={sidebarBadge.count}
-                            label={sidebarBadge.label}
-                          />
-                        </div>
-                      )}
-
                       <Link to={createPageUrl("Settings")} className="block">
                         <Button
                           variant="outline"
@@ -1239,6 +1090,18 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                           <span className="sidebar-collapse-hide">Settings</span>
                         </Button>
                       </Link>
+                      {/* Log out left the Overview's hero on 13 November 2026. */}
+                      {!isGuest && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          aria-label="Log out"
+                          onClick={() => { logout().catch((error) => console.error('Logout failed:', error)); }}
+                          className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
+                          <LogOut className="w-4 h-4 mr-2" />
+                          <span className="sidebar-collapse-hide">Log out</span>
+                        </Button>
+                      )}
                     </div> :
                     null}
 
@@ -1451,7 +1314,16 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         </nav>
         <LogSheet open={logSheetOpen} onOpenChange={setLogSheetOpen} />
       </div>
-      <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
+      {showTutorial && (
+        <Suspense fallback={null}>
+          <TutorialModal isOpen onClose={() => setShowTutorial(false)} />
+        </Suspense>
+      )}
+      {showChangelog && (
+        <Suspense fallback={null}>
+          <ChangeLogModal isOpen onClose={() => setShowChangelog(false)} />
+        </Suspense>
+      )}
       <CommandPalette />
       <AlertDialog
         open={Boolean(loginPromptFeature)}

@@ -1,6 +1,13 @@
 /**
- * Gamification level thresholds used by Layout.jsx. Extracted from
- * src/Layout.jsx as part of the hairball cleanup.
+ * Gamification level thresholds, extracted from src/Layout.jsx as part of
+ * the hairball cleanup.
+ *
+ * Nothing reads them since 13 November 2026: the rank badge in the menu
+ * footer is hidden (experience review K8, decision 5; the design system
+ * says "not cute, not gamified"), and with it the four requests that
+ * counted a member's geckos, photos and posts on every page load. The
+ * same ladder is also written out in src/components/ui/UserBadge.jsx and
+ * src/pages/MyProfile.jsx, hidden there too. Kept so it can come back.
  *
  * The old hand-kept navigation lists that lived here (publicNavItems,
  * userSpecificNavItems, adminOnlyNavItems) were not read anywhere and still

@@ -1,18 +1,21 @@
-// Where an installed app (a home-screen or desktop install) should go
-// when it opens, once per session (handlePwaLaunch, called from
-// src/App.jsx), and which page the first screen shows (warmFirstScreen in
-// src/App.jsx starts downloading it early).
+// The member's home screen, and how each way in reaches it.
 //
-// The manifest (public/manifest.json) starts the app at /Today, the
-// phone's first tab (review item E3 25). Before that it started at
-// /MyGeckos, and older installs keep the address they were saved with
-// (iOS caches the manifest), so:
-//   * a phone opening at /, /Messages or a plain /MyGeckos goes to Today;
-//   * a laptop or desktop opening at /, /Messages or a plain /Today goes
-//     to My Geckos, where desktop installs have always opened (Today is
-//     the phone's home; the desktop keeps the sidebar).
-// A launch with anything in the query string is a deep link (a reminder
-// or a share) and is left alone.
+// One home on every device (experience review C1, decision 2, 13 Nov
+// 2026): Today. memberHome() below is the only place that says so. It
+// answers for a sign-in, for "/" opened by a signed-in member or a demo
+// guest (HomeRedirect in src/App.jsx), for the logo and the home link in
+// the menu (src/Layout.jsx), and for the installed app's first open of a
+// session (handlePwaLaunch, called from src/App.jsx). Before this a phone
+// opened on Today, a laptop on My Geckos after signing in and on the
+// Dashboard at "/" or from the logo. The Dashboard is still a page:
+// Today's toggle and the quick search call it "Overview".
+//
+// The manifest (public/manifest.json) starts the app at /Today. Before
+// review item E3 25 it started at /MyGeckos, and older installs keep the
+// address they were saved with (iOS caches the manifest), so an install
+// opening at /, /Messages or a plain /MyGeckos goes to Today. A launch
+// with anything in the query string is a deep link (a reminder or a
+// share) and is left alone.
 //
 // The manifest also names the app "id": "/MyGeckos". Without an id, a
 // browser identifies an installed app by its start address, so moving
@@ -21,8 +24,8 @@
 // identity they were installed with.
 
 /**
- * Phones: the width below which the app shows the bottom tab bar and opens
- * on Today (Tailwind's md breakpoint, as in Layout.jsx).
+ * Phones: the width below which the app shows the bottom tab bar
+ * (Tailwind's md breakpoint, as in Layout.jsx).
  */
 export const PHONE_QUERY = '(max-width: 767px)';
 
@@ -37,22 +40,22 @@ const normalisePath = (pathname) => String(pathname || '/').replace(/\/+$/, '') 
  * confirmation or sign-in link returns with its tokens after '#', and moving
  * the page before the session is saved from them would lose the sign-in.
  */
-export function pwaLaunchTarget(pathname, search, phone, hash = '') {
+export function pwaLaunchTarget(pathname, search, hash = '') {
   if (hash && hash !== '#') return null;
   const path = normalisePath(pathname);
-  if (path === '/' || path === '/Messages') return phone ? '/Today' : '/MyGeckos';
-  if (search) return null;
-  if (phone && path === '/MyGeckos') return '/Today';
-  if (!phone && path === '/Today') return '/MyGeckos';
-  return null;
+  const home = memberHome();
+  if (path === '/' || path === '/Messages') return home;
+  if (search || path === home) return null;
+  return path === '/MyGeckos' ? home : null;
 }
 
 /**
- * Where a member lands after signing in when nothing else was asked for:
- * Today on a phone (the phone's first tab), My Geckos on a larger screen.
+ * The member's home screen, the same on every device: where a sign-in
+ * lands when nothing else was asked for, where "/" and the logo lead, and
+ * where the installed app opens. Change the home here and nowhere else.
  */
-export function memberHome(win = globalThis.window) {
-  return isPhoneScreen(win) ? '/Today' : '/MyGeckos';
+export function memberHome() {
+  return '/Today';
 }
 
 /** Whether this window is phone sized (see PHONE_QUERY). */
@@ -90,7 +93,7 @@ function launchAlreadyHandled(win) {
  */
 export function pendingPwaLaunch(win = globalThis.window) {
   if (!win || launchAlreadyHandled(win) || !isInstalledApp(win)) return null;
-  return pwaLaunchTarget(win.location?.pathname, win.location?.search, isPhoneScreen(win), win.location?.hash);
+  return pwaLaunchTarget(win.location?.pathname, win.location?.search, win.location?.hash);
 }
 
 /**
@@ -105,22 +108,18 @@ export function handlePwaLaunch(win, go) {
   } catch {
     return null;
   }
-  const target = pwaLaunchTarget(win.location?.pathname, win.location?.search, isPhoneScreen(win), win.location?.hash);
+  const target = pwaLaunchTarget(win.location?.pathname, win.location?.search, win.location?.hash);
   if (target) go(target);
   return target;
 }
 
 /**
  * The page a signed-in member (or a demo guest) first sees at path:
- * 'Today', 'Dashboard', 'MyGeckos', or null for anything else. "/" is
- * Today on a phone (Layout.jsx moves phones there) and the Dashboard on
- * wider screens.
+ * 'Today', 'Dashboard', 'MyGeckos', or null for anything else. "/" is the
+ * home (memberHome), so it is Today.
  */
-export function firstScreenPage(pathname, phone) {
+export function firstScreenPage(pathname) {
   const path = normalisePath(pathname);
-  if (path === '/Today') return 'Today';
-  if (path === '/') return phone ? 'Today' : 'Dashboard';
-  if (path === '/Dashboard') return 'Dashboard';
-  if (path === '/MyGeckos') return 'MyGeckos';
-  return null;
+  const page = (path === '/' ? memberHome() : path).slice(1);
+  return ['Today', 'Dashboard', 'MyGeckos'].includes(page) ? page : null;
 }

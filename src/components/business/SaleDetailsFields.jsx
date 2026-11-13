@@ -70,7 +70,7 @@ export default function SaleDetailsFields({ value, onChange }) {
         />
       </div>
       <p className="col-span-2 text-xs text-slate-500">
-        Business Tools counts this price as revenue. Leave it blank if you are not sure yet; you can fill it in there.
+        The Business page counts this price as revenue. Leave it blank if you are not sure yet; you can fill it in there.
       </p>
     </div>
   );

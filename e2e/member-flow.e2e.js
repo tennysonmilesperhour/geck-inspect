@@ -1,5 +1,5 @@
 // The member flow from plan item E3 30, in a real browser: sign up, sign
-// in, add a first gecko, log a feeding, start a transfer to a buyer, then
+// in, add a first gecko, log a feeding, weigh it, start a transfer to a buyer, then
 // archive the gecko as sold and send it to the buyer from the step that
 // follows, with no console errors along the way. Supabase is the
 // in-browser fake in support/fake-supabase.js, so the test also checks
@@ -107,6 +107,24 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
     expect(feedings[0]).toMatchObject({ animal_id: mango().id, accepted: true, created_by: MEMBER.email });
     // Each log carries a request id, so a retried save is never stored twice.
     expect(feedings[0].client_request_id).toEqual(expect.any(String));
+  });
+
+  await test.step('weigh in from My Geckos, on the same log screen', async () => {
+    // The Weigh-in button opens the log screen for every active gecko
+    // (experience review WP-4); it used to open a window of its own.
+    await page.goto('/MyGeckos');
+    // One button in the toolbar on a laptop, another beside Add Gecko on a phone.
+    await page.getByRole('button', { name: 'Weigh-in', exact: true }).filter({ visible: true }).first().click();
+    await expect(page).toHaveURL(/\/log\?type=weight&all=1/);
+    await expect(page.getByText(/^last: 18\.5 g/)).toBeVisible();
+    await page.getByLabel('Weight of Mango in grams').fill('19');
+    await page.getByRole('button', { name: 'Save 1 weight' }).click();
+    await expect(page.getByText('19 g, saved')).toBeVisible();
+
+    const weights = fake.table('weight_records');
+    expect(weights).toHaveLength(2);
+    expect(weights.at(-1)).toMatchObject({ gecko_id: mango().id, weight_grams: 19, client_request_id: expect.any(String) });
+    expect(mango().weight_grams).toBe(19);
   });
 
   await test.step('start a transfer to a buyer', async () => {

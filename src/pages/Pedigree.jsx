@@ -546,7 +546,7 @@ export default function Pedigree() {
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 md:p-8">
         <div className="text-center max-w-md">
           <GitBranch className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold">Pedigree not available</h1>
+          <h1 className="text-2xl font-bold">Family tree not available</h1>
           <p className="text-slate-400 mt-2">
             {errorMsg || "We couldn't load this gecko's lineage."}
           </p>
@@ -566,7 +566,7 @@ export default function Pedigree() {
   return (
     <>
       <Seo
-        title={`Pedigree, ${rootGecko.name || 'Crested Gecko'}`}
+        title={`Family tree, ${rootGecko.name || 'Crested Gecko'}`}
         description={`Multi-generation pedigree chart for ${rootGecko.name || 'this crested gecko'}, showing sire, dam, grandparents, and great-grandparents with photos and morph tags.`}
         path={`/Pedigree?geckoId=${rootGecko.id}`}
       />
@@ -585,7 +585,7 @@ export default function Pedigree() {
               </Link>
               <div className="min-w-0">
                 <p className="text-[11px] uppercase tracking-widest text-slate-500">
-                  Pedigree
+                  Family tree
                 </p>
                 <h1 className="text-lg md:text-xl font-bold text-white truncate">
                   {rootGecko.name || 'Unnamed gecko'}

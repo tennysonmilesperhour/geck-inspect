@@ -122,7 +122,7 @@ export default function PairingValuePanel({ plan, sire, dam, eggs = [] }) {
       <p className="text-[11px] text-slate-500 leading-relaxed">
         Median hatchling asking prices from public marketplace listings for each outcome&apos;s traits. Babies often sell for less,
         and pattern quality moves the price most. Tie costs to this pairing and see real sales in{' '}
-        <Link to={`${createPageUrl('MarketplaceSalesStats')}`} className="text-emerald-400 hover:text-emerald-300">Business Tools</Link>.
+        <Link to={`${createPageUrl('MarketplaceSalesStats')}`} className="text-emerald-400 hover:text-emerald-300">Business</Link>.
       </p>
     </div>
   );

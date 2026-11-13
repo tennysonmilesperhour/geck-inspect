@@ -33,8 +33,11 @@ async function openDashboard(context, page, tier) {
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password').fill('test-only-passphrase');
   await page.getByRole('button', { name: 'Sign In', exact: true }).last().click();
-  await expect(page).toHaveURL(/\/(MyGeckos|Today)/);
-  await page.goto('/Dashboard');
+  // Today is the home on every device; the Dashboard is its Overview.
+  await expect(page).toHaveURL(/\/Today/);
+  await page.getByRole('navigation', { name: 'Home views' }).getByRole('link', { name: 'Overview', exact: true }).click();
+  await expect(page).toHaveURL(/\/Dashboard/);
+  await expect(page).toHaveTitle(/Overview/);
   await expect(page.getByRole('heading', { name: 'Your geckos', exact: true })).toBeVisible();
   return fake;
 }
@@ -51,12 +54,29 @@ test('free home preserves modules and offers paid values without loading their d
   for (const heading of ['Community', 'Breeding & tools', 'Your Hatchery']) {
     await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
   }
+  // The hero: the member's own numbers, the Today and Overview toggle and
+  // one primary action. Sign out, What's New, My Store and Preview profile
+  // left it.
+  const home = page.locator('.dashboard-home');
+  await expect(home.getByText(/You keep 1 crested gecko\./)).toBeVisible();
+  await expect(home.getByRole('navigation', { name: 'Home views' }).getByRole('link', { name: 'Today', exact: true })).toHaveAttribute('href', '/Today');
+  await expect(home.getByRole('button', { name: 'Log care' })).toBeVisible();
+  await expect(home.getByRole('button', { name: /Sign out|What's New|My Store|Preview profile/ })).toHaveCount(0);
+  // Community Pulse is off until the member switches it on, and the choice
+  // is kept on this device.
+  const pulse = page.locator('#home-workspace').getByText('Community Pulse', { exact: true });
+  await expect(pulse).toHaveCount(0);
+  await page.getByRole('button', { name: 'Customize home' }).click();
+  await expect(page.getByRole('checkbox', { name: 'Community Pulse' })).not.toBeChecked();
+  await page.getByRole('checkbox', { name: 'Community Pulse' }).check();
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(pulse).toBeVisible();
+  await page.reload();
+  await expect(pulse).toBeVisible();
   await page.getByRole('button', { name: 'Customize home' }).click();
   await page.getByRole('checkbox', { name: 'Community Pulse' }).uncheck();
   await page.getByRole('button', { name: 'Done', exact: true }).click();
-  await expect(page.locator('#home-workspace').getByText('Community Pulse', { exact: true })).toHaveCount(0);
-  await page.reload();
-  await expect(page.locator('#home-workspace').getByText('Community Pulse', { exact: true })).toHaveCount(0);
+  await expect(pulse).toHaveCount(0);
   await expect(page.locator('#home-workspace').getByText('Today', { exact: true })).toBeVisible();
   if (testInfo.project.name === 'chromium') {
     const rail = page.locator('.desktop-sidebar-wrapper');

@@ -100,7 +100,8 @@ function DueCard({ card, demoSignedOut }) {
       </div>
       {card.action && !demoSignedOut && (
         <Button asChild className="mt-3 w-full min-h-12 text-base font-semibold bg-emerald-600 hover:bg-emerald-700">
-          <Link to={card.action.to} onClick={() => captureEvent('today', { action: 'open', kind: card.kind })}>
+          {/* state: the whole due list for the log page (src/lib/quickLog.js). */}
+          <Link to={card.action.to} state={card.action.state} onClick={() => captureEvent('today', { action: 'open', kind: card.kind })}>
             {card.action.label}
           </Link>
         </Button>
@@ -257,17 +258,22 @@ export default function Today() {
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Today</h1>
             <p className="text-sm text-slate-400">{dateLine}</p>
           </div>
-          <div className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900/90 p-1 text-xs font-semibold">
-            <span className="rounded-full bg-emerald-600 px-3 py-1.5 text-white shadow-sm">
-              Daily Care
-            </span>
-            <Link
-              to="/Dashboard"
-              className="rounded-full px-3 py-1.5 text-slate-400 transition-colors hover:text-slate-100"
-            >
-              Overview
-            </Link>
-          </div>
+          {/* The same pair of names as the toggle on the Overview
+              (src/pages/Dashboard.jsx). A signed-out visitor has no
+              Overview to open, so the toggle is left out for them. */}
+          {!demoSignedOut && (
+            <nav aria-label="Home views" className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900/90 p-1 text-xs font-semibold">
+              <span aria-current="page" className="rounded-full bg-emerald-600 px-3 py-1.5 text-white shadow-sm">
+                Today
+              </span>
+              <Link
+                to="/Dashboard"
+                className="relative touch-hit rounded-full px-3 py-1.5 text-slate-400 transition-colors hover:text-slate-100"
+              >
+                Overview
+              </Link>
+            </nav>
+          )}
         </div>
         {signedIn && (
           <nav aria-label="Husbandry tools" className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -278,8 +284,10 @@ export default function Today() {
               <Wrench className="mr-1.5 h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
               Field Mode
             </Link>
+            {/* Batch Husbandry became the log screen (13 Nov 2026): every
+                feeding group, each with "Mark all fed". */}
             <Link
-              to="/BatchHusbandry"
+              to="/log?type=feeding&all=1&from=%2FToday"
               className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-slate-700/80 bg-slate-900/80 px-3 py-1 text-xs font-semibold text-slate-200 transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
             >
               <ListChecks className="mr-1.5 h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />

@@ -317,7 +317,8 @@ export default function StorePage() {
                 <div className="text-center max-w-md space-y-3">
                     <h1 className="font-serif text-3xl font-bold text-white">You blocked this breeder</h1>
                     <p className="text-stone-400 text-sm">Their store, posts, photos and listings are hidden for you. You can unblock them in Settings.</p>
-                    <Button onClick={() => navigate(createPageUrl('Settings'))} className="bg-emerald-600 hover:bg-emerald-500">Open Settings</Button>
+                    {/* Straight to the blocked list (Data and privacy tab). */}
+                    <Button onClick={() => navigate('/Settings#blocked-users')} className="bg-emerald-600 hover:bg-emerald-500">Open Settings</Button>
                 </div>
             </div>
         );

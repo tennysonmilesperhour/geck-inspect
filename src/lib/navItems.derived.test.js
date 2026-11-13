@@ -10,12 +10,16 @@ import {
   PHONE_TABS,
   SIDEBAR_MAX,
   KEEPER_SIDEBAR_MAX,
+  HOME_PAGE,
   buildNavItems,
   keeperNavItems,
   sidebarDestinations,
+  navPagePath,
+  paletteItemsFor,
 } from './navItems';
 import { RETIRED_PAGES, RETIRED_PAGE_NAMES, isFeatureRetired } from './retiredPages';
-import { PAGES, LIVE_PAGES } from '@/pages.config';
+import { PAGES, LIVE_PAGES, TAB_FORWARDS, pagesConfig } from '@/pages.config';
+import { memberHome } from './pwaLaunch';
 
 // The structures navItems.js derives from NAV_REGISTRY. If you add or move
 // a page in NAV_REGISTRY, update the matching fixture here in the same
@@ -33,13 +37,14 @@ const EXPECTED_FALLBACK = {
   ],
   tools: [
     { page_name: 'Recognition', display_name: 'Morph ID', icon: 'Search', category: 'tools', requires_auth: false, is_enabled: true, order: 1 },
+    { page_name: 'GeneticCalculatorTool', display_name: 'Genetics Calculator', icon: 'Calculator', category: 'tools', requires_auth: false, is_enabled: true, order: 2 },
     { page_name: 'MorphGuide', display_name: 'Morph Guide', icon: 'BookOpen', category: 'tools', requires_auth: false, is_enabled: true, order: 3 },
     { page_name: 'GeneticsGuide', display_name: 'Genetics Guide', icon: 'Dna', category: 'tools', requires_auth: false, is_enabled: true, order: 4 },
   ],
+  // The Dashboard (the Overview) left the menu on 13 Nov 2026.
   public: [
-    { page_name: 'Dashboard', display_name: 'Dashboard', icon: 'BarChart3', category: 'public', requires_auth: false, is_enabled: true, order: 1 },
-    { page_name: 'Market', display_name: 'Market Intelligence', icon: 'TrendingUp', category: 'public', requires_auth: true, is_enabled: true, order: 1.5 },
-    { page_name: 'MarketplaceSalesStats', display_name: 'Business Tools', icon: 'BarChart3', category: 'public', requires_auth: true, is_enabled: true, order: 3 },
+    { page_name: 'Market', display_name: 'Prices', icon: 'TrendingUp', category: 'public', requires_auth: true, is_enabled: true, order: 1.5 },
+    { page_name: 'MarketplaceSalesStats', display_name: 'Business', icon: 'BarChart3', category: 'public', requires_auth: true, is_enabled: true, order: 3 },
   ],
 };
 
@@ -65,37 +70,36 @@ const EXPECTED_BREEDER_ONLY = [
   'Breeding', 'BreedingSeason', 'PairingPlanner', 'Portfolio', 'Lineage',
   'Pedigree', 'MarketplaceSalesStats', 'MyListings', 'Market',
   'BatchHusbandry', 'ProjectManager', 'MorphMarketExport', 'BreedingROI',
+  'GeneticCalculatorTool', 'MyStore',
 ];
 
 // The palette rows in their display order (icons compared separately
 // since they resolve to components). One name per page: the palette uses
 // the sidebar's name, and the old names stay as search keywords.
 const EXPECTED_PALETTE = [
-  ['Dashboard', 'Dashboard', 'Your Collection'],
   ['Today', 'Today', 'Your Collection'],
+  ['Dashboard', 'Overview', 'Your Collection'],
   ['MyGeckos', 'My Geckos', 'Your Collection'],
   ['FieldMode', 'Field Mode', 'Your Collection'],
   ['MyProfile', 'My Profile', 'Your Collection'],
-  ['BatchHusbandry', 'Batch Husbandry', 'Your Collection'],
   ['ImageImport', 'AI Image Import', 'Your Collection'],
   ['PrintableWorksheets', 'Printable Worksheets', 'Your Collection'],
   ['Breeding', 'Breeding', 'Breeding'],
+  ['GeneticCalculatorTool', 'Genetics Calculator', 'Breeding'],
   ['Lineage', 'Lineage', 'Breeding'],
-  ['Pedigree', 'Pedigree', 'Breeding'],
-  ['MarketplaceSalesStats', 'Business Tools', 'Breeding'],
+  ['Pedigree', 'Family tree', 'Breeding'],
   ['ProjectManager', 'Season Planner', 'Breeding'],
   ['BreedingSeason', 'Season Timeline', 'Breeding'],
   ['PairingPlanner', 'Pairing Planner', 'Breeding'],
-  ['Portfolio', 'Portfolio', 'Breeding'],
   ['Gallery', 'Community Gallery', 'Community'],
   ['LikedGeckos', 'Liked Geckos', 'Community'],
   ['Forum', 'Forum', 'Community'],
   ['Messages', 'Messages', 'Community'],
   ['Notifications', 'Notifications', 'Community'],
-  ['Market', 'Market Intelligence', 'Marketplace'],
-  ['MarketplaceBuy', 'Buy Geckos', 'Marketplace'],
-  ['MarketplaceSell', 'Sell Geckos', 'Marketplace'],
-  ['MyListings', 'My Listings', 'Marketplace'],
+  ['MarketplaceSalesStats', 'Business', 'Selling'],
+  ['Market', 'Prices', 'Selling'],
+  ['MyListings', 'My Listings', 'Selling'],
+  ['MyStore', 'My Store', 'Selling'],
   ['MorphGuide', 'Morph Guide', 'Reference'],
   ['GeneticsGuide', 'Genetics Guide', 'Reference'],
   ['CareGuide', 'Care Guide', 'Reference'],
@@ -160,13 +164,33 @@ describe('the sidebar stays small (review item E3 23)', () => {
     expect(keeper.length).toBeLessThanOrEqual(KEEPER_SIDEBAR_MAX);
     expect(SIDEBAR_MAX).toBe(12);
     expect(KEEPER_SIDEBAR_MAX).toBe(8);
+    // Section 7 of the experience review of 11 Nov 2026: Today is the home
+    // link, the Dashboard is out, the Genetics Calculator is in.
     expect(all).toEqual([
-      'Dashboard', 'Today', 'MyGeckos', 'Breeding', 'Lineage', 'MarketplaceSalesStats',
-      'Recognition', 'Market', 'MorphGuide', 'CareGuide', 'GeneticsGuide', 'Forum',
+      'Today', 'MyGeckos', 'Lineage', 'Breeding', 'GeneticCalculatorTool', 'MarketplaceSalesStats',
+      'Market', 'Recognition', 'MorphGuide', 'CareGuide', 'GeneticsGuide', 'Forum',
     ]);
+    expect(all).toHaveLength(12);
     expect(keeper).toEqual([
-      'Dashboard', 'Today', 'MyGeckos', 'Recognition', 'MorphGuide', 'CareGuide', 'GeneticsGuide', 'Forum',
+      'Today', 'MyGeckos', 'Recognition', 'MorphGuide', 'CareGuide', 'GeneticsGuide', 'Forum',
     ]);
+    expect(all).not.toContain('Dashboard');
+  });
+
+  it('puts the home screen above the groups, once', () => {
+    expect(`/${HOME_PAGE}`).toBe(memberHome());
+    expect(pagesConfig.mainPage).toBe(HOME_PAGE);
+    expect(LIVE_PAGES[HOME_PAGE]).toBeTruthy();
+    expect(NAV_GROUPS.flatMap((g) => g.pages)).not.toContain(HOME_PAGE);
+    expect(sidebarDestinations(FALLBACK_NAV_ITEMS)[0]).toBe(HOME_PAGE);
+  });
+
+  it('links the Genetics Calculator at its public address', () => {
+    expect(navPagePath('GeneticCalculatorTool')).toBe('/calculator');
+    expect(navPagePath('MyGeckos')).toBe('/MyGeckos');
+    expect(PALETTE_ITEMS.find((i) => i.page === 'GeneticCalculatorTool').path).toBe('/calculator');
+    // A public page: no sign-in prompt and no "view only" in the demo.
+    expect(NAV_REGISTRY.find((e) => e.page === 'GeneticCalculatorTool').sidebar.requiresAuth).toBe(false);
   });
 
   it('stays inside the limits with the rows production has', () => {
@@ -175,8 +199,12 @@ describe('the sidebar stays small (review item E3 23)', () => {
     const keeper = sidebarDestinations(keeperNavItems(nav, true));
     expect(all.length).toBeLessThanOrEqual(SIDEBAR_MAX);
     expect(keeper.length).toBeLessThanOrEqual(KEEPER_SIDEBAR_MAX);
-    // Today has no row yet, so it comes from the fallback list.
+    // Today and the Genetics Calculator have no row yet, so they come
+    // from the fallback list.
     expect(all).toContain('Today');
+    expect(all).toContain('GeneticCalculatorTool');
+    // Production's enabled Dashboard row does not put it back in the menu.
+    expect(all).not.toContain('Dashboard');
     // An enabled row does not put a retired page, or a page off the list,
     // back in the sidebar.
     for (const page of ['OtherReptiles', 'Marketplace', 'ProjectManager', 'MarketplaceSell', 'MyProfile']) {
@@ -188,22 +216,93 @@ describe('the sidebar stays small (review item E3 23)', () => {
   });
 
   it('lists only pages that exist, are routed and are not retired', () => {
-    for (const group of NAV_GROUPS) {
-      for (const page of group.pages) {
-        const entry = NAV_REGISTRY.find((e) => e.page === page);
-        expect(entry?.sidebar, `${page} has a sidebar entry`).toBeTruthy();
-        expect(NAV_ICON_MAP[entry.sidebar.icon], `${page} icon`).toBeTruthy();
-        expect(LIVE_PAGES[page], `${page} is routed`).toBeTruthy();
-      }
+    for (const page of [HOME_PAGE, ...NAV_GROUPS.flatMap((g) => g.pages)]) {
+      const entry = NAV_REGISTRY.find((e) => e.page === page);
+      expect(entry?.sidebar, `${page} has a sidebar entry`).toBeTruthy();
+      expect(NAV_ICON_MAP[entry.sidebar.icon], `${page} icon`).toBeTruthy();
+      expect(LIVE_PAGES[page], `${page} is routed`).toBeTruthy();
     }
   });
 
   it('keeps the pages that left the sidebar findable in the command palette', () => {
     const palette = new Set(PALETTE_ITEMS.map((i) => i.page));
-    for (const page of ['ProjectManager', 'BreedingSeason', 'PairingPlanner', 'Portfolio', 'FieldMode', 'Gallery']) {
+    for (const page of ['Dashboard', 'ProjectManager', 'BreedingSeason', 'PairingPlanner', 'FieldMode', 'Gallery']) {
       expect(palette.has(page), page).toBe(true);
       expect(LIVE_PAGES[page], `${page} is routed`).toBeTruthy();
     }
+  });
+});
+
+// Experience review H3, H4 and H6 (13 Nov 2026).
+describe('the quick search', () => {
+  const labels = (items) => items.map((i) => i.label);
+
+  it('lists each page once and gives no two rows the same name', () => {
+    const pages = PALETTE_ITEMS.map((i) => i.page);
+    expect(new Set(pages).size).toBe(pages.length);
+    expect(new Set(labels(PALETTE_ITEMS)).size).toBe(PALETTE_ITEMS.length);
+  });
+
+  it('uses the menu name for every page that is in the menu', () => {
+    for (const entry of NAV_REGISTRY) {
+      if (entry.sidebar && entry.palette) expect(entry.palette.label, entry.page).toBe(entry.sidebar.label);
+    }
+  });
+
+  it('names the pages as the names table does, and keeps the old names as keywords', () => {
+    const row = (page) => PALETTE_ITEMS.find((i) => i.page === page);
+    expect(row('Dashboard').label).toBe('Overview');
+    expect(row('Dashboard').keywords).toContain('dashboard');
+    expect(row('MarketplaceSalesStats').label).toBe('Business');
+    expect(row('MarketplaceSalesStats').keywords).toContain('business tools');
+    expect(row('Market').label).toBe('Prices');
+    expect(row('Market').keywords).toContain('market intelligence');
+    expect(row('Pedigree').label).toBe('Family tree');
+    expect(row('Gallery').label).toBe('Community Gallery');
+    expect(row('Lineage').label).toBe('Lineage');
+    expect(row('MyGeckos').label).toBe('My Geckos');
+    expect(row('Recognition').label).toBe('Morph ID');
+    expect(row('GeneticCalculatorTool').label).toBe('Genetics Calculator');
+  });
+
+  it('hides the breeding and selling pages in Keeper mode, as the menu does', () => {
+    const keeper = paletteItemsFor({ keeperMode: true });
+    expect(keeper.filter((i) => BREEDER_ONLY_PAGES.has(i.page))).toEqual([]);
+    for (const page of ['Breeding', 'Lineage', 'Pedigree', 'GeneticCalculatorTool', 'MarketplaceSalesStats', 'Market', 'MyListings', 'MyStore', 'ProjectManager']) {
+      expect(keeper.some((i) => i.page === page), page).toBe(false);
+    }
+    for (const page of ['Today', 'Dashboard', 'MyGeckos', 'Recognition', 'MorphGuide', 'CareGuide', 'GeneticsGuide', 'Forum', 'Settings']) {
+      expect(keeper.some((i) => i.page === page), page).toBe(true);
+    }
+    // With Keeper mode off nothing is hidden from a member.
+    expect(paletteItemsFor({})).toEqual(PALETTE_ITEMS);
+  });
+
+  it('does not offer a demo guest rows that only work with an account', () => {
+    const guest = paletteItemsFor({ guest: true });
+    for (const page of ['MyProfile', 'MyStore', 'LikedGeckos']) {
+      expect(guest.some((i) => i.page === page), page).toBe(false);
+    }
+    expect(guest.some((i) => i.page === 'MyGeckos')).toBe(true);
+  });
+
+  it('has no row for a page that is a tab of Prices; the old address opens the tab', () => {
+    const palette = new Set(PALETTE_ITEMS.map((i) => i.page));
+    const prices = PALETTE_ITEMS.find((i) => i.page === 'Market');
+    expect(Object.keys(TAB_FORWARDS).sort()).toEqual(['MarketplaceBuy', 'MarketplaceSell', 'Portfolio']);
+    for (const [page, to] of Object.entries(TAB_FORWARDS)) {
+      expect(palette.has(page), page).toBe(false);
+      expect(LIVE_PAGES[page], `${page} keeps its route for the demo`).toBeTruthy();
+      expect(to).toMatch(/^\/Market\?tab=(collection|browse|listings)$/);
+    }
+    for (const word of ['portfolio', 'buy geckos', 'sell geckos']) expect(prices.keywords).toContain(word);
+    expect(pagesConfig.forwards).toBe(TAB_FORWARDS);
+  });
+
+  it('has no row for Batch Husbandry, which is now the log screen', () => {
+    expect(PALETTE_ITEMS.some((i) => i.page === 'BatchHusbandry')).toBe(false);
+    expect(PALETTE_ITEMS.map((i) => i.label)).not.toContain('Batch Husbandry');
+    expect(LIVE_PAGES.BatchHusbandry, 'the old address still forwards').toBeTruthy();
   });
 });
 

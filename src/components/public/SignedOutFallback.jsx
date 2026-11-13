@@ -35,7 +35,7 @@ const MEMBER_PAGES = {
     body: 'Your collection: one record per gecko with its morph, parents, weights and photos.',
   },
   dashboard: {
-    title: 'Dashboard',
+    title: 'Overview',
     body: 'Your collection at a glance: what is due, recent weigh-ins and your breeding season.',
   },
   breeding: {
@@ -47,7 +47,7 @@ const MEMBER_PAGES = {
     body: 'Family trees for the geckos in your collection, built from the parents you record.',
   },
   market: {
-    title: 'Market Intelligence',
+    title: 'Prices',
     body: 'Crested gecko prices from real listings and how your own geckos compare.',
   },
   forum: {

@@ -1,6 +1,13 @@
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
+// Not drawn anywhere since 13 November 2026 (experience review K8,
+// decision 5): the emoji rank badges are hidden because the design system
+// says "not cute, not gamified". The menu footer in src/Layout.jsx was the
+// only place that used this component, and My Profile hides its own
+// ladders the same way. Kept so the badges can come back; plan and admin
+// badges are a different component (TierBadge) and still show.
+
 // Badge levels for different categories
 const COLLECTION_LEVELS = [
   { geckos: 1, title: "New Collector", badge: "🥚" },

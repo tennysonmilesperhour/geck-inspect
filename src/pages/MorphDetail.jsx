@@ -13,7 +13,6 @@ import {
   CircleDollarSign,
   Dna,
   Eye,
-  Images,
   Shuffle,
   Sparkles,
   Users,
@@ -926,7 +925,10 @@ export default function MorphDetail() {
 
           {(referenceImages.length > 0 || memberPhotos.length > 0) && (
             <Reveal as="section" id="photos" className="scroll-mt-20">
-              <SectionHeading icon={Images}>{morphName} photos</SectionHeading>
+              {/* Camera, not the stacked-images icon: this public page already
+                  loads Camera, and the other icon would cost it a file of its
+                  own (the size check in CI counts it). */}
+              <SectionHeading icon={Camera}>{morphName} photos</SectionHeading>
 
               {/* Reference photos pulled from geck-data: outside photos whose
                   licence allows commercial use (src/lib/imageLicenses.js).

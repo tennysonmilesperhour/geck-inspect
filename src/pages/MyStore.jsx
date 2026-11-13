@@ -764,7 +764,7 @@ export default function MyStore() {
                                                 <>
                                                     No open waitlists yet. Create one in{' '}
                                                     <Link to={`${createPageUrl('MarketplaceSalesStats')}?tab=waitlists`} className="text-emerald-400 underline underline-offset-2 hover:text-emerald-300">
-                                                        Business Tools, under Waitlists
+                                                        Business, under Waitlists
                                                     </Link>
                                                     , then attach it here.
                                                 </>

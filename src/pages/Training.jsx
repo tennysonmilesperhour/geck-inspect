@@ -108,7 +108,7 @@ export default function TrainingPage() {
   if (!user && !isLoading) {
     return (
       <SignInRequired
-        title="AI Training Center"
+        title="Morph ID review"
         description="Sign in to contribute expert-graded training data and help review the community queue. Your labels directly train the crested-gecko morph model."
         icon={Brain}
       />
@@ -120,7 +120,7 @@ export default function TrainingPage() {
       <div className="min-h-screen bg-slate-950 p-4 md:p-8">
         <div className="max-w-7xl mx-auto py-20 flex flex-col items-center text-center">
           <Loader2 className="w-16 h-16 mb-4 text-emerald-500 animate-spin" />
-          <h2 className="text-2xl font-bold text-slate-100">Loading Morph ID Evidence Lab...</h2>
+          <h2 className="text-2xl font-bold text-slate-100">Loading Morph ID review...</h2>
           <p className="text-slate-400">Fetching the latest dataset.</p>
         </div>
       </div>
@@ -132,7 +132,7 @@ export default function TrainingPage() {
       <div className="max-w-7xl mx-auto">
         <PageHeader
           icon={GraduationCap}
-          title="Morph ID Evidence Lab"
+          title="Morph ID review"
           description={`Build an auditable crested gecko reference set for review and benchmarking. Taxonomy v${TAXONOMY_VERSION}.`}
         >
           <Button variant="outline" onClick={reload}>

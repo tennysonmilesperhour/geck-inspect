@@ -1,8 +1,16 @@
 // Feature explanations for the in-app walkthrough. Keep every sidebar page covered.
+//
+// Nothing in the app opens the walkthrough since 13 November 2026
+// (experience review H8); the steps are kept, named as the menu names the
+// pages, so it can be offered again.
 export const STEP_BLURBS = {
     Market: {
-        title: 'Market Intelligence',
-        body: 'Review current crested gecko asking prices and changes in the market, watch for morphs within your budget, browse geckos listed in the app, and manage your own listings. Asking prices are not confirmed sale prices.',
+        title: 'Prices',
+        body: 'See what each gecko in your collection is worth from real crested gecko listings, browse geckos listed in the app, and manage your own listings. Asking prices are not confirmed sale prices.',
+    },
+    GeneticCalculatorTool: {
+        title: 'Genetics Calculator',
+        body: 'Pick a sire and a dam, or type their traits, and see the odds for each outcome in the clutch: Lilly White, Cappuccino, Axanthic and the rest. It is a public page, so a pairing can be shared as a link.',
     },
     Today: {
         title: 'Today',
@@ -14,15 +22,19 @@ export const STEP_BLURBS = {
     FieldMode: {"title": "Field Mode", "body": "Log a weight, feeding, shed or note while handling an animal. Large controls make one-handed entry easier, recent animals are quick to find, and a short undo window lets you correct an accidental log."},
     __group_collection: {
         title: 'Collection',
-        body: 'The geckos you keep: what is due today, and every gecko\'s record. The Log tab on a phone, and Field Mode, log a feeding or weigh-in in a tap.',
+        body: 'The geckos you keep: every gecko\'s record, and how they are related. Today, above the groups, lists what is due. The Log tab on a phone, and Field Mode, log a feeding or weigh-in in a tap.',
     },
     __group_breeding: {
         title: 'Breeding',
-        body: 'Running a breeding operation: pairings, eggs and lineage, and your sales numbers. The Pairing Planner, Season Planner and Season Timeline open from the Breeding page. Keeper mode hides this group.',
+        body: 'Pairings and eggs, and the Genetics Calculator for clutch odds. The planners and the season timeline are tabs of the Breeding page. Keeper mode hides this group.',
+    },
+    __group_selling: {
+        title: 'Selling',
+        body: 'Business holds your sales, costs, profit and waitlists. Prices shows what your geckos are worth and the listings. Keeper mode hides this group.',
     },
     __group_tools: {
         title: 'Tools',
-        body: 'Morph ID from a photo, and Market Intelligence for prices and listings.',
+        body: 'Morph ID: a ranked shortlist of likely morphs from photos of a gecko.',
     },
     __group_learn: {
         title: 'Learn',
@@ -33,8 +45,8 @@ export const STEP_BLURBS = {
         body: 'The forum, where crested gecko keepers and breeders trade questions and answers.',
     },
     Dashboard: {
-        title: 'Dashboard',
-        body: 'Your home base. Daily to-do list, gecko of the day, community pulse, featured breeders, weight-trend snapshots, and quick stats across your collection.',
+        title: 'Overview',
+        body: 'Your numbers at a glance: what is due, collection and season values, hatchery counts, and community activity. Open it from the toggle on Today.',
     },
     MyGeckos: {
         title: 'My Geckos',
@@ -53,7 +65,7 @@ export const STEP_BLURBS = {
         body: 'Your public-facing breeder page. Bio, location, social links, geckos for sale, breeding projects, store policy, and the cover image other keepers see first.',
     },
     MarketplaceSalesStats: {
-        title: 'Business Tools',
+        title: 'Business',
         body: 'Record sales and expenses, review revenue and profit, and manage buyer waitlists. Use these records to compare seasons and understand the costs behind your breeding business.',
     },
     Recognition: {
@@ -85,7 +97,7 @@ export const STEP_BLURBS = {
         body: 'Community discussion board. Ask husbandry questions, share breeding results, post morph-ID requests, and chat with other keepers without leaving the app.',
     },
     Gallery: {
-        title: 'Image Gallery',
+        title: 'Community Gallery',
         body: 'Community photo feed. Post pictures of your geckos, like other keepers\' shots, and browse morph examples filtered by trait.',
     },
     MarketplaceBuy: {

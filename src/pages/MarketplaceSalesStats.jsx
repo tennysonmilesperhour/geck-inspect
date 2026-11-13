@@ -897,7 +897,8 @@ export function PendingSalesTab({ user, pendingSales, setPendingSales, onComplet
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// Business Tools tabs. Older saved preferences name the five tabs this page
+// Business tabs (the page was Business Tools until 13 Nov 2026). Older
+// saved preferences name the five tabs this page
 // had before 28 Sep 2026; map them onto Money, Sales and Pricing. Waitlists
 // joined on 29 Sep 2026.
 // ---------------------------------------------------------------------------
@@ -1316,8 +1317,8 @@ export default function MarketplaceSalesStats() {
       <div className="max-w-5xl mx-auto space-y-6">
         <PageHeader
           icon={TrendingUp}
-          title="Business Tools"
-          description="Revenue tracking, cost management, and market intelligence for your breeding operation."
+          title="Business"
+          description="Sales, costs and profit for your breeding operation, with pricing and buyer waitlists."
           settings={
             <PageSettingsPanel title="Sales Stats Settings">
               <div>

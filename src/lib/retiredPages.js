@@ -45,9 +45,10 @@ export const RETIRED_PAGES = [
   // Step 8: an older copy of Breeding with its own hatch flow. Its dated
   // "add a clutch with a grade" form now lives on each Breeding plan card.
   { page: 'BreedingPairs', to: '/Breeding' },
-  // 6 Oct 2026: Buy and Sell moved into Market Intelligence, as the
-  // In-app listings and Your listings tabs. /MarketplaceBuy and
-  // /MarketplaceSell still work on their own.
+  // 6 Oct 2026: Buy and Sell moved into the Market page (named Prices
+  // since 13 Nov 2026), as the In-app listings and Your listings tabs.
+  // Since 13 Nov, /MarketplaceBuy and /MarketplaceSell forward a
+  // signed-in member to those tabs; a demo guest still gets the pages.
   { page: 'Marketplace', to: '/Market?tab=browse' },
 
   // 16 Oct 2026, review item E3 23 (retire breadth). No member other than

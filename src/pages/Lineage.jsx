@@ -1108,7 +1108,7 @@ export default function Lineage() {
         <TooltipProvider>
         <div className="flex flex-col h-full min-h-0 bg-slate-950 text-slate-200 overflow-hidden lineage-scroll-host">
             <Seo
-                title="Lineage Tree"
+                title="Lineage"
                 description="Visualize your crested gecko family trees with an interactive lineage explorer. Trace ancestry across generations."
                 path="/Lineage"
                 noIndex
@@ -1117,7 +1117,7 @@ export default function Lineage() {
             <header className="px-3 pb-3 md:p-4 pt-[calc(0.75rem+env(safe-area-inset-top))] border-b border-slate-700 flex-shrink-0 z-20 bg-slate-950/80 backdrop-blur-sm">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:justify-start items-center gap-3">
                     <div className="hidden md:block text-center md:text-left md:mr-6">
-                        <h1 className="text-xl md:text-2xl font-bold text-slate-100">Gecko Lineage</h1>
+                        <h1 className="text-xl md:text-2xl font-bold text-slate-100">Lineage</h1>
                         <p className="text-slate-400 text-sm hidden md:block">
                             Select a gecko to view its family tree
                             {selectedGeckoId && (
@@ -1127,7 +1127,7 @@ export default function Lineage() {
                                         href={`/Pedigree?geckoId=${selectedGeckoId}`}
                                         className="text-emerald-300 hover:text-emerald-200 underline underline-offset-2"
                                     >
-                                        Open pedigree chart →
+                                        Open family tree →
                                     </a>
                                 </>
                             )}
@@ -1362,7 +1362,7 @@ export default function Lineage() {
                                     href={`/Pedigree?geckoId=${selectedGeckoId}`}
                                     className="touch:min-h-11 inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded border border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700 transition-colors"
                                 >
-                                    Pedigree chart <ExternalLink className="w-3 h-3" />
+                                    Family tree <ExternalLink className="w-3 h-3" />
                                 </a>
                                 <button
                                     onClick={() => handleSelectGecko(null)}

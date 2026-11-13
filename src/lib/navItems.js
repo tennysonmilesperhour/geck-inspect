@@ -59,6 +59,7 @@ import {
   CalendarCheck,
   PlusCircle,
   Menu,
+  Calculator,
 } from 'lucide-react';
 import { RETIRED_PAGE_NAMES } from '@/lib/retiredPages';
 
@@ -72,7 +73,7 @@ export const NAV_ICON_MAP = {
   Egg, LayoutGrid, LayoutDashboard, CircleUser, UsersRound, Images, Tag,
   CalendarDays, CalendarRange, Sparkles, Truck, Wrench, Store: StoreIcon,
   DollarSign, TrendingUp, Handshake, HelpCircle, Utensils, Printer,
-  Bell, Trophy, Mail, CalendarCheck, PlusCircle, Menu,
+  Bell, Trophy, Mail, CalendarCheck, PlusCircle, Menu, Calculator,
 };
 
 // Top-level section tabs. Rendered as a desktop header bar and a mobile
@@ -91,23 +92,38 @@ export const SECTIONS = [
 // is not listed here does not show in it, even when its page_config row
 // says enabled (the admin Pages tool can still hide a listed page). Pages
 // that left the sidebar still open from the command palette and from the
-// pages that link to them (Breeding links its planners, Market and each
-// gecko's value card link Portfolio, the Log tab and Today open Field
-// Mode).
+// pages that link to them (Breeding links its planners, the Log tab and
+// Today open Field Mode, Today's toggle opens the Overview).
 //
-// Counted with the Dashboard link above the groups: 12 destinations, and
-// 8 in Keeper mode (navItems.derived.test.js holds both limits).
+// Since 13 Nov 2026 (experience review C1 and H1, section 7) the link
+// above the groups is Today, the one home on every device. The Dashboard
+// left the menu: it is Today's "Overview" and is in the quick search. Its
+// slot went to the Genetics Calculator, and selling has its own group.
+//
+// Counted with the Today link above the groups: 12 destinations, and 7
+// in Keeper mode (navItems.derived.test.js holds both limits).
+export const HOME_PAGE = 'Today';
 export const NAV_GROUPS = [
-  { id: 'collection', label: 'Collection', pages: ['Today', 'MyGeckos'] },
-  { id: 'breeding', label: 'Breeding', pages: ['Breeding', 'Lineage', 'MarketplaceSalesStats'] },
-  { id: 'tools', label: 'Tools', pages: ['Recognition', 'Market'] },
+  { id: 'collection', label: 'Collection', pages: ['MyGeckos', 'Lineage'] },
+  { id: 'breeding', label: 'Breeding', pages: ['Breeding', 'GeneticCalculatorTool'] },
+  { id: 'selling', label: 'Selling', pages: ['MarketplaceSalesStats', 'Market'] },
+  { id: 'tools', label: 'Tools', pages: ['Recognition'] },
   { id: 'learn', label: 'Learn', pages: ['MorphGuide', 'CareGuide', 'GeneticsGuide'] },
   { id: 'community', label: 'Community', pages: ['Forum'] },
 ];
 
-// The most the sidebar may hold, Dashboard included (E3 23's target).
+// The most the sidebar may hold, the home link included (E3 23's target).
 export const SIDEBAR_MAX = 12;
 export const KEEPER_SIDEBAR_MAX = 8;
+
+// Pages whose address is not "/" plus the page name. The calculator's
+// public address is /calculator; /GeneticCalculatorTool still opens it.
+const PAGE_PATHS = { GeneticCalculatorTool: '/calculator' };
+
+/** The address a menu or quick search row for `page` opens. */
+export function navPagePath(page) {
+  return PAGE_PATHS[page] || `/${page}`;
+}
 
 // The phone's bottom bar (review item E3 25): Today, Geckos, Log, More.
 // Log opens a short sheet (feeding, weigh-in, shed, Field Mode) and More
@@ -120,7 +136,7 @@ export const PHONE_TABS = [
 ];
 
 /** Splits a flat sidebar list into NAV_GROUPS order, dropping empty groups. */
-export function groupNavItems(items, skip = new Set(['Dashboard'])) {
+export function groupNavItems(items, skip = new Set([HOME_PAGE])) {
   const byPage = new Map();
   for (const item of items || []) {
     if (item?.page_name && !skip.has(item.page_name)) byPage.set(item.page_name, item);
@@ -143,12 +159,16 @@ export function groupNavItems(items, skip = new Set(['Dashboard'])) {
  * The registry. One row per page. Fields:
  *   page        route/page name (the id used everywhere else)
  *   section     'manage' | 'discover' | undefined (section tab membership)
- *   breederOnly true if hidden in Keeper mode
+ *   breederOnly true if hidden in Keeper mode (the menu and the quick search)
  *   sidebar     present if the page seeds the fallback sidebar. Shape:
  *                 { category:'collection'|'tools'|'public', order,
  *                   label, icon (string key), requiresAuth }
  *   palette     present if the page appears in the command palette. Shape:
- *                 { group, label, icon (string key), keywords[] }
+ *                 { group, label, icon (string key), keywords[],
+ *                   memberOnly (hidden from demo guests) }
+ *
+ * One name per page (experience review H3): the palette label is the menu
+ * label, and a page's older names live on as search keywords.
  *
  * Order in this array only matters for the palette (items render in array
  * order, grouped by `group`); the sidebar sorts by the explicit `order`
@@ -158,14 +178,15 @@ export function groupNavItems(items, skip = new Set(['Dashboard'])) {
 export const NAV_REGISTRY = [
   // ----- Your Collection (palette) / Manage (section) -----
   {
-    page: 'Dashboard', section: undefined,
-    sidebar: { category: 'public', order: 1, label: 'Dashboard', icon: 'BarChart3', requiresAuth: false },
-    palette: { group: 'Your Collection', label: 'Dashboard', icon: 'LayoutDashboard', keywords: ['home', 'overview', 'stats'] },
-  },
-  {
     page: 'Today', section: 'manage',
     sidebar: { category: 'collection', order: 0.5, label: 'Today', icon: 'CalendarCheck', requiresAuth: false },
-    palette: { group: 'Your Collection', label: 'Today', icon: 'CalendarCheck', keywords: ['due', 'to do', 'reminders', 'feeding', 'weigh-in', 'hatch'] },
+    palette: { group: 'Your Collection', label: 'Today', icon: 'CalendarCheck', keywords: ['home', 'due', 'to do', 'reminders', 'feeding', 'weigh-in', 'hatch'] },
+  },
+  // The Dashboard is Today's "Overview" (13 Nov 2026): no menu entry, the
+  // toggle on Today and this row lead to it.
+  {
+    page: 'Dashboard', section: undefined,
+    palette: { group: 'Your Collection', label: 'Overview', icon: 'LayoutDashboard', keywords: ['dashboard', 'stats', 'summary', 'numbers'] },
   },
   {
     page: 'MyGeckos', section: 'manage',
@@ -178,12 +199,13 @@ export const NAV_REGISTRY = [
   },
   {
     page: 'MyProfile',
-    palette: { group: 'Your Collection', label: 'My Profile', icon: 'Users', keywords: ['account', 'public profile'] },
+    palette: { group: 'Your Collection', label: 'My Profile', icon: 'Users', keywords: ['account', 'public profile'], memberOnly: true },
   },
-  {
-    page: 'BatchHusbandry', section: 'manage', breederOnly: true,
-    palette: { group: 'Your Collection', label: 'Batch Husbandry', icon: 'Users', keywords: ['bulk', 'feeding', 'weigh', 'group log'] },
-  },
+  // Batch Husbandry became part of the log screen on 13 Nov 2026 (the
+  // page forwards to /log?type=feeding&all=1), so it is not a tool of its
+  // own in the quick search: the search's "Log feeding" action opens that
+  // screen and answers to the old name.
+  { page: 'BatchHusbandry', section: 'manage', breederOnly: true },
   {
     page: 'ImageImport', section: 'discover',
     palette: { group: 'Your Collection', label: 'AI Image Import', icon: 'Sparkles', keywords: ['import', 'scan', 'extract', 'notecard', 'spreadsheet'] },
@@ -199,23 +221,26 @@ export const NAV_REGISTRY = [
     sidebar: { category: 'collection', order: 3, label: 'Breeding', icon: 'Egg', requiresAuth: true },
     palette: { group: 'Breeding', label: 'Breeding', icon: 'GitBranch', keywords: ['breeding plans', 'pairings', 'projects', 'season', 'breeding pairs', 'sire dam', 'pair', 'eggs', 'hatch', 'hatchery'] },
   },
+  // The calculator is a public page at /calculator (navPagePath). It took
+  // the Dashboard's slot in the menu on 13 Nov 2026 (experience review H1).
+  {
+    page: 'GeneticCalculatorTool', section: 'discover', breederOnly: true,
+    sidebar: { category: 'tools', order: 2, label: 'Genetics Calculator', icon: 'Calculator', requiresAuth: false },
+    palette: { group: 'Breeding', label: 'Genetics Calculator', icon: 'Calculator', keywords: ['calculate a pairing', 'punnett', 'odds', 'cross', 'clutch', 'offspring', 'morph calculator'] },
+  },
   {
     page: 'Lineage', section: 'manage', breederOnly: true,
     sidebar: { category: 'collection', order: 4, label: 'Lineage', icon: 'GitBranch', requiresAuth: true },
-    palette: { group: 'Breeding', label: 'Lineage', icon: 'GitBranch', keywords: ['lineage tree', 'family tree', 'ancestry'] },
+    palette: { group: 'Breeding', label: 'Lineage', icon: 'GitBranch', keywords: ['lineage tree', 'ancestry', 'bloodline'] },
   },
   {
     page: 'Pedigree', section: 'manage', breederOnly: true,
-    palette: { group: 'Breeding', label: 'Pedigree', icon: 'GitBranch', keywords: ['pedigree', 'certificate', 'lineage record'] },
+    palette: { group: 'Breeding', label: 'Family tree', icon: 'GitBranch', keywords: ['pedigree', 'pedigree chart', 'certificate', 'lineage record'] },
   },
   // Breeding ROI left the menus on 28 Sep 2026: each breeding plan now shows
-  // its pairing value, and Business Tools shows profit per pairing. The
+  // its pairing value, and Business shows profit per pairing. The
   // page still routes for old links.
   { page: 'BreedingROI', section: 'discover', breederOnly: true },
-  { page: 'MarketplaceSalesStats', section: 'manage', breederOnly: true,
-    sidebar: { category: 'public', order: 3, label: 'Business Tools', icon: 'BarChart3', requiresAuth: true },
-    palette: { group: 'Breeding', label: 'Business Tools', icon: 'BarChart3', keywords: ['roi', 'profit', 'cost', 'revenue', 'money', 'sales', 'expenses', 'business'] },
-  },
   {
     page: 'ProjectManager', section: 'manage', breederOnly: true,
     palette: { group: 'Breeding', label: 'Season Planner', icon: 'CalendarDays', keywords: ['project manager', 'tasks', 'goals', 'feeding groups', 'future pairings'] },
@@ -228,13 +253,10 @@ export const NAV_REGISTRY = [
     page: 'PairingPlanner', section: 'manage', breederOnly: true,
     palette: { group: 'Breeding', label: 'Pairing Planner', icon: 'Dna', keywords: ['pairing', 'goal', 'compare pairs'] },
   },
-  {
-    page: 'Portfolio', section: 'manage', breederOnly: true,
-    palette: { group: 'Breeding', label: 'Portfolio', icon: 'BarChart3', keywords: ['collection value', 'worth', 'estimate'] },
-  },
-  {
-    page: 'GeneticCalculatorTool', section: 'discover',
-  },
+  // The collection's value is the first tab of Prices (13 Nov 2026), so
+  // it has no row of its own in the quick search. /Portfolio forwards to
+  // the tab (TAB_FORWARDS in src/pages.config.js).
+  { page: 'Portfolio', section: 'manage', breederOnly: true },
 
   // ----- Community (palette) -----
   {
@@ -243,7 +265,7 @@ export const NAV_REGISTRY = [
   },
   {
     page: 'LikedGeckos', section: 'manage',
-    palette: { group: 'Community', label: 'Liked Geckos', icon: 'Heart', keywords: ['hearts', 'favorites'] },
+    palette: { group: 'Community', label: 'Liked Geckos', icon: 'Heart', keywords: ['hearts', 'favorites'], memberOnly: true },
   },
   {
     page: 'Forum', section: 'discover',
@@ -259,25 +281,33 @@ export const NAV_REGISTRY = [
     palette: { group: 'Community', label: 'Notifications', icon: 'Bell', keywords: ['alerts'] },
   },
 
-  // ----- Marketplace (palette) -----
-  // Market Intelligence: daily brief, live listings, watchlist, in-app
-  // listings (the old Marketplace page) and your listings. 6 Oct 2026.
+  // ----- Selling (palette) -----
+  // Two homes for selling (experience review H6): Business for the money,
+  // Prices for what geckos are worth and the listings.
+  { page: 'MarketplaceSalesStats', section: 'manage', breederOnly: true,
+    sidebar: { category: 'public', order: 3, label: 'Business', icon: 'BarChart3', requiresAuth: true },
+    palette: { group: 'Selling', label: 'Business', icon: 'BarChart3', keywords: ['business tools', 'roi', 'profit', 'cost', 'revenue', 'money', 'sales', 'expenses', 'waitlists'] },
+  },
+  // Prices (Market Intelligence until 13 Nov 2026): the collection's
+  // value, in-app listings (the old Marketplace page) and your listings;
+  // for Enterprise also the daily brief, live listings and the watchlist.
+  // Buy Geckos, Sell Geckos and Portfolio are tabs here, so they are
+  // keywords of this row and not rows of their own.
   {
     page: 'Market', section: 'discover', breederOnly: true,
-    sidebar: { category: 'public', order: 1.5, label: 'Market Intelligence', icon: 'TrendingUp', requiresAuth: true },
-    palette: { group: 'Marketplace', label: 'Market Intelligence', icon: 'TrendingUp', keywords: ['market', 'prices', 'brief', 'watchlist', 'alerts', 'new listings', 'price cuts', 'value', 'marketplace', 'buy', 'sell', 'shop'] },
+    sidebar: { category: 'public', order: 1.5, label: 'Prices', icon: 'TrendingUp', requiresAuth: true },
+    palette: { group: 'Selling', label: 'Prices', icon: 'TrendingUp', keywords: ['market intelligence', 'market', 'collection value', 'portfolio', 'worth', 'estimate', 'in-app listings', 'marketplace', 'buy geckos', 'for sale', 'sell geckos', 'seller console', 'brief', 'watchlist', 'price cuts'] },
   },
-  {
-    page: 'MarketplaceBuy', section: 'discover',
-    palette: { group: 'Marketplace', label: 'Buy Geckos', icon: 'ShoppingCart', keywords: ['purchase', 'for sale'] },
-  },
-  {
-    page: 'MarketplaceSell', section: 'manage',
-    palette: { group: 'Marketplace', label: 'Sell Geckos', icon: 'ShoppingCart', keywords: ['list', 'post'] },
-  },
+  { page: 'MarketplaceBuy', section: 'discover' },
+  { page: 'MarketplaceSell', section: 'manage' },
   {
     page: 'MyListings', section: 'manage', breederOnly: true,
-    palette: { group: 'Marketplace', label: 'My Listings', icon: 'ShoppingCart', keywords: ['my sales'] },
+    palette: { group: 'Selling', label: 'My Listings', icon: 'ShoppingCart', keywords: ['my sales', 'inquiries'] },
+  },
+  // Left the Overview's hero on 13 Nov 2026 (experience review C4).
+  {
+    page: 'MyStore', breederOnly: true,
+    palette: { group: 'Selling', label: 'My Store', icon: 'Store', keywords: ['storefront', 'store page', 'breeder page'], memberOnly: true },
   },
 
   // ----- Reference (palette) / Discover (section) -----
@@ -333,8 +363,7 @@ export const NAV_REGISTRY = [
 ];
 
 // Focus pass (27 Sep 2026, docs/planning/history/vip-audit-2026-09-27.md P7):
-// Genetic Calculator Tool and Geck Answers no longer appear in the command
-// palette; the palette already links /calculator directly.
+// Geck Answers no longer appears in the command palette.
 //
 // Retired 2 Oct 2026 (feature completeness audit, step 5): Breeding Loans,
 // Community Connect, the AI Training Center (/TrainModel) and the Morph
@@ -387,10 +416,24 @@ export const FALLBACK_NAV_ITEMS = buildFallbackNav();
 export const PALETTE_ITEMS = NAV_REGISTRY.filter((e) => e.palette).map((e) => ({
   label: e.palette.label,
   page: e.page,
+  path: navPagePath(e.page),
   icon: NAV_ICON_MAP[e.palette.icon],
   section: e.palette.group,
   keywords: e.palette.keywords || [],
+  breederOnly: e.breederOnly === true,
+  memberOnly: e.palette.memberOnly === true,
 }));
+
+/**
+ * The quick search rows this visitor should see (experience review H4):
+ * Keeper mode hides the breeding and selling pages, as it does in the
+ * menu, and a demo guest is not offered rows that only work with an
+ * account. Works on any rows carrying breederOnly and memberOnly, so the
+ * quick search runs its own actions through it too.
+ */
+export function paletteItemsFor({ keeperMode = false, guest = false } = {}, items = PALETTE_ITEMS) {
+  return items.filter((item) => !(keeperMode && item.breederOnly) && !(guest && item.memberOnly));
+}
 
 export const FAVORITES_MAX = 4;
 
@@ -503,8 +546,8 @@ export function keeperNavItems(nav, keeperMode) {
   };
 }
 
-/** Every page the sidebar links to: the Dashboard link, then the groups. */
+/** Every page the sidebar links to: the home link (Today), then the groups. */
 export function sidebarDestinations(nav) {
   const groups = groupNavItems(flattenNavItems(nav));
-  return ['Dashboard', ...groups.flatMap((g) => g.items.map((i) => i.page_name))];
+  return [HOME_PAGE, ...groups.flatMap((g) => g.items.map((i) => i.page_name))];
 }

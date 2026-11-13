@@ -45,7 +45,7 @@ const PublicPageShell = lazy(() => import('@/components/public/PublicPageShell')
 const SignedOutFallback = lazy(() => import('@/components/public/SignedOutFallback'));
 import ScrollToTop from '@/components/shared/ScrollToTop';
 import RetiredPageNotice from '@/components/shared/RetiredPageNotice';
-import { firstScreenPage, handlePwaLaunch, isPhoneScreen, pendingPwaLaunch } from '@/lib/pwaLaunch';
+import { firstScreenPage, handlePwaLaunch, pendingPwaLaunch } from '@/lib/pwaLaunch';
 import NativeCareSync from '@/components/native/NativeCareSync';
 import { captureReferralFromUrl } from '@/lib/referral';
 import { captureFirstTouch } from '@/lib/attribution';
@@ -83,11 +83,10 @@ const Home = lazy(loadHome);
 
 // Start downloading the code the first screen needs while the auth check
 // runs, instead of after it. Signed-in members and demo guests land in
-// the app shell (Layout) on their home: Today on a phone, the Dashboard
-// on wider screens (firstScreenPage in src/lib/pwaLaunch.js, which uses
-// the same phone test as the launch handler below). The installed app's
-// first open of a session is warmed for where the launch handler is about
-// to send it. Signed-out visitors on "/" land on the landing page.
+// the app shell (Layout) on their home, which is Today on every device
+// (memberHome and firstScreenPage in src/lib/pwaLaunch.js). The installed
+// app's first open of a session is warmed for where the launch handler is
+// about to send it. Signed-out visitors on "/" land on the landing page.
 function warmFirstScreen() {
   if (typeof window === 'undefined') return;
   const path = window.location.pathname.replace(/\/+$/, '') || '/';
@@ -99,7 +98,7 @@ function warmFirstScreen() {
   } catch { /* storage blocked: fall through to the signed-out guess */ }
   if (hasSession) {
     import('./Layout.jsx').catch(() => {});
-    const page = firstScreenPage(pendingPwaLaunch(window) || path, isPhoneScreen(window));
+    const page = firstScreenPage(pendingPwaLaunch(window) || path);
     if (page === 'Today') import('./pages/Today').catch(() => {});
     else if (page === 'Dashboard') import('./pages/Dashboard').catch(() => {});
     else if (page === 'MyGeckos') import('./pages/MyGeckos').catch(() => {});
@@ -200,7 +199,7 @@ const BlogTagPage           = lazy(() => import('./pages/BlogTagPage'));
 // (cart, gifts, PDPs) resolve without colliding with the auto-router.
 const Store                 = lazy(() => import('./pages/Store'));
 
-const { Pages, Layout, mainPage } = pagesConfig;
+const { Pages, Layout, forwards } = pagesConfig;
 
 // Redirects for retired pages, shared by the signed-out and signed-in
 // route sets so an old link never ends on "Page not found". A `prefix`
@@ -211,8 +210,15 @@ const retiredRoutes = RETIRED_PAGES.flatMap(({ page, to, prefix }) => [
   <Route key={`retired-${page}`} path={`/${page}`} element={<Navigate to={to} replace />} />,
   ...(prefix ? [<Route key={`retired-${page}-all`} path={`/${page}/*`} element={<Navigate to={to} replace />} />] : []),
 ]);
-const mainPageKey = mainPage ?? Object.keys(Pages)[0];
-const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
+
+// "/" for a signed-in member or a demo guest: the one home screen
+// (memberHome in src/lib/pwaLaunch.js), with the query string kept. The
+// Dashboard used to render here on laptops while phones were moved to
+// Today. A signed-out visitor never reaches this: "/" is the landing page.
+const HomeRedirect = () => {
+  const { search } = useLocation();
+  return <Navigate to={`${memberHome()}${search}`} replace />;
+};
 
 // Spinner used for the in-Layout Suspense boundary, fills whatever
 // space the page slot has rather than the whole viewport, so the
@@ -251,8 +257,9 @@ const LazyFallback = (
   </div>
 );
 
-// A signed-in user on /AuthPortal normally just bounces to the dashboard,
-// or back to the claim link or invite that sent them to sign in
+// A signed-in user on /AuthPortal normally just bounces to the home
+// screen (memberHome: Today), or back to the claim link or invite that
+// sent them to sign in
 // (?redirect= or ?next=, see src/lib/postAuthRedirect.js). The one
 // exception is the password reset link, which lands here as
 // /AuthPortal?mode=reset with a recovery session and needs the
@@ -265,8 +272,9 @@ const AuthPortalAuthed = () => {
   return <Navigate to={target || memberHome()} replace />;
 };
 
-// After an email confirmation or Google sign-in the app opens on
-// /MyGeckos; if the person came from a claim link or invite, go there.
+// After an email confirmation or Google sign-in the app opens on the
+// home screen (memberHome); if the person came from a claim link or
+// invite, go there.
 const PostAuthRedirect = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -331,9 +339,8 @@ const AuthenticatedApp = () => {
   // with an older start address ("/", /MyGeckos, or while the member was
   // on /Messages), and iOS caches the manifest aggressively, so a
   // manifest-only change doesn't reach already-installed icons. Once per
-  // session, the installed app goes to its home: Today on a phone (review
-  // item E3 25), My Geckos on a laptop or desktop, where desktop installs
-  // have always opened (src/lib/pwaLaunch.js). A session flag means later
+  // session, the installed app goes to its home, Today on every device
+  // (memberHome in src/lib/pwaLaunch.js). A session flag means later
   // in-app navigation to those pages works normally. The move reloads the
   // page at the new address, so a signed-out launch on "/" does not carry
   // the homepage experiment's theme hold (index.html) to another page.
@@ -476,19 +483,24 @@ const AuthenticatedApp = () => {
         element={isGuest ? <LoginPortal /> : <AuthPortalAuthed />}
       />
       <Route element={<LayoutOutlet />}>
-        <Route path="/" element={<MainPage />} />
+        <Route path="/" element={<HomeRedirect />} />
         {Object.entries(Pages).map(([path, Page]) => {
           // AuthPortal is handled outside the authenticated layout. Guests
           // need the real sign-in form; authenticated users are sent home.
           if (path === 'AuthPortal') {
             return null;
           }
+          // A standalone page that is also a tab of Prices opens that tab
+          // (pages.config.js). The demo keeps the page: its Prices page is
+          // a sample with no tabs.
+          const forward = !isGuest && forwards[path];
           return (
             <Route
               key={path}
               path={`/${path}`}
               element={
-                disabledPages.has(path)
+                forward ? <Navigate to={forward} replace />
+                : disabledPages.has(path)
                   ? <div className="max-w-xl mx-auto p-8 space-y-4"><h1 className="text-2xl font-semibold">This feature is currently unavailable</h1><p>We are working on this part of Geck Inspect. Your collection remains available.</p><a className="underline" href="/MyGeckos">Return to My Geckos</a></div>
                   : <Page />
               }

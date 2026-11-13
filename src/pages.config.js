@@ -13,9 +13,9 @@ import { RETIRED_PAGE_NAMES } from '@/lib/retiredPages';
 // October 2026 they were eager, so every visitor to the landing page, the
 // Morph Guide or the Care Guide downloaded the sidebar, Dashboard and
 // profile code they never use (about a third of the 1.22 MB main
-// script). App.jsx prefetches Layout and Dashboard as soon as it knows
-// the visitor is signed in or in the demo, so the signed-in first paint
-// does not wait on an extra round trip.
+// script). App.jsx prefetches Layout and the first screen (Today, the
+// home) as soon as it knows the visitor is signed in or in the demo, so
+// the signed-in first paint does not wait on an extra round trip.
 const __Layout              = lazy(() => import('./Layout.jsx'));
 const Home                  = lazy(() => import('./pages/Home'));
 const MyProfile             = lazy(() => import('./pages/MyProfile'));
@@ -145,8 +145,22 @@ export const LIVE_PAGES = Object.fromEntries(
     Object.entries(PAGES).filter(([name]) => !RETIRED_PAGE_NAMES.has(name)),
 );
 
+// Standalone pages that are also a tab of Prices (/Market): a signed-in
+// member who opens the old address lands on the tab (experience review
+// H6, 13 Nov 2026). The pages keep their code and their routes; the demo
+// still opens them, because its Prices page is a sample with no tabs.
+export const TAB_FORWARDS = {
+    Portfolio: '/Market?tab=collection',
+    MarketplaceBuy: '/Market?tab=browse',
+    MarketplaceSell: '/Market?tab=listings',
+};
+
+// "/" for a signed-in member is not a page of its own: it redirects to
+// the home screen (memberHome in src/lib/pwaLaunch.js). mainPage names
+// that page for anything that reads this config.
 export const pagesConfig = {
-    mainPage: "Dashboard",
+    mainPage: "Today",
     Pages: LIVE_PAGES,
+    forwards: TAB_FORWARDS,
     Layout: __Layout,
 };

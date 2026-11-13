@@ -1,23 +1,72 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Command as CommandPrimitive } from 'cmdk';
 import {
-  Images,
   Sparkles,
   Search,
   Plus,
-  LifeBuoy,
   LogOut,
+  Utensils,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
-import { PALETTE_ITEMS } from '@/lib/navItems';
+import { useAuth } from '@/lib/AuthContext';
+import { KEEPER_MODE_STORAGE_KEY, PALETTE_ITEMS, paletteItemsFor } from '@/lib/navItems';
 
-// The searchable page list (label, page, icon, section, keywords) is
+// The searchable page list (label, path, icon, section, keywords) is
 // derived from the single NAV_REGISTRY in navItems.js so it can never drift
 // from the sidebar. Each row's icon is already resolved to a component.
-const NAV_ITEMS = PALETTE_ITEMS;
+//
+// The actions below are only things that are not a page of their own.
+// "Identify morph with AI", "Calculate a pairing" and "Browse community
+// gallery" were removed on 13 November 2026 (experience review H4): each
+// was a second row for a page that is listed under its own name (Morph
+// ID, Genetics Calculator, Community Gallery), and their words are now
+// that row's keywords. "Open tutorial" left with the tour's other entry
+// points (H8). "Log feeding" took the place of the Batch Husbandry row:
+// that page is now the log screen, which this opens with every feeding
+// group and gecko listed, and the old name still finds it. The same flags
+// as the page rows decide who sees an action.
+export const PALETTE_ACTIONS = [
+  {
+    id: 'add-gecko',
+    label: 'Add a new gecko',
+    value: 'add gecko new gecko create',
+    icon: Plus,
+    // ?add=1 opens the add form; plain /MyGeckos only showed the list.
+    path: '/MyGeckos?add=1',
+  },
+  {
+    id: 'log-feeding',
+    label: 'Log feeding',
+    value: 'log feeding fed feed mark all fed group rack bulk batch husbandry batch care',
+    icon: Utensils,
+    // The address /BatchHusbandry forwards to.
+    path: '/log?type=feeding&all=1',
+  },
+  {
+    id: 'reverse-calculator',
+    label: 'Reverse calculator: what makes my target morph?',
+    value: 'reverse calculator make me a target morph goal',
+    icon: Sparkles,
+    path: '/calculator/reverse',
+    breederOnly: true,
+  },
+  {
+    id: 'sign-out',
+    label: 'Sign out',
+    value: 'sign out log out logout',
+    icon: LogOut,
+    signOut: true,
+    // A demo guest has no account to sign out of.
+    memberOnly: true,
+  },
+];
+
+const readKeeperMode = () => {
+  try { return localStorage.getItem(KEEPER_MODE_STORAGE_KEY) === '1'; }
+  catch { return false; }
+};
 
 // Shared row styling so every item looks the same whether it's an action
 // or a navigation link.
@@ -27,8 +76,15 @@ const ITEM_CLASS =
   'aria-selected:border-l-2 aria-selected:border-emerald-400 ' +
   'transition-colors';
 
+const GROUP_CLASS =
+  '[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[11px] ' +
+  '[&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase ' +
+  '[&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-slate-500';
+
 export default function CommandPalette() {
   const [open, setOpen] = useState(false);
+  const [keeperMode, setKeeperMode] = useState(readKeeperMode);
+  const { isGuest } = useAuth();
   const navigate = useNavigate();
 
   // Listen for a custom event so any button in the app can open the palette
@@ -50,9 +106,19 @@ export default function CommandPalette() {
     };
   }, []);
 
-  const goTo = (page) => {
+  // Keeper mode is kept per device (Settings writes it and fires
+  // 'keeper_mode_changed'; a sign-in can copy it from the profile), so it
+  // is read again each time the search opens.
+  useEffect(() => {
+    const sync = () => setKeeperMode(readKeeperMode());
+    if (open) sync();
+    window.addEventListener('keeper_mode_changed', sync);
+    return () => window.removeEventListener('keeper_mode_changed', sync);
+  }, [open]);
+
+  const go = (path) => {
     setOpen(false);
-    navigate(createPageUrl(page));
+    navigate(path);
   };
 
   const runAction = (fn) => {
@@ -60,8 +126,13 @@ export default function CommandPalette() {
     setTimeout(fn, 50);
   };
 
+  // Keeper mode hides the breeding and selling rows, as it does in the
+  // menu, and a demo guest is not offered what needs an account.
+  const viewer = { keeperMode, guest: Boolean(isGuest) };
+  const actions = paletteItemsFor(viewer, PALETTE_ACTIONS);
+
   // Group nav items by section for the palette
-  const sections = NAV_ITEMS.reduce((acc, item) => {
+  const sections = paletteItemsFor(viewer, PALETTE_ITEMS).reduce((acc, item) => {
     (acc[item.section] ||= []).push(item);
     return acc;
   }, {});
@@ -104,67 +175,21 @@ export default function CommandPalette() {
               </CommandPrimitive.Empty>
 
               {/* Quick actions */}
-              <CommandPrimitive.Group
-                heading="Actions"
-                className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-slate-500"
-              >
-                <CommandPrimitive.Item
-                  value="add gecko new gecko create"
-                  // ?add=1 opens the add form; plain /MyGeckos only showed the list.
-                  onSelect={() => { setOpen(false); navigate('/MyGeckos?add=1'); }}
-                  className={ITEM_CLASS}
-                >
-                  <Plus className="h-4 w-4 text-emerald-400" />
-                  <span>Add a new gecko</span>
-                </CommandPrimitive.Item>
-                <CommandPrimitive.Item
-                  value="identify morph ai recognition classify"
-                  onSelect={() => goTo('Recognition')}
-                  className={ITEM_CLASS}
-                >
-                  <Sparkles className="h-4 w-4 text-emerald-400" />
-                  <span>Identify morph with AI</span>
-                </CommandPrimitive.Item>
-                <CommandPrimitive.Item
-                  value="calculate pairing genetics calculator punnett odds cross x"
-                  onSelect={() => { setOpen(false); navigate('/calculator'); }}
-                  className={ITEM_CLASS}
-                >
-                  <Sparkles className="h-4 w-4 text-purple-400" />
-                  <span>Calculate a pairing (type it in the omnibox)</span>
-                </CommandPrimitive.Item>
-                <CommandPrimitive.Item
-                  value="reverse calculator make me a target morph goal"
-                  onSelect={() => { setOpen(false); navigate('/calculator/reverse'); }}
-                  className={ITEM_CLASS}
-                >
-                  <Sparkles className="h-4 w-4 text-purple-400" />
-                  <span>Reverse calculator: what makes my target morph?</span>
-                </CommandPrimitive.Item>
-                <CommandPrimitive.Item
-                  value="tutorial help tour onboarding"
-                  onSelect={() => runAction(() => window.dispatchEvent(new CustomEvent('open_tutorial')))}
-                  className={ITEM_CLASS}
-                >
-                  <LifeBuoy className="h-4 w-4 text-emerald-400" />
-                  <span>Open tutorial</span>
-                </CommandPrimitive.Item>
-                <CommandPrimitive.Item
-                  value="search community gallery browse"
-                  onSelect={() => goTo('Gallery')}
-                  className={ITEM_CLASS}
-                >
-                  <Images className="h-4 w-4 text-emerald-400" />
-                  <span>Browse community gallery</span>
-                </CommandPrimitive.Item>
-                <CommandPrimitive.Item
-                  value="sign out log out logout"
-                  onSelect={() => runAction(() => supabase.auth.signOut())}
-                  className={ITEM_CLASS}
-                >
-                  <LogOut className="h-4 w-4 text-emerald-400" />
-                  <span>Sign out</span>
-                </CommandPrimitive.Item>
+              <CommandPrimitive.Group heading="Actions" className={`[&_[cmdk-group-heading]]:pt-2 ${GROUP_CLASS}`}>
+                {actions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <CommandPrimitive.Item
+                      key={action.id}
+                      value={`${action.label} ${action.value}`}
+                      onSelect={() => (action.signOut ? runAction(() => supabase.auth.signOut()) : go(action.path))}
+                      className={ITEM_CLASS}
+                    >
+                      <Icon className="h-4 w-4 text-emerald-400" />
+                      <span>{action.label}</span>
+                    </CommandPrimitive.Item>
+                  );
+                })}
               </CommandPrimitive.Group>
 
               {/* Navigation, grouped by section */}
@@ -172,7 +197,7 @@ export default function CommandPalette() {
                 <CommandPrimitive.Group
                   key={section}
                   heading={section}
-                  className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-slate-500"
+                  className={`[&_[cmdk-group-heading]]:pt-3 ${GROUP_CLASS}`}
                 >
                   {items.map((item) => {
                     const Icon = item.icon;
@@ -181,7 +206,7 @@ export default function CommandPalette() {
                       <CommandPrimitive.Item
                         key={item.page}
                         value={searchable}
-                        onSelect={() => goTo(item.page)}
+                        onSelect={() => go(item.path)}
                         className={ITEM_CLASS}
                       >
                         <Icon className="h-4 w-4 text-slate-400" />
@@ -192,6 +217,21 @@ export default function CommandPalette() {
                 </CommandPrimitive.Group>
               ))}
             </CommandPrimitive.List>
+
+            {/* A keeper can still reach every page: this says where the
+                hidden ones went and how to bring them back. */}
+            {keeperMode && (
+              <p className="border-t border-slate-700/70 px-4 py-3 text-xs text-slate-400">
+                Breeding and selling pages are hidden in Keeper mode.{' '}
+                <button
+                  type="button"
+                  onClick={() => go('/Settings#keeper-mode')}
+                  className="relative touch-hit font-medium text-emerald-300 underline underline-offset-2 hover:text-emerald-200"
+                >
+                  Change it in Settings.
+                </button>
+              </p>
+            )}
           </CommandPrimitive>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

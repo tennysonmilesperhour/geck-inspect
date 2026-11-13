@@ -1511,7 +1511,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     </SelectContent>
                                 </Select>
                                 {feedingGroups.length === 0 && (
-                                    <p className="text-xs text-slate-500 mt-1">Create feeding groups in the Project Manager.</p>
+                                    <p className="text-xs text-slate-500 mt-1">Create feeding groups in the Season Planner.</p>
                                 )}
                             </div>
                         </div>

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { BarChart3, BellRing, Radio, ShoppingCart, Store, Sunrise, TrendingUp } from 'lucide-react';
+import { BarChart3, BellRing, Radio, ShoppingCart, Store, Sunrise, TrendingUp, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PageHeader from '@/components/shared/PageHeader';
@@ -12,15 +12,19 @@ import WatchlistPanel from '@/components/market/WatchlistPanel';
 import SellerPanel from '@/components/market/SellerPanel';
 import DemoMarketBrief from '@/components/market/DemoMarketBrief';
 import MarketPreviewGate from '@/components/subscription/MarketPreviewGate';
+import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
 import MarketplaceBuyPage from '@/pages/MarketplaceBuy';
 import MarketplaceSellPage from '@/pages/MarketplaceSell';
 import { useAuth } from '@/lib/AuthContext';
+import { lazy } from '@/lib/lazyWithRetry';
+import { marketTabsFor, resolveMarketTab } from '@/lib/marketTabs';
 import { captureEvent } from '@/lib/posthog';
+import { ENTERPRISE_ON_SALE } from '@/lib/stripe-config';
 import { createPageUrl } from '@/utils';
 
-const TABS = ['today', 'live', 'watchlist', 'browse', 'listings'];
-// Old links: Guess the Price left the tab strip on 6 Oct 2026.
-const TAB_ALIASES = { game: 'today', buy: 'browse', sell: 'listings' };
+// The collection's value is the Portfolio page, shown here as a tab. Its
+// chart library is large, so it loads only when the tab is opened.
+const PortfolioPage = lazy(() => import('@/pages/Portfolio'));
 
 // The embedded marketplace pages are also standalone routes, so their
 // wrapper carries min-h-screen and page padding. Inside this page that
@@ -28,16 +32,18 @@ const TAB_ALIASES = { game: 'today', buy: 'browse', sell: 'listings' };
 const EMBEDDED = '[&>.min-h-screen]:min-h-0 [&>.min-h-screen]:p-0';
 
 /**
- * Market Intelligence: the crested gecko market as a daily habit. Today is
- * the morning brief, Live is the feed of new listings and price cuts,
- * Watchlist sends a note when a matching gecko is listed, In-app listings
- * is the Geck Inspect marketplace, and Your listings holds the Seller
- * Console plus (Breeder plan) the member's MorphMarket listings against
- * the market. The old Marketplace page was folded in here on 6 Oct 2026.
+ * Prices (called Market Intelligence until 13 Nov 2026): what the
+ * member's crested geckos are worth and what geckos are listed for. My
+ * collection is the Portfolio (each gecko valued from real listings),
+ * In-app listings is the Geck Inspect marketplace, and Your listings holds
+ * the Seller Console plus (Breeder plan) the member's MorphMarket listings
+ * against the market. The old Marketplace page was folded in here on 6
+ * Oct 2026.
  *
- * Today, Live and Watchlist are Enterprise only (6 Oct 2026): other plans
- * see a short read-only preview with an upgrade card (MarketPreviewGate).
- * In-app listings and the Seller Console stay open to every member.
+ * Today (the morning brief), Live (new listings and price cuts) and
+ * Watchlist are Market Intelligence, an Enterprise feature (6 Oct 2026).
+ * src/lib/marketTabs.js says who is shown them. Nothing was removed: an
+ * Enterprise member has the same tabs and the same first screen.
  *
  * Member-only for now: the listing photos come from MorphMarket, and
  * whether to show them on public pages is an open decision (D20).
@@ -45,11 +51,13 @@ const EMBEDDED = '[&>.min-h-screen]:min-h-0 [&>.min-h-screen]:p-0';
 export default function Market() {
   const { user, isGuest, isLoadingAuth } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const requested = searchParams.get('tab');
-  const aliased = TAB_ALIASES[requested] || requested;
-  const tab = TABS.includes(aliased) ? aliased : 'today';
-  const [listingsView, setListingsView] = useState('selling');
   const signedIn = !!user?.email && !isGuest;
+  const view = marketTabsFor({
+    hasMarketIntelligence: signedIn && canUseFeature(user, 'market_intelligence'),
+    enterpriseOnSale: ENTERPRISE_ON_SALE,
+  });
+  const tab = resolveMarketTab(searchParams.get('tab'), view);
+  const [listingsView, setListingsView] = useState('selling');
 
   useEffect(() => {
     if (signedIn) captureEvent('market_view', { surface: tab });
@@ -57,8 +65,8 @@ export default function Market() {
 
   const seo = (
     <Seo
-      title="Crested Gecko Market Intelligence"
-      description="What crested geckos are listed for today, what changed since yesterday, and what it means for your collection."
+      title="Prices"
+      description="What your crested geckos are worth, what crested geckos are listed for, and your own listings."
       path="/Market"
       noIndex
       keywords={['crested gecko prices', 'crested gecko market', 'morph prices']}
@@ -88,7 +96,7 @@ export default function Market() {
         <div className="max-w-5xl mx-auto">
           <PageHeader
             icon={TrendingUp}
-            title="Market Intelligence"
+            title="Prices"
             description="What crested geckos are listed for, and what that means for each gecko in a collection. This is the demo version."
           />
           <DemoMarketBrief />
@@ -103,8 +111,8 @@ export default function Market() {
         {seo}
         <SignInRequired
           icon={TrendingUp}
-          title="Crested Gecko Market Intelligence"
-          description="Sign in to see today's market, watch for morphs under your price, and buy or sell in the app."
+          title="Prices"
+          description="Sign in to see what your crested geckos are worth, and to buy or sell in the app."
         />
       </>
     );
@@ -112,7 +120,7 @@ export default function Market() {
 
   const setTab = (next) => {
     const params = new URLSearchParams(searchParams);
-    if (next === 'today') params.delete('tab');
+    if (next === view.defaultTab) params.delete('tab');
     else params.set('tab', next);
     setSearchParams(params, { replace: true });
   };
@@ -120,11 +128,13 @@ export default function Market() {
   return (
     <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       {seo}
-      <div className={`${tab === 'browse' ? 'max-w-7xl' : tab === 'listings' ? 'max-w-6xl' : 'max-w-5xl'} mx-auto`}>
+      <div className={`${tab === 'browse' ? 'max-w-7xl' : tab === 'listings' || tab === 'collection' ? 'max-w-6xl' : 'max-w-5xl'} mx-auto`}>
         <PageHeader
           icon={TrendingUp}
-          title="Market Intelligence"
-          description="What crested geckos are listed for today, what changed, and what it means for yours. Asking prices on listings, not sale prices."
+          title="Prices"
+          description={view.showLive
+            ? 'What crested geckos are listed for today, what changed, and what it means for yours. Asking prices on listings, not sale prices.'
+            : 'What your crested geckos are worth, and what crested geckos are listed for. Asking prices on listings, not sale prices.'}
         >
           <Button asChild variant="outline" size="sm">
             <Link to={`${createPageUrl('MarketplaceSalesStats')}?tab=pricing`}>
@@ -134,21 +144,35 @@ export default function Market() {
         </PageHeader>
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-5 flex-wrap sm:flex-nowrap">
-            <TabsTrigger value="today"><Sunrise className="w-3.5 h-3.5" /> Today</TabsTrigger>
-            <TabsTrigger value="live"><Radio className="w-3.5 h-3.5" /> Live</TabsTrigger>
-            <TabsTrigger value="watchlist"><BellRing className="w-3.5 h-3.5" /> Watchlist</TabsTrigger>
+            <TabsTrigger value="collection"><Wallet className="w-3.5 h-3.5" /> My collection</TabsTrigger>
+            {view.showLive && (
+              <>
+                <TabsTrigger value="today"><Sunrise className="w-3.5 h-3.5" /> Today</TabsTrigger>
+                <TabsTrigger value="live"><Radio className="w-3.5 h-3.5" /> Live</TabsTrigger>
+                <TabsTrigger value="watchlist"><BellRing className="w-3.5 h-3.5" /> Watchlist</TabsTrigger>
+              </>
+            )}
             <TabsTrigger value="browse"><ShoppingCart className="w-3.5 h-3.5" /> In-app listings</TabsTrigger>
             <TabsTrigger value="listings"><Store className="w-3.5 h-3.5" /> Your listings</TabsTrigger>
           </TabsList>
-          <TabsContent value="today">
-            <MarketPreviewGate user={user} surface="market_today" serverGated><MarketBriefPanel user={user} /></MarketPreviewGate>
+          <TabsContent value="collection" className={EMBEDDED}>
+            <Suspense fallback={<div className="h-80 animate-pulse rounded-xl bg-slate-900" aria-label="Loading your collection's value" />}>
+              <PortfolioPage embedded />
+            </Suspense>
           </TabsContent>
-          <TabsContent value="live">
-            <MarketPreviewGate user={user} surface="market_live" serverGated><MarketTapePanel /></MarketPreviewGate>
-          </TabsContent>
-          <TabsContent value="watchlist">
-            <MarketPreviewGate user={user} surface="market_watchlist" serverGated><WatchlistPanel /></MarketPreviewGate>
-          </TabsContent>
+          {view.showLive && (
+            <>
+              <TabsContent value="today">
+                <MarketPreviewGate user={user} surface="market_today" serverGated><MarketBriefPanel user={user} /></MarketPreviewGate>
+              </TabsContent>
+              <TabsContent value="live">
+                <MarketPreviewGate user={user} surface="market_live" serverGated><MarketTapePanel /></MarketPreviewGate>
+              </TabsContent>
+              <TabsContent value="watchlist">
+                <MarketPreviewGate user={user} surface="market_watchlist" serverGated><WatchlistPanel /></MarketPreviewGate>
+              </TabsContent>
+            </>
+          )}
           <TabsContent value="browse" className={EMBEDDED}>
             <MarketplaceBuyPage embedded />
           </TabsContent>
