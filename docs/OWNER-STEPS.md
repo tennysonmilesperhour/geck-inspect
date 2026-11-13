@@ -85,6 +85,7 @@ None of these is recorded as done. Each takes a minute or two; do them in one si
 9. Delete a disposable account from Settings; the Gmail one-click unsubscribe; rack labels from Printable Worksheets; an iPhone HEIC photo upload; a Stripe upgrade with a test card.
 10. PageSpeed on a real phone for the landing page, and capture the product photo slides on production (about an hour).
 11. New on 13 November, on an iPhone: open Log, Weigh-in. Type two weights: the "Save all" bar should sit just above the tab bar and not cover the last row. Type a weight ten times too big: it should ask before saving. In Field Mode, log a feeding and tap "Next". Open More: Log out is beside Settings.
+12. New on 13 November: mark a test gecko Sold. One sheet should open with two steps (sale price, then the QR code for the buyer) and no mention of a passport. On Printable Worksheets, print one sheet of tub labels and scan a label with the phone camera: it should open that gecko's log after sign-in. Run a photo health screen in the iPhone app: the "Send this to the AI provider?" question should appear in the app's own dialog.
 
 Sources: `planning/deploy-queue-2026-10-03.md` (round 2 item 5, round 3 items 1 and 5, "Real-device and real-email checks"); `planning/feature-completeness-audit-2026-09-29.md`, section 8; `planning/history/landing-speed-2026-10.md`.
 

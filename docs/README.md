@@ -121,7 +121,7 @@ Then the document for the job in hand, from the table below.
 | `morphmarket-import-reference-2026-10-24.md` | MorphMarket's import fields | Reference |
 | `instrumentation-2026-10.md` | Analytics events and the funnel | Reference |
 | `activation-2026-10.md` | Guided first gecko, default reminders | Reference |
-| `signed-in-home-2026-10.md` | The 17 October Dashboard | Reference |
+| `signed-in-home-2026-10.md` | The 17 October Dashboard (called Overview since 13 November 2026) | Reference |
 | `feature-completeness-audit-2026-09-29.md` | The plan before 15 October; per-feature status; phone and money checks | Dated |
 | `growth-funnel-2026-10.md` | 5 October funnel numbers | Dated |
 | `competitive-landscape-2026-10.md` | 5 October competitor research | Dated |
