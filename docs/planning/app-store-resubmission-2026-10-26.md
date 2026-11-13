@@ -50,7 +50,7 @@ Open `com.geckinspect.app`, tick **Sign in with Apple**, Save. If Xcode uses aut
 
 ### 2. Build and upload build 15
 
-On the Mac, from the repo on the latest `main`:
+On the Mac, from the repo on the latest `main` (13 November 2026 or later: the app bundles the website as it is when you build, so this picks up the week's screen changes, and the paths in steps 3 and 6 below are for that build):
 
 ```
 NATIVE_AUTH_REDIRECT_VERIFIED=true NATIVE_BILLING_WEBHOOK_VERIFIED=true pnpm ios:release
@@ -68,12 +68,12 @@ On a phone running the **newest iOS** (the iPhone 11 on 18.5 does not qualify). 
 2. Sign in with the Breeder reviewer account.
 3. Today, then My Geckos, then open a gecko.
 4. Add a gecko and take its photo with the **camera**.
-5. Morph ID: take or pick a top and a side photo, show the AI data notice (a panel on the page since 28 October, not a pop-up), tap **Allow and identify** and let the scan finish. In build 15 the notice opens when you tap Identify morph. In a build made after 12 November 2026 it is already on the page, under the **Allow and identify** button, as soon as both photos are in, so there is no Identify morph tap first.
+5. Morph ID: take or pick a top and a side photo. The AI data notice is already on the page under the **Allow and identify** button as soon as both photos are in (a notice on the page since 28 October, not a pop-up, and shown before the tap since 12 November). Tap **Allow and identify** and let the scan finish.
 6. Breeding: open a pair and show the clutch odds.
-7. Settings > **Phone reminders**: turn one on and accept the iOS notification prompt.
-8. Membership: show the store prices, **Restore purchases**, and the Terms and Privacy links.
+7. Settings > **Reminders** tab > **Phone reminders**: turn one on and accept the iOS notification prompt.
+8. **More** (bottom right) > **Membership**: show the store prices, **Restore purchases**, and the Terms and Privacy links.
 9. Community: open a post, tap **Report**, and show the **Block** option in the same dialog.
-10. Settings > **Delete account**: open the dialog and cancel.
+10. Settings > **Data and privacy** tab > **Delete account**: open the dialog and cancel.
 
 Steps 4, 7 and 8 are the device features that answer "is this just a website" (guideline 4.2), so make them clear.
 
@@ -118,12 +118,12 @@ Passwords are in the sign-in fields above.
 
 Device features
 - Camera and photo library: adding a gecko, gecko photos and Morph ID.
-- Local notifications: Settings > Phone reminders schedules feeding and weigh-in reminders on the device.
+- Local notifications: Settings > Reminders > Phone reminders schedules feeding and weigh-in reminders on the device.
 - In-app purchase: Keeper and Breeder, monthly or annual, through StoreKit.
 
 Where to find things
-- Membership (prices, Restore purchases, Terms, Privacy): side menu > Membership.
-- Account deletion: Settings > Delete account > Delete my account. It deletes the account in the app; no email or website step.
+- Membership (prices, Restore purchases, Terms, Privacy): More (bottom right) > Membership.
+- Account deletion: Settings > Data and privacy > Delete account > Delete my account. It deletes the account in the app; no email or website step.
 - Morph ID sends the photo to our AI providers (Anthropic, Replicate) only after the member taps Allow and identify on a notice shown before each scan. Not now sends nothing.
 
 Member content (1.2)
@@ -132,7 +132,7 @@ New posts and photos are screened automatically against a list of objectionable 
 A screen recording on a physical device, from launch through each of these features, is attached.
 ```
 
-The support address matches the one the app shows (`SUPPORT_EMAIL` in the code). Check the "side menu > Membership" path against build 15 before pasting.
+The support address matches the one the app shows (`SUPPORT_EMAIL` in the code). The paths above are for a build made from `main` on 13 November 2026 or later: on a phone the menu opens from the **More** tab (there is no menu button in the header since 12 November), and Settings has five tabs (Account, Look, Reminders, Breeder profile, Data and privacy) since 13 November. A build made before 12 November has the old layout; do not submit one.
 
 ## Reply to App Review
 

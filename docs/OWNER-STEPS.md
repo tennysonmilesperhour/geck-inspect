@@ -16,7 +16,6 @@ How to use it:
 | A1 | **Breeder conversations: 15 by 17 November.** 0 recorded on 31 October. Under the Day 30 rule, fewer than 15 means engineering pauses. | Book the calls. After each, Admin panel, Overview, Weekly scoreboard, "Record by hand". The questions and the $120 Founding Breeder offer are in the source. | `planning/breeder-interviews-2026-10.md` |
 | A2 | **Hand-import 5 breeder collections.** 0 recorded. | Offer it in each call; record each under "Record by hand". | Part E, item 14 |
 | A4 | **Rewrite the top ten in `NOW.md`.** It is still the 31 October draft; the Mondays of 3 and 10 November were missed. | Copy the scoreboard card's numbers into `docs/NOW.md` and rewrite the list. | Part E, rule E0.5 |
-| A5 | **Seven decisions from the experience review.** They block most of its remaining work. | Read section 2 of the source and answer each in a sentence. The two that unblock the most: how much to build before decision day, and whether Today replaces the Dashboard as the one home. | `planning/experience-review-2026-11-11.md`, section 2 |
 
 ## B. App Store (the iPhone app is in review work)
 
@@ -24,7 +23,7 @@ How to use it:
 |---|---|---|---|
 | B1 | **Sign in with Apple key and three secrets.** Until then, deleting an account that signed in with Apple cannot revoke its Apple token. | Create the key at https://developer.apple.com/account/resources/authkeys/list, then add `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` at https://supabase.com/dashboard/project/mmuglfphhwlaluyfyxsp/functions/secrets | `planning/deploy-queue-2026-10-03.md`, open item 8 |
 | B2 | **Tick "Sign in with Apple" on the app ID** (not recorded as done). | https://developer.apple.com/account/resources/identifiers/list, open `com.geckinspect.app`, tick it, Save. | `planning/app-store-resubmission-2026-10-26.md`, step 1 |
-| B3 | **Build and upload build 15**, then the device recording, the sandbox purchase, the screenshots and the submission. | Steps 2 to 6 of the source, with the paste-ready review notes and reply. The project is already at build 15. | Same, steps 2 to 6 |
+| B3 | **Build and upload build 15 from today's `main`**, then the device recording, the sandbox purchase, the screenshots and the submission. Most screens changed 11 to 13 November, so the screenshots and the recording must come from this build, and the review notes' paths were updated on 13 November to match it. | Steps 2 to 6 of the source, with the paste-ready review notes and reply. The project is already at build 15. | Same, steps 2 to 6 |
 | B4 | **Look at the launch colour on that build.** The launch background and status bar colour changed to match the default theme (11 November). | Open the app cold: no blue-black flash before the green-black page. | `planning/experience-review-2026-11-11.md`, finding A9 |
 
 ## C. Safety and accounts (each is a few minutes)
@@ -104,5 +103,6 @@ Sources: `planning/deploy-queue-2026-10-03.md` (round 2 item 5, round 3 items 1 
 
 ## Done
 
+- 12 November 2026: A5, the seven decisions from the experience review. Tennyson asked for the recommendations to be built; each decision took its recommended answer (section 2 of `planning/experience-review-2026-11-11.md`), and every package was built 11 to 13 November.
 - 13 November 2026: E14, sold prices on public geckos. What a gecko sold for, and what a buyer paid on a claimed transfer, now sit in tables only the owner (and a shared collection's members, and admins) can read. Migration `20261113172624_private_sale_prices.sql`; the plan and checks are `planning/private-sale-prices-2026-11.md`. Nothing for Tennyson to do.
 - 12 November 2026: A3, the 6-digit code in the "Confirm signup" email template (done by Tennyson; not checked from a session, which cannot read the templates. To check: sign up with a spare address and type the code).
