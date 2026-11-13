@@ -47,7 +47,7 @@ How to read the "What runs it" column:
 | `gen-gecko-reference.sh` | Asks Replicate for a line drawing of a crested gecko, the base layer of the Morph Visualizer (which is retired) | By hand | `./gecko-base.png` |
 | `generate-pdfs.mjs` | Builds the Care Guide and Genetics Guide PDFs behind the "Download PDF" buttons and the guides email | `pnpm build:pdfs`, by hand | `public/downloads/geck-inspect-care-guide.pdf`, `public/downloads/geck-inspect-genetics-guide.pdf` |
 | `growth/` | Shared code for the growth report: Google Analytics, Search Console, and the blog queue feed | Imported by `growth-report.mjs` | Nothing by itself |
-| `growth-report.mjs` | The weekly traffic and search report | The `growth-report` workflow | `docs/growth-reports/<date>.md`. It also still adds search gaps to `docs/blog-queue.json`, which nothing reads while the blog is shelved |
+| `growth-report.mjs` | The weekly traffic and search report | The `growth-report` workflow | `docs/growth-reports/<date>.md`. Since 13 November 2026 it no longer adds search gaps to `docs/blog-queue.json` (the blog is shelved); `GROWTH_FEED_BLOG_QUEUE=1` switches that back on |
 | `lib/` | Shared code for the scripts: the Weekly Gecko Notes rules, accepted facts, agent content, photo GPS reading, loading app code from Node. Has its own tests | Imported by other scripts and by unit tests | Nothing |
 | `local/` | Files for Tennyson's Mac only: a weekly `git pull --ff-only` and the launchd files that schedule it | Installed by hand on the Mac | Nothing in the repository |
 | `mcp/` | The source of the public MCP server's tools (`core.js`) | Bundled by `build-mcp.mjs` | Nothing |

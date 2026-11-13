@@ -66,7 +66,8 @@ All three are self-hosted: the files are in `public/fonts/`, declared in `src/st
 - **Page padding:** `p-4 md:p-8` on app pages (42 page files use it; 18 still use `p-4 md:p-6`).
 - **Cards:** one surface: `rounded-xl border border-slate-700 bg-slate-900` (`src/components/ui/card.jsx`). Card padding is 1.5rem, 1rem on phones (`[data-card-part]` rules in `src/index.css`). Pass a class only for a real variant such as an amber warning.
 - **Tap targets:** the `touch:` variant applies only on touch screens, and buttons grow to a 44 px minimum there (`touch:min-h-11` in `button.jsx`). For a small control that cannot grow, add `touch-hit` (an invisible 44 px hit area).
-- **Phone frame:** a glass header floats over the page and a glass bottom bar sits above the home indicator (decision 39). Their sizes are the `--top-bar-h` and `--bottom-bar-h` variables in `src/index.css`.
+- **Phone frame:** a glass header floats over the page and a glass bottom bar sits above the home indicator (decision 39). Since 12 November 2026 the glass carries the page colour at 85% (`--glass-tint` in `src/styles/layout-theme.css`), so labels stay readable over any content. The header holds the page's name on the left, then Search, Morph ID and the bell; there is no hamburger (the More tab opens the menu). The bar sizes are the `--top-bar-h` and `--bottom-bar-h` variables in `src/index.css`.
+- **Floating notices:** at most one at a time. A notice that floats over the page asks for its turn with `useFloatingNotice(id, wants)` (`src/components/shared/floatingNoticeQueue.js`) and marks its element `data-floating-notice`. Order: app update, analytics consent, offline status, the feeding reminder ask, the demo tour. Nothing else floats over a list on a phone.
 
 ## 6. Components to reuse
 
@@ -83,7 +84,8 @@ These carried over from the old document. They are the standard for new work; th
 
 - Inline form validation, never `alert()`.
 - Skeletons for loading lists (`CardGridSkeleton`), not bare spinners.
-- A confirmation dialog for destructive actions (delete, transfer, end a loan).
+- A confirmation dialog for what cannot be undone (delete, transfer, removing someone's access): `src/components/shared/ConfirmDialog.jsx`, never the browser's `confirm()`. For anything that can be reversed, do it at once and offer Undo for 8 seconds: `undoToast` in `src/lib/undoToast.jsx`.
+- Every save says what happened (a toast or a "Saved" tick beside the control), and a failed save says so and offers a way to try again.
 - Animations respect the operating system's reduced-motion setting (`@media (prefers-reduced-motion: reduce)` in `src/index.css`, and `src/lib/reducedMotion.js`).
 - Tooltips on abbreviated stats and icon-only buttons; every icon-only button has an accessible name.
 - Phone first: grids collapse to one column on small screens, and nothing scrolls sideways except tab strips and tables built to.

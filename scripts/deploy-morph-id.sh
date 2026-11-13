@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
-# Deploys the /recognition + /training pipeline in the right order:
-#   1. Apply the auto-applied SQL migrations.
-#   2. Deploy the four edge functions.
+# Deploys the Morph ID edge functions by hand:
+#   1. Migrations are skipped (merging to main applies them).
+#   2. Deploy three edge functions: recognize-gecko-morph,
+#      embed-gecko-image and export-training-corpus.
 #   3. Optionally backfill embeddings for verified rows missing one.
 #
-# Idempotent: every step is safe to re-run. The manual RLS step is NOT
-# done here on purpose (see scripts/README.md).
+# DO NOT RUN WITHOUT TENNYSON'S SAY. Two of the three functions are kept
+# hand-deployed on purpose because the copies in this repository are
+# newer than what production runs; this script deploys the repository
+# copies and so changes production. See scripts/README.md and
+# docs/INFRASTRUCTURE.md, section 2.
 #
 # Usage:
 #   scripts/deploy-morph-id.sh            # full deploy, no backfill
@@ -60,9 +64,7 @@ command -v supabase >/dev/null || die "supabase CLI not found. Install: https://
 # migration that production's history does not list by name, including
 # superseded ones that would overwrite the vault-based notification
 # dispatcher. Never do that here.
-say "Skipping database migrations: apply them by hand per docs/MIGRATIONS.md"
-
-ok  "migrations applied"
+say "Skipping database migrations: merging to main applies them (docs/MIGRATIONS.md)"
 
 # ---- 2. Edge functions ----------------------------------------------------
 FUNCTIONS=(

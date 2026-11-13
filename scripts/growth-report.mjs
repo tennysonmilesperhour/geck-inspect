@@ -19,10 +19,10 @@
  *   - low-CTR pages    (impressions ≥ 100, CTR ≤ 1.5%) → snippet
  *                        rewrite targets
  *   - query gaps       (query impressions ≥ 20, no matching /blog/*
- *                        or /MorphGuide/* slug) → blog topic
- *                        candidates (also fed into blog-queue.json
- *                        via scripts/growth/blog-queue-feed.mjs in
- *                        step G5)
+ *                        or /MorphGuide/* slug) → listed in the report
+ *                        as data. Blog work is shelved (30 Sep 2026),
+ *                        so they are NOT added to docs/blog-queue.json
+ *                        unless GROWTH_FEED_BLOG_QUEUE=1 is set.
  *   - engagement laggs (GA4 engagementRate < 50% on pages with
  *                        ≥ 25 pageviews) → UX/content fix targets
  *
@@ -367,11 +367,15 @@ async function main() {
   writeFileSync(outFile, md);
   console.log(`[growth-report] wrote ${outFile} · ${findings.page2Queries.length + findings.lowCtr.length + findings.queryGaps.length + findings.engagementLag.length} findings`);
 
-  // Feed query gaps into the blog pipeline so the existing research
-  // → draft → publish flow picks them up on its next run.
-  const added = appendGapsToQueue(findings.queryGaps);
-  if (added > 0) {
-    console.log(`[growth-report] appended ${added} query gap(s) to docs/blog-queue.json`);
+  // Blog and article work is shelved (CLAUDE.md, 30 Sep 2026): a search
+  // with no matching page is data in the report, not a queued post. The
+  // feed into docs/blog-queue.json stays off until Tennyson brings the
+  // blog back, and is then switched on with GROWTH_FEED_BLOG_QUEUE=1.
+  if (process.env.GROWTH_FEED_BLOG_QUEUE === '1') {
+    const added = appendGapsToQueue(findings.queryGaps);
+    if (added > 0) {
+      console.log(`[growth-report] appended ${added} query gap(s) to docs/blog-queue.json`);
+    }
   }
 }
 
