@@ -4,6 +4,29 @@ A review of how Geck Inspect feels to use: how smooth the main jobs are, how the
 
 Screens and the script that made them: [experience-review-2026-11/](experience-review-2026-11/).
 
+## Status, 13 November 2026 (read this first)
+
+Every work package in section 9 has shipped, in whole or in part, between 11 and 13 November. Each has a dated note under it saying what shipped and what was left out. The findings in section 5 describe the app as it was on 11 November; where a finding and the code disagree, the code is right.
+
+What is left, and why:
+
+| Left | Where | Why it is not done |
+|---|---|---|
+| Haptics, pull to refresh, moving a field above the keyboard in the iPhone app | WP-11, L3 | Needs two Capacitor plugins and a new iPhone build; the app is in App Store review work |
+| The shared page header on the Overview, Lineage, My Profile and the gecko record page | WP-10, K3 | Each title sits in a designed hero or toolbar, so it means a layout change. Needs a decision |
+| The 12 pixel floor and the five colour roles on Lineage, My Profile, Settings and Business | WP-10, K1 and K2 | Not reached. `src/lib/__tests__/visualGauges.test.js` holds the counts; lower its ceilings as you go |
+| One Stat component for the 15 hand-written number cards | WP-10, K5 | Left out as not worth the churn |
+| One notice for every plan limit (the modal, Breeding, My Geckos, Waitlists) | WP-13, J6 | The modal's button and benefit list are what the running paywall test measures |
+| A passport step when a gecko is sold | Section 8, idea 2 | Switched off: a public gecko's sold price is readable by other signed-in members. Decision E14 in `docs/OWNER-STEPS.md` |
+| Saving a hatch year without a month and day | WP-3 | Needs a small database change. Decision E13 |
+| Which feeding group Quick Add uses when a breeder has several | WP-3 | Decision E12 |
+| A new gecko's card appearing before the save | WP-11, L2 | The plan-limit count and ID numbering read the same list |
+| My Listings, Liked Geckos and Market Pricing as tabs; My Store linked from Business | WP-8, H6 | No matching tab exists yet; building one is new surface |
+| Field Mode on the shared save helper | WP-4 | It handles a split weight save the helper does not |
+| Checks on a real phone | `docs/OWNER-STEPS.md`, section F, items 11 and 12 | Only Tennyson can do them |
+
+The ideas in section 8 marked "after decision day" are untouched.
+
 ## 0. How to use this file (for the session that implements it)
 
 1. Read section 2 first. It lists the rules this work must obey and the decisions that belong to Tennyson. Several packages are blocked on a decision; do not guess the answer.
@@ -12,7 +35,7 @@ Screens and the script that made them: [experience-review-2026-11/](experience-r
 4. When a package is finished, add a dated line under it in section 9 saying what shipped and what was left out.
 5. If the code no longer matches a file reference here, trust the code and fix this file in the same commit.
 
-Paste-ready prompt for a new session:
+Paste-ready prompt for a new session (since 13 November, name the row of the status table above in place of a package number):
 
 > Read `docs/planning/experience-review-2026-11-11.md`, sections 0, 2 and 9. Implement work package WP-N only. Follow its "Done when" checks exactly, obey the rules in section 2, and do not touch `src/pages/Home.jsx`, `src/pages/HomeControl.jsx`, `src/components/landing/` or the theme defaults (the homepage test is running). Re-run the screenshot script before and after, and add a dated status line under the package when finished.
 

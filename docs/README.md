@@ -35,7 +35,7 @@ Then the document for the job in hand, from the table below.
 | If the work is about | Read | Then |
 |---|---|---|
 | What to build next, priorities | Part E of `planning/comprehensive-review-2026-10-14.md`, `NOW.md` | `planning/experience-review-2026-11-11.md` for screens |
-| Any screen, flow or copy in the app | `planning/experience-review-2026-11-11.md` (sections 0, 2, 9) | `specs/DESIGN-SYSTEM.md`, `planning/homepage-ab-test-2026-10.md` (what is frozen) |
+| Any screen, flow or copy in the app | `planning/experience-review-2026-11-11.md` (the status table at the top, then sections 2 and 9) | `specs/DESIGN-SYSTEM.md`, `planning/homepage-ab-test-2026-10.md` (what is frozen) |
 | The landing page or theme defaults | `planning/homepage-ab-test-2026-10.md` | Nothing changes there while the test runs |
 | Sign-up, first gecko, onboarding | `planning/activation-2026-10.md` | `planning/experience-review-2026-11-11.md` WP-12 |
 | Database or edge functions | `MIGRATIONS.md`, `INFRASTRUCTURE.md` | `planning/deploy-queue-2026-10-03.md`, `../supabase/SCHEMA_CONVENTIONS.md` |
