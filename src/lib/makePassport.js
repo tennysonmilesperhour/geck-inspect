@@ -15,10 +15,10 @@ export const passportPublicNote = (name) =>
  * A passport link only works while the gecko is public, so this also
  * turns Public display on, and the record's toast says so. Only the
  * member's own "Make a passport" on the gecko record calls this. Marking
- * a gecko sold and sending a transfer never do, so a sale never makes a
- * gecko public: other members can read a public gecko's sold price. The
- * sold sheet has a passport step written but switched off for that
- * reason (OFFER_PASSPORT_AT_SALE in SellHandoverSheet.jsx).
+ * a gecko sold and sending a transfer never do. The sold sheet has a
+ * passport step written but switched off (OFFER_PASSPORT_AT_SALE in
+ * SellHandoverSheet.jsx says why, and what would switch it on). The sale
+ * price is not on the public row any more (src/lib/geckoSalePrices.js).
  *
  * surface says where it was made, for the passport and transfer funnel
  * ('record', Make a passport on the gecko record).

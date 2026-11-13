@@ -6,7 +6,7 @@ import {
   Egg,
   Clutch,
   ShedRecord,
-  FeedingRecord, GeckoEvent, VetRecord, OwnershipRecord, OtherReptile, ReptileEvent, Project, Task, FeedingGroup,
+  FeedingRecord, GeckoEvent, VetRecord, OwnershipRecord, OwnershipRecordPrice, OtherReptile, ReptileEvent, Project, Task, FeedingGroup,
 } from '@/entities/all';
 
 /**
@@ -269,11 +269,11 @@ export async function exportGeckosPDF(rosterGeckos, { title, filename, userName,
  * an empty array with an explanatory note instead of failing the whole
  * export. Returns { filename, counts, notes }.
  */
-export async function fetchAllEntityRecords(entity, filter = {}) {
+export async function fetchAllEntityRecords(entity, filter = {}, sort = 'id') {
   const rows = [];
   const pageSize = 500;
   for (let offset = 0; ; offset += pageSize) {
-    const page = await entity.filter(filter, 'id', pageSize, offset);
+    const page = await entity.filter(filter, sort, pageSize, offset);
     if (!Array.isArray(page)) throw new Error('Export returned an invalid page');
     rows.push(...page);
     if (page.length < pageSize) return rows;
@@ -297,6 +297,10 @@ export async function exportFullBackupJSON({ filename } = {}) {
     ['gecko_events', GeckoEvent],
     ['vet_records', VetRecord],
     ['ownership_records', OwnershipRecord],
+    // What you paid when you claimed a transfer. It is kept apart from the
+    // ownership record, which others can read on a public passport. The
+    // table has no created_by; its row rules return only your own.
+    ['ownership_record_prices', OwnershipRecordPrice, {}, 'record_id'],
     ['other_reptiles', OtherReptile],
     ['reptile_events', ReptileEvent],
     ['projects', Project],
@@ -307,9 +311,9 @@ export async function exportFullBackupJSON({ filename } = {}) {
   const data = {};
   const notes = [];
   await Promise.all(
-    sources.map(async ([key, entity]) => {
+    sources.map(async ([key, entity, filter, sort]) => {
       try {
-        data[key] = await fetchAllEntityRecords(entity, { created_by: me.email });
+        data[key] = await fetchAllEntityRecords(entity, filter ?? { created_by: me.email }, sort);
       } catch (err) {
         data[key] = [];
         notes.push(

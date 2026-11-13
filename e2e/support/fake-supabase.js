@@ -242,6 +242,35 @@ export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confir
     return profile;
   }
 
+  // Sale prices are kept apart from rows other members can read
+  // (supabase/migrations/20261113172624_private_sale_prices.sql). The
+  // database's triggers move a price written to geckos.sold_price or
+  // ownership_records.sale_price into its own table and leave the column
+  // null; a gecko's price goes when it is unarchived or changes owner. The
+  // fake does the same, so a test sees what production stores.
+  function keepSalePricesPrivate(name, row, before) {
+    const upsert = (tableName, key, id, price) => {
+      const list = table(tableName);
+      const existing = list.find((p) => p[key] === id);
+      if (existing) Object.assign(existing, { [key === 'gecko_id' ? 'sold_price' : 'sale_price']: Number(price), updated_date: nowIso() });
+      else list.push({ [key]: id, [key === 'gecko_id' ? 'sold_price' : 'sale_price']: Number(price), created_date: nowIso(), updated_date: nowIso() });
+    };
+    if (name === 'geckos') {
+      if (before) {
+        const unarchived = Boolean(before.archived) && !row.archived;
+        const newOwner = String(before.created_by || '').toLowerCase() !== String(row.created_by || '').toLowerCase();
+        if (unarchived || newOwner) tables.set('gecko_sale_prices', table('gecko_sale_prices').filter((p) => p.gecko_id !== row.id));
+      }
+      if (row.sold_price != null) {
+        upsert('gecko_sale_prices', 'gecko_id', row.id, row.sold_price);
+        row.sold_price = null;
+      }
+    } else if (name === 'ownership_records' && row.sale_price != null) {
+      upsert('ownership_record_prices', 'record_id', row.id, row.sale_price);
+      row.sale_price = null;
+    }
+  }
+
   const rpcHandlers = {
     // The atomic gecko save (GeckoForm, Quick Add, the first gecko flow).
     save_gecko_record: (args, { currentUser }) => {
@@ -467,10 +496,16 @@ export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confir
         const written = input.map((values) => {
           if (upsert) {
             const existing = rows.find((r) => conflict.every((c) => values[c] !== undefined && r[c] === values[c]));
-            if (existing) return Object.assign(existing, values);
+            if (existing) {
+              const before = { ...existing };
+              Object.assign(existing, values);
+              keepSalePricesPrivate(name, existing, before);
+              return existing;
+            }
           }
           const row = { id: uuid(), created_date: nowIso(), created_by: requestUser?.email, ...values };
           rows.push(row);
+          keepSalePricesPrivate(name, row, null);
           return row;
         });
         if (!returnRows) return route.fulfill({ status: 201, headers: { 'access-control-allow-origin': '*' }, body: '' });
@@ -479,7 +514,11 @@ export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confir
 
       if (method === 'PATCH') {
         const matched = applyFilters(rows, params);
-        for (const row of matched) Object.assign(row, body || {});
+        for (const row of matched) {
+          const before = { ...row };
+          Object.assign(row, body || {});
+          keepSalePricesPrivate(name, row, before);
+        }
         if (!returnRows) return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
         return json(wantsObject ? matched[0] ?? null : matched);
       }

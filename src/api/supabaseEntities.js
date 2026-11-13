@@ -215,6 +215,9 @@ export const TABLE_MAP = {
 
   // P1, Animal Passport + Ownership Transfer
   OwnershipRecord: 'ownership_records',
+  // The price on an ownership record, readable by that record's member only
+  // (20261113172624_private_sale_prices.sql). Read by the data export.
+  OwnershipRecordPrice: 'ownership_record_prices',
   ShedRecord: 'shed_records',
   VetRecord: 'vet_records',
   TransferRequest: 'transfer_requests',
@@ -562,7 +565,29 @@ export const ForumComment = createEntityClient('ForumComment');
 export const ForumLike = createEntityClient('ForumLike');
 export const ForumPost = createEntityClient('ForumPost');
 export const FutureBreedingPlan = createEntityClient('FutureBreedingPlan');
-export const Gecko = createEntityClient('Gecko');
+// What a gecko sold for lives in gecko_sale_prices, which only the people
+// who keep the gecko can read (src/lib/geckoSalePrices.js says why). Every
+// Gecko read and write goes through that module, which puts the price back
+// on the gecko, so the rest of the app keeps using gecko.sold_price. It
+// loads with the first gecko read, not with the app (public pages are
+// size-budgeted). If it cannot load, geckos are read without prices rather
+// than not at all.
+const geckoBase = createEntityClient('Gecko');
+const geckoCall = (method) => async (...args) => {
+  const prices = await import('@/lib/geckoSalePrices').catch(() => null);
+  if (prices) return prices.geckoCall(method, geckoBase, args, { getSupabase, isGuestMode, withAuthRetry });
+  return method === 'merge' ? args[0] : geckoBase[method](...args);
+};
+export const Gecko = {
+  filter: geckoCall('filter'),
+  list: geckoCall('list'),
+  get: geckoCall('get'),
+  create: geckoCall('create'),
+  update: geckoCall('update'),
+  delete: geckoCall('delete'),
+};
+/** Puts each gecko's sale price on rows read without the Gecko entity. */
+export const mergeGeckoSalePrices = geckoCall('merge');
 export const GeckoEvent = createEntityClient('GeckoEvent');
 export const GeckoImage = createEntityClient('GeckoImage');
 export const GeckoLike = createEntityClient('GeckoLike');
@@ -597,6 +622,7 @@ export const UserEntity = createEntityClient('User');
 
 // P1, Animal Passport + Ownership Transfer
 export const OwnershipRecord = createEntityClient('OwnershipRecord');
+export const OwnershipRecordPrice = createEntityClient('OwnershipRecordPrice');
 export const ShedRecord = createEntityClient('ShedRecord');
 export const VetRecord = createEntityClient('VetRecord');
 export const TransferRequest = createEntityClient('TransferRequest');

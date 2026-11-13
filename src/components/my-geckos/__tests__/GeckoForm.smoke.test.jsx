@@ -25,6 +25,7 @@ vi.mock('@/entities/all', () => ({
   FeedingGroup: { list: async () => [] },
   Collection: { filter: async () => [] },
   CollectionMember: { filter: async () => [] },
+  mergeGeckoSalePrices: async (rows) => rows,
 }));
 vi.mock('@/integrations/Core', () => ({ UploadFile: vi.fn() }));
 vi.mock('@/components/notifications/NotificationService', () => ({

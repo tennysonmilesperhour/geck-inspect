@@ -4,7 +4,7 @@ import { flushSync } from 'react-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Gecko, FeedingGroup, Collection, CollectionMember } from '@/entities/all';
+import { Gecko, FeedingGroup, Collection, CollectionMember, mergeGeckoSalePrices } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
 import { notifyFollowersNewGecko, checkAndNotifyLevelUp } from '@/components/notifications/NotificationService';
 import { useToast } from '@/components/ui/use-toast';
@@ -693,6 +693,14 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 p_record_date: todayLocalISO(),
             });
             if (saveError) throw saveError;
+            // The saved row reads no sale price (it is kept apart, see
+            // src/lib/geckoSalePrices.js); put it back before handing on.
+            // The save has happened either way, so this never fails it.
+            try {
+                await mergeGeckoSalePrices(savedGecko);
+            } catch {
+                // Shown without its price until the next read.
+            }
             // Saved, so the kept draft has done its job.
             draftDoneRef.current = true;
             if (keepsDraft) clearGeckoFormDraft(currentUser);

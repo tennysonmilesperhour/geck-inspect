@@ -7,17 +7,17 @@ import { makePassport, passportPublicNote } from '@/lib/makePassport';
 import SoldTransferStep from './SoldTransferStep';
 
 // Whether the sheet offers "Make its passport" between the sale and the
-// hand-over. Off, and it must stay off for now. A passport makes the
-// gecko's record public, and any signed-in member can read a public
-// gecko's sold price and its owner's email (the geckos read rule shows
-// every row with is_public, and those two columns are not held back). A
-// sheet that saves a sale price and then offers to make the gecko public
-// would lead sellers into showing that price to every member, and a
-// warning line is not enough for that (the same decision as the note in
-// docs/planning/instrumentation-2026-10.md: a sale must not do that on
-// the seller's behalf). Switch it on only after the database hides sold
-// prices and owner emails from other members. While it is off the step is
-// not drawn, not counted, and makePassport cannot be reached from here.
+// hand-over. Off. A passport makes the gecko's record public, and any
+// signed-in member can read a public gecko's row. It was switched off on
+// 13 November 2026 because that row carried the sale price. The sale
+// price has since been moved out of the row, where only the gecko's
+// keepers can read it (src/lib/geckoSalePrices.js), so that reason is
+// gone. What a public row still shows other members is the owner's email
+// address (created_by). Switching this on is Tennyson's decision
+// (docs/OWNER-STEPS.md, E15): either now, accepting what every public
+// gecko already shows, or once the email is held back too. While it is
+// off the step is not drawn, not counted, and makePassport cannot be
+// reached from here.
 export const OFFER_PASSPORT_AT_SALE = false;
 
 const STEPS = [

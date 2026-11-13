@@ -184,7 +184,11 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
     await expect(step.getByText('A new link replaces it, and the one you sent stops working.', { exact: false })).toBeVisible();
     await expect(step.getByRole('button', { name: 'Keep the link I sent' })).toBeVisible();
     await expect(step.getByText(/passport|public/i)).toHaveCount(0);
-    expect(mango()).toMatchObject({ archived: true, archive_reason: 'sold', status: 'Sold', sold_price: 300 });
+    expect(mango()).toMatchObject({ archived: true, archive_reason: 'sold', status: 'Sold' });
+    // What Mango sold for is kept apart from its row, which every signed-in
+    // member can read once a gecko is public; the column itself reads null.
+    expect(mango().sold_price ?? null).toBeNull();
+    expect(fake.table('gecko_sale_prices')).toEqual([expect.objectContaining({ gecko_id: mango().id, sold_price: 300 })]);
     // Showing the step changes nothing: the emailed link is still pending.
     expect(fake.table('transfer_requests').map((t) => t.status)).toEqual(['pending']);
     await step.getByRole('button', { name: 'Send a new link' }).click();

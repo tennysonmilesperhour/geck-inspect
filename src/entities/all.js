@@ -124,6 +124,10 @@ export const WeightRecord = sb.WeightRecord;
 
 // P1, Animal Passport + Ownership Transfer
 export const OwnershipRecord = sb.OwnershipRecord;
+export const OwnershipRecordPrice = sb.OwnershipRecordPrice;
+// Puts each gecko's sale price on rows read without the Gecko entity
+// (src/lib/geckoSalePrices.js).
+export const mergeGeckoSalePrices = sb.mergeGeckoSalePrices;
 export const ShedRecord = sb.ShedRecord;
 export const VetRecord = sb.VetRecord;
 export const TransferRequest = sb.TransferRequest;
