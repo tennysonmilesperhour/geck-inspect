@@ -326,10 +326,18 @@ function QuickLogScreen() {
 
   // Per gecko: { status: 'saving' | 'saved' | 'queued' | 'error' | 'refused',
   // label, kind, accepted, groupId, result, queuedId, requestId, prevWeight,
-  // mirrored, batch, synced }. logsRef holds the same without waiting for a
-  // render, so a second tap (on Mark all, or on a gecko's own button while
-  // Mark all runs) sees a save already under way and does not save twice,
-  // and an Undo tapped later from a toast sees the page as it is then.
+  // mirrored, batch, synced, waiting }. logsRef holds the same without
+  // waiting for a render, so a second tap (on Mark all, or on a gecko's own
+  // button while Mark all runs) sees a save already under way and does not
+  // save twice, and an Undo tapped later from a toast sees the page as it
+  // is then.
+  //
+  // The screen changes first (experience review L2): a 'saving' row
+  // already shows its log ("Fed", "18.5 g") the moment it is tapped, with
+  // no ", saved" and no Undo until the server has answered. A save that
+  // fails puts the row back as it was ('error': its buttons, or its weight
+  // box still filled in) and says so. `waiting` marks a row of a "Mark
+  // all" or "Save all" that shows its log but has not had its turn yet.
   const [logs, setLogs] = useState({});
   const logsRef = useRef({});
   const setLog = (id, value) => {
@@ -384,23 +392,33 @@ function QuickLogScreen() {
     description: 'Nothing is saved here. Create a free account to log your own geckos.',
   });
 
+  // What a tap is about to log, and the words its row shows for it.
+  const draftLog = ({ accepted = true, grams = null } = {}) => {
+    const date = logDate > today ? today : logDate;
+    const kind = type === 'weight' ? 'weight' : type === 'shed' ? 'shed' : 'fed';
+    const what = kind === 'weight' ? `${grams} g` : kind === 'shed' ? 'Shed logged' : accepted ? 'Fed' : 'Refused';
+    return { date, kind, label: date === today ? what : `${what} for ${shortDate(date)}` };
+  };
+
   // Saves one log. Resolves to { ok, status, message }: status is 'saved',
   // 'queued' (kept on the phone), 'skipped' (already logged here),
   // 'failed', 'auth' (sign-in expired) or 'demo'. `batch` marks the logs
   // of one "Mark all" or "Save all", for its Undo; `quiet` leaves the
   // failure message to the batch's own summary.
   const save = async (gecko, { accepted = true, grams = null, batch = null, quiet = false } = {}) => {
+    // The demo never shows a log as made: nothing is saved there.
     if (guest) {
       demoNotice();
       return { ok: false, status: 'demo' };
     }
     // Already saving, saved or kept for this gecko: never a second record.
+    // A row its own batch marked ahead of its turn is the one exception.
     const prior = logsRef.current[gecko.id];
-    if (['saving', 'saved', 'queued'].includes(prior?.status)) return { ok: true, status: 'skipped' };
+    const itsTurn = Boolean(batch) && prior?.waiting === true && prior.batch === batch;
+    if (!itsTurn && ['saving', 'saved', 'queued'].includes(prior?.status)) return { ok: true, status: 'skipped' };
     // Logging again after a refusal: the old refusal has been answered.
     if (prior?.status === 'refused' && prior.queuedId) dismissRefusedLogs([prior.queuedId]);
-    const date = logDate > today ? today : logDate;
-    const kind = type === 'weight' ? 'weight' : type === 'shed' ? 'shed' : 'fed';
+    const { date, kind, label } = draftLog({ accepted, grams });
     const prevWeight = gecko.weight_grams ?? null;
     // The gecko's shown weight follows today's weigh-in. A weigh-in for an
     // earlier day fills it only when the gecko has no weight yet (the same
@@ -411,9 +429,9 @@ function QuickLogScreen() {
       : kind === 'shed'
         ? { kind, geckoId: gecko.id, date, quality: 'unknown' }
         : { kind, geckoId: gecko.id, feedingGroupId: gecko.feeding_group_id || null, accepted, date };
-    const what = kind === 'weight' ? `${grams} g` : kind === 'shed' ? 'Shed logged' : accepted ? 'Fed' : 'Refused';
-    const label = date === today ? what : `${what} for ${shortDate(date)}`;
-    setLog(gecko.id, { status: 'saving' });
+    // The row shows the log now; the server's answer confirms it below, or
+    // the catch puts the row back.
+    setLog(gecko.id, { status: 'saving', label, kind, batch });
     try {
       const { result, queued, data: sent } = await saveFieldLog(data);
       setLog(gecko.id, {
@@ -631,14 +649,23 @@ function QuickLogScreen() {
   // spinner and ignore taps, and save() skips any gecko already saving or
   // saved. A gecko that fails does not stop the rest (an expired sign-in
   // does); a second tap then sends only what is not saved yet.
+  //
+  // `rows` is what the batch is about to send, as [gecko, options]. Each
+  // of those rows shows its log at once, before its turn comes, so the
+  // whole rack answers the tap together and not one row at a time.
   const [batchBusy, setBatchBusy] = useState(false);
   const batchRef = useRef(false);
-  const runBatch = async (work) => {
+  const runBatch = async (work, rows = []) => {
     if (batchRef.current) return;
     batchRef.current = true;
     setBatchBusy(true);
     batchCount += 1;
     const batch = `b${batchCount}`;
+    for (const [gecko, options] of rows) {
+      if (['saving', 'saved', 'queued', 'refused'].includes(logsRef.current[gecko.id]?.status)) continue;
+      const { kind, label } = draftLog(options);
+      setLog(gecko.id, { status: 'saving', label, kind, batch, waiting: true });
+    }
     const tally = { batch, failed: 0, message: null };
     const sendOne = async (gecko, options) => {
       const outcome = await save(gecko, { ...options, batch, quiet: true });
@@ -651,6 +678,11 @@ function QuickLogScreen() {
     try {
       await work(sendOne);
     } finally {
+      // A batch stops when the sign-in has expired. The rows it never
+      // reached were not sent, so they get their buttons back.
+      for (const [id, entry] of Object.entries(logsRef.current)) {
+        if (entry?.waiting && entry.batch === batch) setLog(id, undefined);
+      }
       batchRef.current = false;
       setBatchBusy(false);
     }
@@ -666,7 +698,7 @@ function QuickLogScreen() {
       for (const gecko of list) {
         if (!(await sendOne(gecko))) break;
       }
-    });
+    }, list.map((gecko) => [gecko, {}]));
     if (tally) announceBatch({ ...tally, retry: 'Tap Mark all again to send only those.' });
   };
 
@@ -735,7 +767,7 @@ function QuickLogScreen() {
       for (const [gecko, grams] of send) {
         if (!(await sendOne(gecko, { grams }))) break;
       }
-    });
+    }, send.map(([gecko, grams]) => [gecko, { grams }]));
     if (!tally) return;
     announceBatch({ ...tally, retry: 'They are still filled in. Tap Save all again to send only those.' });
     if (held > 0) {
@@ -807,14 +839,15 @@ function QuickLogScreen() {
   const yesterday = addDays(today, -1);
   // The weight rows that still have a box, and how many boxes are filled.
   const openWeightRows = type === 'weight'
-    ? allGeckos.filter((g) => !isDone(logs[g.id]) && logs[g.id]?.status !== 'refused')
+    ? allGeckos.filter((g) => !isDone(logs[g.id]) && !['saving', 'refused'].includes(logs[g.id]?.status))
     : [];
   const filledWeights = openWeightRows.filter((g) => String(weights[g.id] ?? '').trim()).length;
 
   const card = (gecko) => {
     const entry = logs[gecko.id];
-    const done = isDone(entry);
-    const saving = entry?.status === 'saving';
+    // On its way to the server: the row already reads as logged.
+    const sending = entry?.status === 'saving';
+    const done = isDone(entry) || sending;
     const notSaved = entry?.status === 'refused';
     const isWeight = type === 'weight';
     const last = isWeight ? lastWeightOf(gecko) : null;
@@ -857,7 +890,6 @@ function QuickLogScreen() {
                 inputMode="decimal"
                 autoComplete="off"
                 placeholder="0.0"
-                disabled={saving}
                 aria-invalid={invalid[gecko.id] ? 'true' : undefined}
                 value={weights[gecko.id] ?? ''}
                 onChange={(e) => {
@@ -868,9 +900,7 @@ function QuickLogScreen() {
                 }}
                 className={`min-h-12 pr-8 text-right text-lg bg-slate-950 ${invalid[gecko.id] ? 'border-red-500' : 'border-slate-600'}`}
               />
-              <span aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'g'}
-              </span>
+              <span aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">g</span>
             </div>
           </form>
         ) : (
@@ -891,10 +921,10 @@ function QuickLogScreen() {
             <p className="mt-1 text-sm text-red-100/90">{entry.reason}</p>
           </div>
         ) : done ? (
-          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-emerald-950/50 border border-emerald-700/60 px-3 py-2">
+          <div aria-busy={sending || undefined} className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-emerald-950/50 border border-emerald-700/60 px-3 py-2">
             <span className="flex items-center gap-2 text-emerald-200 text-base">
               <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-              {entry.status === 'queued' ? `${entry.label}, kept on this phone` : `${entry.label}, saved`}
+              {entry.status === 'queued' ? `${entry.label}, kept on this phone` : sending ? entry.label : `${entry.label}, saved`}
             </span>
             {canUndo(entry) && (
               <Button type="button" variant="ghost" disabled={batchBusy || undoing} onClick={() => undo(gecko)} className="min-h-11 text-slate-200">
@@ -910,7 +940,6 @@ function QuickLogScreen() {
                 <div className="mt-2 flex gap-2">
                   <Button
                     type="button"
-                    disabled={saving}
                     onClick={() => saveWeight(gecko, { confirmed: true })}
                     className="min-h-11 flex-1 font-semibold bg-emerald-600 hover:bg-emerald-700"
                   >
@@ -937,26 +966,23 @@ function QuickLogScreen() {
         ) : type === 'shed' ? (
           <Button
             type="button"
-            disabled={saving}
             onClick={() => save(gecko)}
             className="mt-3 w-full min-h-12 text-lg font-semibold bg-emerald-600 hover:bg-emerald-700"
           >
-            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Shed today'}
+            Shed today
           </Button>
         ) : (
           <div className="mt-3 flex gap-2">
             <Button
               type="button"
-              disabled={saving}
               onClick={() => save(gecko, { accepted: true })}
               className="flex-1 min-h-12 text-lg font-semibold bg-emerald-600 hover:bg-emerald-700"
             >
-              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Fed'}
+              Fed
             </Button>
             <Button
               type="button"
               variant="outline"
-              disabled={saving}
               onClick={() => save(gecko, { accepted: false })}
               className="min-h-12 px-4 text-base border-slate-600 text-slate-200"
             >

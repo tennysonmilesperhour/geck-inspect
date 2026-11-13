@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FeedingGroup, Gecko } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { format, addDays, differenceInDays } from 'date-fns';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { markGroupFed } from '@/lib/husbandryLog';
 import { toast } from '@/components/ui/use-toast';
+import { isGuestMode } from '@/lib/guestMode';
 
 const GROUP_COLORS = ['#f97316', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#eab308', '#ef4444', '#06b6d4'];
 const GROUP_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -126,11 +127,38 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
         onUpdate();
     };
 
-    // Inline reminder toggle from the card. Optimistic call; relies on
-    // onUpdate() to re-fetch and reconcile.
+    // Inline reminder toggle from the card. The bell changes the moment it
+    // is tapped (experience review L2): `reminderWish` holds what was
+    // tapped, by group id, until the page's own list says the same. A save
+    // that fails puts the bell back and says so. Legacy rows without the
+    // column count as on.
+    const [reminderWish, setReminderWish] = useState({});
+    const remindersOnFor = (group) => reminderWish[group.id] ?? (group.feeding_reminder_enabled !== false);
+    const dropWish = (groupId) => setReminderWish((prev) => (
+        groupId in prev ? Object.fromEntries(Object.entries(prev).filter(([id]) => id !== String(groupId))) : prev
+    ));
+    // Once the reloaded list agrees with a tap, the list is the one shown
+    // (so a later change made in the edit form is not hidden by an old tap).
+    useEffect(() => {
+        const settled = feedingGroups.filter((g) => g.id in reminderWish && reminderWish[g.id] === (g.feeding_reminder_enabled !== false));
+        if (settled.length === 0) return;
+        const gone = new Set(settled.map((g) => String(g.id)));
+        setReminderWish((prev) => Object.fromEntries(Object.entries(prev).filter(([id]) => !gone.has(id))));
+    }, [feedingGroups, reminderWish]);
     const handleToggleReminder = async (group) => {
-        const next = !(group.feeding_reminder_enabled !== false);
-        await FeedingGroup.update(group.id, { feeding_reminder_enabled: next });
+        const next = !remindersOnFor(group);
+        // Not in the demo: a guest's save is refused, so the bell stays put.
+        if (!isGuestMode()) setReminderWish((prev) => ({ ...prev, [group.id]: next }));
+        try {
+            await FeedingGroup.update(group.id, { feeding_reminder_enabled: next });
+        } catch (error) {
+            dropWish(group.id);
+            // A guest's save is refused with its own "view-only" notice.
+            if (error?.isGuestBlock) return;
+            console.error('Reminder change failed:', error);
+            toast({ title: 'Could not change the reminder', description: error.message || 'Please try again.', variant: 'destructive' });
+            return;
+        }
         onUpdate();
     };
 
@@ -175,8 +203,7 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                         const nextFeed = getNextFeedDate(group);
                         const assignedGeckos = geckos.filter(g => g.feeding_group_id === group.id);
                         const fedToday = wasFedToday(group);
-                        // Default reminders to ON for legacy rows that pre-date the column.
-                        const remindersOn = group.feeding_reminder_enabled !== false;
+                        const remindersOn = remindersOnFor(group);
                         // If you fed today the group is not overdue and not
                         // "due soon", regardless of interval math.
                         const isOverdue = !fedToday && daysUntil !== null && daysUntil < 0;

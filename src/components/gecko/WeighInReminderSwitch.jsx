@@ -11,7 +11,10 @@ import {
   loadCareReminderSettings,
   setGeckoFeedingReminder,
   setGeckoWeighInReminder,
+  withGeckoFeeding,
+  withGeckoWeighIn,
 } from '@/lib/careReminders';
+import { isGuestMode } from '@/lib/guestMode';
 import { addDaysISO, friendlyDay } from '@/lib/firstGeckoFlow';
 import { weighInCadenceLabel } from '@/lib/lifeStage';
 import { todayLocalISO } from '@/lib/dateUtils';
@@ -61,9 +64,15 @@ export default function WeighInReminderSwitch({ gecko, email, lastWeighDate = nu
   const feed = effectiveGeckoFeeding(state.extra, gecko, { defaultsFrom });
   const busy = state.status !== 'ready';
 
-  const update = async (write) => {
+  // The switch moves the moment it is tapped (experience review L2):
+  // `wanted` is the settings as they will be once saved, worked out here
+  // with the same function the save uses. If the save fails the switch
+  // goes back and a toast says so. The controls stay locked while the save
+  // runs, so a second tap cannot race the first. The demo keeps the old
+  // order (save, then show): nothing a guest taps is kept.
+  const update = async (wanted, write) => {
     const before = state;
-    setState({ ...state, status: 'saving' });
+    setState({ ...state, status: 'saving', extra: isGuestMode() ? state.extra : wanted });
     try {
       const extra = await write();
       setState({ status: 'ready', extra: extra || before.extra, defaultsFrom: before.defaultsFrom });
@@ -73,13 +82,19 @@ export default function WeighInReminderSwitch({ gecko, email, lastWeighDate = nu
     }
   };
 
-  const changeWeigh = (on, choice = weigh.fixed ? String(weigh.everyDays) : 'auto') => update(() => setGeckoWeighInReminder(email, gecko.id, {
-    on,
-    everyDays: choice === 'auto' ? weigh.everyDays : Number(choice),
-    fixed: choice !== 'auto',
-    since: lastWeighDate || todayLocalISO(),
-  }));
-  const changeFeed = (on, everyDays = feed.everyDays) => update(() => setGeckoFeedingReminder(email, gecko.id, { on, everyDays }));
+  const changeWeigh = (on, choice = weigh.fixed ? String(weigh.everyDays) : 'auto') => {
+    const options = {
+      on,
+      everyDays: choice === 'auto' ? weigh.everyDays : Number(choice),
+      fixed: choice !== 'auto',
+      since: lastWeighDate || todayLocalISO(),
+    };
+    return update(withGeckoWeighIn(state.extra, gecko.id, options), () => setGeckoWeighInReminder(email, gecko.id, options));
+  };
+  const changeFeed = (on, everyDays = feed.everyDays) => update(
+    withGeckoFeeding(state.extra, gecko.id, { on, everyDays }),
+    () => setGeckoFeedingReminder(email, gecko.id, { on, everyDays }),
+  );
 
   const due = lastWeighDate ? addDaysISO(lastWeighDate, weigh.everyDays) : todayLocalISO();
   const cadence = weigh.fixed ? `every ${weigh.everyDays} days` : weighInCadenceLabel(weigh.everyDays);

@@ -48,6 +48,7 @@ import {
 } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { todayLocalISO, parseLocalDate, daysSinceLocal } from '@/lib/dateUtils';
+import { isGuestMode } from '@/lib/guestMode';
 import { generateCalendarEvent } from '@/functions/generateCalendarEvent';
 import GeneticsModal from './GeneticsModal';
 import PlanDetails from './PlanDetails';
@@ -88,13 +89,36 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
     const [isAddingEggs, setIsAddingEggs] = useState(false);
     const [eggCheckDay, setEggCheckDay] = useState(plan.egg_check_day || 15);
 
+    // The screen changes first (experience review L2). A quick add puts
+    // its eggs on this card the moment it is tapped: stand-in rows while
+    // the save runs, then the saved rows until the page's own list
+    // (planEggs) has them. A save that fails takes them off again.
+    // `addedClutch` is the clutch count to show until the plan itself
+    // reloads with it. The numbers on the card read these; the egg list in
+    // the opened plan (PlanDetails) shows saved eggs only, since its rows
+    // can be edited.
+    const [addedEggs, setAddedEggs] = useState([]);
+    const [addedClutch, setAddedClutch] = useState(null);
+    // Once the page's list holds an egg, the page's copy is the one shown.
+    useEffect(() => {
+        if (addedEggs.length === 0) return;
+        const known = new Set(planEggs.map((egg) => egg.id));
+        if (addedEggs.some((egg) => known.has(egg.id))) setAddedEggs((eggs) => eggs.filter((egg) => !known.has(egg.id)));
+    }, [planEggs, addedEggs]);
+    useEffect(() => {
+        if (addedClutch != null && (plan.egg_check_count || 0) >= addedClutch) setAddedClutch(null);
+    }, [plan.egg_check_count, addedClutch]);
+    const extraEggs = addedEggs.filter((egg) => !planEggs.some((e) => e.id === egg.id));
+    const shownEggs = extraEggs.length > 0 ? [...planEggs, ...extraEggs] : planEggs;
+    const clutchCount = Math.max(plan.egg_check_count || 0, addedClutch ?? 0);
+
     // Derive egg data from hoisted prop, no individual fetches
-    const sortedEggs = [...planEggs].sort((a, b) => new Date(b.lay_date) - new Date(a.lay_date));
+    const sortedEggs = [...shownEggs].sort((a, b) => new Date(b.lay_date) - new Date(a.lay_date));
     const lastEggDate = sortedEggs.length > 0 ? sortedEggs[0].lay_date : null;
-    const eggsLaid = planEggs.filter(e => !e.archived).length;
-    const incubating = planEggs.filter(e => e.status === 'Incubating' && !e.archived).length;
-    const hatched = planEggs.filter(e => e.status === 'Hatched').length;
-    const failed = planEggs.filter(e => ['Slug', 'Infertile', 'Stillbirth'].includes(e.status)).length;
+    const eggsLaid = shownEggs.filter(e => !e.archived).length;
+    const incubating = shownEggs.filter(e => e.status === 'Incubating' && !e.archived).length;
+    const hatched = shownEggs.filter(e => e.status === 'Hatched').length;
+    const failed = shownEggs.filter(e => ['Slug', 'Infertile', 'Stillbirth'].includes(e.status)).length;
     const eggCounts = { incubating, hatched, failed, eggsLaid };
 
     // Calculate days since last egg
@@ -122,9 +146,27 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
         // The eggs this tap made, so Undo (or a failure part way through)
         // removes exactly these and nothing else.
         const created = [];
+        const newLayDate = todayLocalISO();
+        // The count the card shows, which is ahead of the plan's own for a
+        // moment after an earlier quick add, so two adds in a row count two.
+        const countBefore = clutchCount;
+        // The card shows the clutch now and the save follows. Not in the
+        // demo: a guest's save is refused, so the card never shows a guest
+        // eggs that were not kept.
+        const clutch = `adding-${Date.now()}`;
+        const showNow = !isGuestMode();
+        const takeOffCard = () => {
+            setAddedEggs((eggs) => eggs.filter((egg) => egg.clutch !== clutch));
+            setAddedClutch(null);
+        };
+        if (showNow) {
+            const standIns = Array.from({ length: count }, (_, i) => ({
+                id: `${clutch}-${i}`, clutch, breeding_plan_id: plan.id, lay_date: newLayDate, status: 'Incubating',
+            }));
+            setAddedEggs((eggs) => [...eggs, ...standIns]);
+            setAddedClutch(countBefore + 1);
+        }
         try {
-            const newLayDate = todayLocalISO();
-
             // Load the user's incubation profile so the expected hatch date
             // represents the middle of that temperature range's typical window.
             const currentUser = await User.me();
@@ -144,8 +186,14 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
             }
 
             // Update egg check count
-            const countBefore = plan.egg_check_count || 0;
             await BreedingPlan.update(plan.id, { egg_check_count: countBefore + 1 });
+            // The saved eggs take the stand-ins' place on the card.
+            if (showNow) {
+                setAddedEggs((eggs) => [
+                    ...eggs.filter((egg) => egg.clutch !== clutch),
+                    ...created.map((egg) => ({ ...egg, clutch })),
+                ]);
+            }
 
             // A one-tap save is easy to hit by mistake while holding a
             // gecko, so it can be taken back for a few seconds.
@@ -154,6 +202,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                 description: `Laid today, expected to hatch around ${format(parseLocalDate(expectedHatch), 'MMM d')}. Open the plan to change the dates.`,
                 undone: count === 1 ? 'Egg removed' : `${count} eggs removed`,
                 undo: async () => {
+                    takeOffCard();
                     try {
                         for (const egg of created) await Egg.delete(egg.id);
                         // Read the count again: another clutch may have been
@@ -168,6 +217,8 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
             });
             onPlanUpdate();
         } catch (error) {
+            // Not saved, so the card goes back to what the server has.
+            takeOffCard();
             // A guest's save is refused with its own "view-only" notice.
             if (error?.isGuestBlock) return;
             console.error("Failed to add eggs:", error);
@@ -336,7 +387,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 <button
                                     type="button"
                                     onClick={(e) => { e.stopPropagation(); setIsAddEggsOpen(true); }}
-                                    className="inline-flex items-center gap-1 rounded-md border border-white/80 bg-transparent px-2 sm:px-2.5 py-1 text-xs font-semibold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] shadow-[0_0_0_1px_rgba(0,0,0,0.25)] transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                    className="pressable inline-flex items-center gap-1 rounded-md border border-white/80 bg-transparent px-2 sm:px-2.5 py-1 text-xs font-semibold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] shadow-[0_0_0_1px_rgba(0,0,0,0.25)] hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                     title="Add eggs with a lay date and grade"
                                 >
                                     <CalendarIcon size={14} className="drop-shadow" /> Dated clutch
@@ -350,7 +401,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(n); }}
                                         disabled={isAddingEggs}
-                                        className="inline-flex items-center gap-1 rounded-md border border-white/80 bg-transparent px-2 sm:px-2.5 py-1 text-xs font-semibold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] shadow-[0_0_0_1px_rgba(0,0,0,0.25)] transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-60"
+                                        className="pressable inline-flex items-center gap-1 rounded-md border border-white/80 bg-transparent px-2 sm:px-2.5 py-1 text-xs font-semibold text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.8)] shadow-[0_0_0_1px_rgba(0,0,0,0.25)] hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-60"
                                         aria-label={`Add ${n} egg${n > 1 ? 's' : ''}`}
                                     >
                                         <PlusCircle size={14} className="drop-shadow" /> {n} Egg{n > 1 ? 's' : ''}
@@ -384,7 +435,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 <button
                                     type="button"
                                     onClick={handleOpenEggCheckModal}
-                                    className="group flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-left transition-colors hover:bg-emerald-500/15 hover:border-emerald-400/50"
+                                    className="pressable group flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-left hover:bg-emerald-500/15 hover:border-emerald-400/50"
                                 >
                                     <CalendarIcon className="w-4 h-4 text-emerald-300 flex-shrink-0" />
                                     <div className="flex-1 min-w-0">
@@ -392,7 +443,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                         <div className="text-sm font-semibold text-emerald-50">
                                             Day {plan.egg_check_day}
                                             <span className="ml-2 text-xs font-normal text-emerald-200/70">
-                                                {plan.egg_check_count || 0} clutch{(plan.egg_check_count || 0) !== 1 ? 'es' : ''} laid
+                                                {clutchCount} clutch{clutchCount !== 1 ? 'es' : ''} laid
                                             </span>
                                         </div>
                                     </div>

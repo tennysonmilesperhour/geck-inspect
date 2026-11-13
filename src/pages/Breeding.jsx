@@ -28,6 +28,7 @@ import Hatchery from '../components/breeding/Hatchery';
 import BreedingValueStats from '../components/breeding/BreedingValueStats';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { BREEDING_TABS, BREEDING_TAB_LABELS, resolveBreedingTab } from '@/components/breeding/breedingTabs';
+import { crossFadeState } from '@/lib/crossFade';
 import {
   Dialog,
   DialogContent,
@@ -660,13 +661,13 @@ export default function BreedingPage() {
                 )}
 
                 {isLoading ? TAB_LOADING : (
-                    <Tabs value={activeTab} onValueChange={(value) => {
+                    <Tabs value={activeTab} onValueChange={(value) => crossFadeState(() => {
                         setActiveTab(value);
                         setExpandedPlanIds(new Set());
                         setExpandAllActive(false);
                         setExpandAllArchive(false);
                         setRevealPlanId(null);
-                    }} className="w-full">
+                    })} className="w-full">
                         <TabsList ref={tabListRef}>
                             {BREEDING_TABS.map(({ id, label }) => {
                                 const Icon = TAB_ICONS[id];

@@ -157,8 +157,14 @@ export default function FirstGeckoFlow({ open, gecko: savedGecko, user, allGecko
 
   const [savingFeeding, setSavingFeeding] = useState(false);
   const feedingOn = Boolean(gecko?.feeding_group_id) && group?.feeding_reminder_enabled !== false;
+  // What was just tapped, while its save runs. The switch shows it at
+  // once, like the weigh-in switch above (experience review L2); when the
+  // save ends the switch reads the saved gecko and group again, which is
+  // the same on success and the old position on failure.
+  const [feedingWish, setFeedingWish] = useState(null);
   const toggleFeeding = async (on) => {
     setSavingFeeding(true);
+    setFeedingWish(on);
     try {
       if (on) {
         let target = group;
@@ -200,6 +206,7 @@ export default function FirstGeckoFlow({ open, gecko: savedGecko, user, allGecko
     } catch (err) {
       toast({ title: 'Could not change the reminder', description: err.message, variant: 'destructive' });
     }
+    setFeedingWish(null);
     setSavingFeeding(false);
   };
 
@@ -363,7 +370,7 @@ export default function FirstGeckoFlow({ open, gecko: savedGecko, user, allGecko
                   detail={feedingAccountOff
                     ? 'Feeding alerts are off for your account (Settings, Notifications).'
                     : 'One message on feeding days for all your geckos, never one per gecko.'}
-                  checked={feedingOn}
+                  checked={feedingWish ?? feedingOn}
                   disabled={savingFeeding}
                   onChange={toggleFeeding}
                 />

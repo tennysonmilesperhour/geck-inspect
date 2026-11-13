@@ -298,15 +298,131 @@ describe('no double saves', () => {
     await act(async () => tree.unmount());
   });
 
-  it('a gecko\'s own Fed tapped while Mark all runs is not saved a second time', async () => {
+  it('while Mark all runs every row already shows its log, so no gecko has a second Fed to tap', async () => {
     const release = holdSaves();
     const tree = await open('/log?type=feeding&gecko=g1,g2');
     await act(async () => { buttons(tree, 'Mark all 2 fed')[0].props.onClick(); });
-    // g1 is saving; tap g2's own Fed now.
-    const fed = buttons(tree, 'Fed');
-    await act(async () => { fed[fed.length - 1].props.onClick(); });
+    // g1 is being sent and g2 waits its turn; neither row offers Fed again.
+    expect(buttons(tree, 'Fed')).toHaveLength(0);
     await release();
     expect(savedIds().sort()).toEqual(['g1', 'g2']);
+    await act(async () => tree.unmount());
+  });
+});
+
+// Experience review L2: the row answers the tap before the server does,
+// and goes back to how it was if the save fails.
+describe('the screen changes first', () => {
+  // Saves that wait until the test lets them through, or fails them.
+  const holdSaves = () => {
+    const holds = [];
+    mocks.save.mockImplementation((data) => new Promise((resolve, reject) => {
+      holds.push({
+        ok: () => resolve({ result: { records: [{ id: `r-${data.geckoId}` }], advanced: [] }, queued: null, data }),
+        fail: () => reject(new TypeError('Failed to fetch')),
+      });
+    }));
+    const next = async (how) => {
+      await act(async () => { holds.shift()[how](); });
+      await settle();
+    };
+    return { ok: () => next('ok'), fail: () => next('fail') };
+  };
+
+  it('a feeding shows on its row at once, and gains ", saved" and Undo when the server answers', async () => {
+    const server = holdSaves();
+    const tree = await open('/log?type=feeding&gecko=g1,g2');
+    await act(async () => { buttons(tree, 'Fed')[0].props.onClick(); });
+    // The server has not answered: the row reads Fed, the other is untouched.
+    expect(buttons(tree, 'Fed')).toHaveLength(1);
+    expect(tree.root.findAll((n) => n.props['aria-busy'] === true && textOf(n).trim() === 'Fed')).toHaveLength(1);
+    expect(textOf(tree.root)).not.toContain('Fed, saved');
+    expect(undoButtons(tree)).toHaveLength(0);
+    await server.ok();
+    expect(textOf(tree.root)).toContain('Fed, saved');
+    expect(undoButtons(tree)).toHaveLength(1);
+    await act(async () => tree.unmount());
+  });
+
+  it('a feeding that fails gets its buttons back and says it was not saved', async () => {
+    const quiet = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const server = holdSaves();
+    const tree = await open('/log?type=feeding&gecko=g1,g2');
+    await act(async () => { buttons(tree, 'Fed')[0].props.onClick(); });
+    expect(buttons(tree, 'Fed')).toHaveLength(1);
+    await server.fail();
+    expect(buttons(tree, 'Fed')).toHaveLength(2);
+    expect(buttons(tree, 'Refused')).toHaveLength(2);
+    expect(textOf(tree.root)).not.toContain('saved');
+    expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Not saved', variant: 'destructive' }));
+    quiet.mockRestore();
+    await act(async () => tree.unmount());
+  });
+
+  it('"Mark all fed" marks every row at once; a row that fails goes back and the rest stay', async () => {
+    const quiet = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const server = holdSaves();
+    const tree = await open('/log?type=feeding&gecko=g1,g2');
+    await act(async () => { buttons(tree, 'Mark all 2 fed')[0].props.onClick(); });
+    // Both rows read Fed before the first save has come back.
+    expect(mocks.save).toHaveBeenCalledTimes(1);
+    expect(buttons(tree, 'Fed')).toHaveLength(0);
+    expect(tree.root.findAll((n) => n.props['aria-busy'] === true)).toHaveLength(2);
+    expect(textOf(tree.root)).not.toContain('saved');
+    await server.ok();
+    await server.fail();
+    // g1 is saved; g2 has its buttons again and the toast says one failed.
+    expect(textOf(tree.root)).toContain('Fed, saved');
+    expect(buttons(tree, 'Fed')).toHaveLength(1);
+    expect(tree.root.findAll((n) => n.props['aria-busy'] === true)).toHaveLength(0);
+    expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({ title: '1 not saved', variant: 'destructive' }));
+    quiet.mockRestore();
+    await act(async () => tree.unmount());
+  });
+
+  it('a batch stopped by an expired sign-in gives the rows it never sent their buttons back', async () => {
+    mocks.geckos = [
+      { id: 'g1', name: 'Mango', feeding_group_id: null },
+      { id: 'g2', name: 'Kiwi', feeding_group_id: null },
+      { id: 'g3', name: 'Fig', feeding_group_id: null },
+    ];
+    mocks.save.mockImplementation(async () => { throw Object.assign(new Error('JWT expired'), { status: 401 }); });
+    const tree = await open('/log?type=feeding&gecko=g1,g2,g3');
+    await act(async () => { await buttons(tree, 'Mark all 3 fed')[0].props.onClick(); });
+    await settle();
+    // Only the first was tried, and nothing on the page claims a feeding.
+    expect(savedIds()).toEqual(['g1']);
+    expect(tree.root.findAll((n) => n.props['aria-busy'] === true)).toHaveLength(0);
+    expect(textOf(tree.root)).not.toContain('Fed, saved');
+    await act(async () => tree.unmount());
+  });
+
+  it('a weight shows on its row at once, in place of the box', async () => {
+    const server = holdSaves();
+    const tree = await open('/log?type=weight&gecko=g2');
+    await act(async () => { tree.root.findByProps({ id: 'ql-w-g2' }).props.onChange({ target: { value: '18.5' } }); });
+    await act(async () => { tree.root.findByType('form').props.onSubmit({ preventDefault() {} }); });
+    expect(tree.root.findAllByType('form')).toHaveLength(0);
+    expect(tree.root.findAll((n) => n.props['aria-busy'] === true && textOf(n).trim() === '18.5 g')).toHaveLength(1);
+    expect(textOf(tree.root)).not.toContain('18.5 g, saved');
+    await server.ok();
+    expect(textOf(tree.root)).toContain('18.5 g, saved');
+    await act(async () => tree.unmount());
+  });
+
+  it('a weight that fails brings the box back, still filled in, and says so', async () => {
+    const quiet = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const server = holdSaves();
+    const tree = await open('/log?type=weight&gecko=g2');
+    await act(async () => { tree.root.findByProps({ id: 'ql-w-g2' }).props.onChange({ target: { value: '18.5' } }); });
+    await act(async () => { tree.root.findByType('form').props.onSubmit({ preventDefault() {} }); });
+    expect(tree.root.findAllByType('form')).toHaveLength(0);
+    await server.fail();
+    expect(tree.root.findByProps({ id: 'ql-w-g2' }).props.value).toBe('18.5');
+    expect(textOf(tree.root)).toContain('Not saved. It is still filled in');
+    expect(textOf(tree.root)).not.toContain('18.5 g, saved');
+    expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Not saved', variant: 'destructive' }));
+    quiet.mockRestore();
     await act(async () => tree.unmount());
   });
 });

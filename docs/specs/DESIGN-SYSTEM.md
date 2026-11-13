@@ -91,6 +91,9 @@ These carried over from the old document. They are the standard for new work; th
 - A confirmation dialog for what cannot be undone (delete, transfer, removing someone's access): `src/components/shared/ConfirmDialog.jsx`, never the browser's `confirm()`. For anything that can be reversed, do it at once and offer Undo for 8 seconds: `undoToast` in `src/lib/undoToast.jsx`.
 - Every save says what happened (a toast or a "Saved" tick beside the control), and a failed save says so and offers a way to try again.
 - Animations respect the operating system's reduced-motion setting (`@media (prefers-reduced-motion: reduce)` in `src/index.css`, and `src/lib/reducedMotion.js`).
+- A move to another screen inside the app cross-fades over 120 ms (`src/lib/crossFade.js`; the shell does it for every link and `navigate()`, see `src/components/navigation/RouteCrossFade.jsx`). Tabs inside a page call `crossFadeState`. Nothing fades under reduced motion, on public pages, or on back and forward.
+- Whatever does something when tapped shows a pressed state. Every `Button` has it; a tappable card or row adds the `pressable` class (`src/index.css`). Never on a plain container.
+- A one-tap write changes the screen first and goes back, with a toast, if the save fails (the log screen's rows, quick eggs on a plan card, the reminder switches). Never in the demo: a guest must not be shown something as saved.
 - Tooltips on abbreviated stats and icon-only buttons; every icon-only button has an accessible name.
 - Phone first: grids collapse to one column on small screens, and nothing scrolls sideways except tab strips and tables built to.
 

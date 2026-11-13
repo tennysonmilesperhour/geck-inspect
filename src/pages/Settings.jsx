@@ -58,6 +58,7 @@ import { SaveError, SaveTick } from '@/components/settings/SaveStatus';
 import { ChipListSetting, SwitchSetting, TextSetting } from '@/components/settings/SettingControls';
 import NoticesTable from '@/components/settings/NoticesTable';
 import { SETTINGS_TABS, resolveSettingsTarget } from '@/components/settings/settingsTabs';
+import { crossFadeState } from '@/lib/crossFade';
 
 // Two-factor sign-in, admins only (src/lib/mfa.js), so members never
 // download it.
@@ -522,8 +523,11 @@ export default function SettingsPage() {
     }, [target, location.key]);
 
     const chooseTab = (next) => {
-        setTab(next);
-        setOpened((prev) => (prev.has(next) ? prev : new Set(prev).add(next)));
+        // The same short fade as a move between screens.
+        crossFadeState(() => {
+            setTab(next);
+            setOpened((prev) => (prev.has(next) ? prev : new Set(prev).add(next)));
+        });
         // Keep the address in step, so a reload or a copied link opens the
         // same tab. Written straight to the history entry: going through
         // the router would count every tab change as a page view.

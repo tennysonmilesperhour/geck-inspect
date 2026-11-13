@@ -1378,3 +1378,29 @@ select.glass-field option { background: rgb(15 23 42); color: rgb(226 232 240); 
     opacity: 0.5;
   }
 }
+
+/* Moving between screens cross-fades (experience review L1; the code is
+   src/lib/crossFade.js). The browser fades a picture of the old screen
+   into the new one. 120 ms reads as one motion and is too short to wait
+   for. Anything that looks the same on both screens (the phone bars, the
+   sidebar, a floating notice) does not fade: the two pictures are added
+   together, so an unchanged pixel stays as it is. */
+::view-transition-group(root) {
+  animation-duration: 120ms;
+}
+
+/* The picture sits on top of the page while it fades. Taps go through it
+   to the new screen underneath, so a fade never swallows one. */
+::view-transition {
+  pointer-events: none;
+}
+
+/* crossFade.js already skips the fade under reduced motion; this covers
+   the setting being switched on while one is running. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

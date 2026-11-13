@@ -185,7 +185,7 @@ export default function LogSheet({ open, onOpenChange }) {
                   onClick={() => go(kind, pick)}
                   disabled={Boolean(waiting)}
                   aria-busy={busy || undefined}
-                  className="flex w-full min-h-14 items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-left transition-colors hover:border-emerald-600/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 disabled:opacity-70"
+                  className="pressable flex w-full min-h-14 items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-left hover:border-emerald-600/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 disabled:opacity-70"
                 >
                   <Icon className="h-5 w-5 shrink-0 text-emerald-300" aria-hidden="true" />
                   <span className="min-w-0 flex-1">

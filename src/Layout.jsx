@@ -89,6 +89,8 @@ import { memberHome } from '@/lib/pwaLaunch';
 // works with no signal (the dialog code is already here for the command
 // palette).
 import LogSheet from '@/components/navigation/LogSheet';
+import RouteCrossFade from '@/components/navigation/RouteCrossFade';
+import { warmPhoneTabs } from '@/lib/warmPhoneTabs';
 import { useHideOnScroll } from '@/lib/useHideOnScroll';
 import { NOT_QUIET_FILTER, isQuietNotification, markAllNotificationsRead } from '@/lib/notificationsApi';
 import { listenForPushRotation, syncPushSubscription } from '@/lib/webPush';
@@ -231,6 +233,12 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     window.addEventListener('open_tutorial', handler);
     return () => window.removeEventListener('open_tutorial', handler);
   }, []);
+
+  // Once the first screen is idle, fetch the code for the phone's other
+  // tabs so the first tap on one does not wait (experience review L4).
+  // For members and demo guests, who are both inside this shell.
+  const inShell = Boolean(user);
+  useEffect(() => (inShell ? warmPhoneTabs() : undefined), [inShell]);
 
   // The profile is the source of truth for onboarding and Keeper mode, so
   // a second phone picks up the answers given on the first (audit step 32).
@@ -782,7 +790,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   const phoneTitle = phoneHeaderTitle(location.pathname);
 
   return (
-    <>
+    // Every move to another screen made inside the shell (a tab, the menu,
+    // a link or a button on a page) cross-fades: see RouteCrossFade.
+    <RouteCrossFade>
       {/* Skip-to-content link for keyboard/screen-reader users */}
       <a
         href="#main-content"
@@ -1376,7 +1386,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           notification is non-disruptive, so no separate master toggle. */}
       <HatchAlertSystem user={user} enabled={Boolean(user?.email)} />
       {user && <FeedbackWidget />}
-    </>
+    </RouteCrossFade>
     );
           }
 

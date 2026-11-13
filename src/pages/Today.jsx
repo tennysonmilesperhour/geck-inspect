@@ -120,7 +120,7 @@ function GeckoTile({ gecko, linkable, children }) {
   return (
     <Link
       to={`/GeckoDetail?id=${encodeURIComponent(gecko.id)}`}
-      className="block rounded-xl border border-slate-700 bg-slate-900 p-2 text-center hover:border-emerald-600/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
+      className="pressable block rounded-xl border border-slate-700 bg-slate-900 p-2 text-center hover:border-emerald-600/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
     >
       {children}
     </Link>
@@ -282,7 +282,7 @@ export default function Today() {
           <nav aria-label="Husbandry tools" className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
             <Link
               to="/FieldMode"
-              className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-slate-700/80 bg-slate-900/80 px-3 py-1 text-xs font-semibold text-slate-200 transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
+              className="pressable inline-flex min-h-9 shrink-0 items-center rounded-full border border-slate-700/80 bg-slate-900/80 px-3 py-1 text-xs font-semibold text-slate-200 hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
             >
               <Wrench className="mr-1.5 h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
               Field Mode
@@ -291,14 +291,14 @@ export default function Today() {
                 feeding group, each with "Mark all fed". */}
             <Link
               to="/log?type=feeding&all=1&from=%2FToday"
-              className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-slate-700/80 bg-slate-900/80 px-3 py-1 text-xs font-semibold text-slate-200 transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
+              className="pressable inline-flex min-h-9 shrink-0 items-center rounded-full border border-slate-700/80 bg-slate-900/80 px-3 py-1 text-xs font-semibold text-slate-200 hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
             >
               <ListChecks className="mr-1.5 h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
               Batch Care
             </Link>
             <Link
               to="/PrintableWorksheets"
-              className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-slate-700/80 bg-slate-900/80 px-3 py-1 text-xs font-semibold text-slate-200 transition-colors hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
+              className="pressable inline-flex min-h-9 shrink-0 items-center rounded-full border border-slate-700/80 bg-slate-900/80 px-3 py-1 text-xs font-semibold text-slate-200 hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300"
             >
               <CalendarCheck className="mr-1.5 h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
               Worksheets

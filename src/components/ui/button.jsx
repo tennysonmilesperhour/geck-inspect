@@ -4,8 +4,13 @@ import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils"
 
+// `pressable` (src/index.css) gives every variant its pressed state: a
+// little darker and 2% smaller while held, none of the movement under
+// reduced motion. It also carries the colour transitions that
+// `transition-colors` used to, so the base string is no longer than before
+// (this file is in the code every public page downloads).
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "pressable inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {

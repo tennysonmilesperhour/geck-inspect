@@ -146,7 +146,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             type="button"
             onClick={handleViewClick}
             aria-label={`Open ${gecko.name ? `${gecko.name}'s` : "this gecko's"} record`}
-            className="block w-full cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-400"
+            className="pressable block w-full cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-400"
           >
             {photo}
           </button>

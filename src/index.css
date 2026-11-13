@@ -94,6 +94,40 @@ html, body {
   }
 }
 
+/* Pressed state (experience review L5). A tap on a phone had no visible
+   answer until the save came back: hover does not exist under a finger.
+   While a button or a tappable card is held it sits 2% smaller and a
+   little darker, over 80 ms. Every Button has this class
+   (src/components/ui/button.jsx); add it by hand only to something that
+   does something when tapped (a card that opens a record, a row in a
+   sheet), never to a plain container.
+   - `scale` and not `transform`, so it adds to a hover lift or any other
+     transform the element already has.
+   - The base rule is in the components layer, so an element's own
+     transition utilities still win. It also carries the colour
+     transitions, so an element with this class needs no transition-colors.
+   - The pressed rule is outside the layers, so pressing in always eases
+     over 80 ms whatever transition the element has. */
+@layer components {
+  .pressable {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, scale, filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms, 150ms, 150ms, 150ms, 150ms, 150ms, 80ms, 80ms;
+  }
+}
+.pressable:active {
+  scale: 0.98;
+  filter: brightness(0.9);
+  transition: scale 80ms ease-out, filter 80ms ease-out;
+}
+/* Reduced motion: no movement. The darker shade stays, since it is the
+   only sign that the tap landed and a change of shade is not motion. */
+@media (prefers-reduced-motion: reduce) {
+  .pressable:active {
+    scale: none;
+  }
+}
+
 /* A row that scrolls sideways without drawing a scrollbar (chip rows on
    Today, Breeding and the gecko record). The class was already used in
    three places but had never been defined, so those rows showed a bar. */

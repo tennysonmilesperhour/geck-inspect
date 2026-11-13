@@ -6,13 +6,15 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { installDomHarness } from '@/lib/__tests__/domHarness';
 
-const fx = vi.hoisted(() => ({ calls: [], nextId: 1, failCreateAt: null, planCount: 0 }));
+const fx = vi.hoisted(() => ({ calls: [], nextId: 1, failCreateAt: null, planCount: 0, guest: false }));
 
 vi.mock('@/lib/supabaseClient', () => ({ supabase: {} }));
+vi.mock('@/lib/guestMode', () => ({ isGuestMode: () => fx.guest }));
 vi.mock('@/entities/all', () => ({
   User: { me: async () => ({ email: 'breeder@example.com' }) },
   Egg: {
     create: async (row) => {
+      if (fx.guest) throw Object.assign(new Error('Guests have view-only access.'), { isGuestBlock: true });
       if (fx.failCreateAt === fx.nextId) throw new Error('offline');
       const egg = { id: `egg-${fx.nextId++}`, ...row };
       fx.calls.push(['create-egg', egg.id]);
@@ -45,12 +47,12 @@ const PLAN = { id: 'plan-1', sire_id: 'g-sire', dam_id: 'g-dam', egg_check_count
 
 // Toasts outlive a test (the toast list is shared by the whole app), so
 // each test uses its own pair and reads only that pair's toast.
-function renderCard(sireName, damName) {
+function renderCard(sireName, damName, plan = PLAN) {
   const onPlanUpdate = vi.fn();
   render(
     <>
       <BreedingPlanCard
-        plan={PLAN}
+        plan={plan}
         geckos={[
           { id: 'g-sire', name: sireName, sex: 'Male' },
           { id: 'g-dam', name: damName, sex: 'Female' },
@@ -75,6 +77,7 @@ beforeEach(() => {
   fx.nextId = 1;
   fx.failCreateAt = null;
   fx.planCount = 3;
+  fx.guest = false;
 });
 
 describe('quick egg buttons on a breeding plan card', () => {
@@ -125,5 +128,61 @@ describe('quick egg buttons on a breeding plan card', () => {
     fireEvent.click(failed.getByRole('button', { name: 'Try again' }));
     expect(await screen.findByText('2 eggs added to Moss x Cappy')).toBeTruthy();
     quiet.mockRestore();
+  });
+});
+
+// Experience review L2: the card answers the tap before the server does.
+describe('the plan card changes first', () => {
+  // A plan with a monthly egg check shows its clutch count on the card.
+  const CHECKED = { ...PLAN, egg_check_day: 15 };
+
+  it('shows the new clutch the moment the button is tapped', async () => {
+    renderCard('Rook', 'Wren', CHECKED);
+    expect(screen.getByText('3 clutches laid')).toBeTruthy();
+    expect(screen.queryByText('0 days since last egg')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add 2 eggs' }));
+    // Nothing has been saved yet, and the card already counts the clutch.
+    expect(fx.calls).toEqual([]);
+    expect(screen.getByText('4 clutches laid')).toBeTruthy();
+    expect(screen.getByText('0 days since last egg')).toBeTruthy();
+
+    // The save follows, and the card keeps the clutch.
+    await toastWith('2 eggs added to Rook x Wren');
+    expect(screen.getByText('4 clutches laid')).toBeTruthy();
+    expect(screen.getByText('0 days since last egg')).toBeTruthy();
+  });
+
+  it('a save that fails takes the clutch off the card again', async () => {
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => {});
+    fx.failCreateAt = 1;
+    renderCard('Juno', 'Pip', CHECKED);
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 egg' }));
+    expect(screen.getByText('4 clutches laid')).toBeTruthy();
+
+    await toastWith('Eggs not added');
+    expect(screen.getByText('3 clutches laid')).toBeTruthy();
+    expect(screen.queryByText('0 days since last egg')).toBeNull();
+    quiet.mockRestore();
+  });
+
+  it('Undo tapped before the page has reloaded takes the clutch straight off the card', async () => {
+    renderCard('Basil', 'Olive', CHECKED);
+    fireEvent.click(screen.getByRole('button', { name: 'Add 1 egg' }));
+    const toast = await toastWith('1 egg added to Basil x Olive');
+    fireEvent.click(toast.getByRole('button', { name: 'Undo' }));
+    expect(screen.getByText('3 clutches laid')).toBeTruthy();
+    expect(screen.queryByText('0 days since last egg')).toBeNull();
+    expect(await screen.findByText('Egg removed')).toBeTruthy();
+  });
+
+  it('in the demo the card never shows eggs that were not kept', async () => {
+    fx.guest = true;
+    renderCard('Fern', 'Ivy', CHECKED);
+    fireEvent.click(screen.getByRole('button', { name: 'Add 2 eggs' }));
+    expect(screen.getByText('3 clutches laid')).toBeTruthy();
+    expect(screen.queryByText('0 days since last egg')).toBeNull();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Add 2 eggs' }).disabled).toBe(false));
+    expect(screen.getByText('3 clutches laid')).toBeTruthy();
   });
 });
