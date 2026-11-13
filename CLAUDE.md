@@ -155,7 +155,7 @@ The full list, with sources, is `docs/RULES.md`. The ones most often needed:
 - **Read `docs/marketing/email-brain.md` before writing or changing any email.**
 - **Size check:** CI fails a push to main that adds a picture over 200 KB to public/ or makes a public page load too much code. For pictures, run pnpm shrink:images and commit the result; the CI message says what to do for code.
 - **Artwork:** the Morph Guide's pattern-study drawings live in art/morph-guide/ink-studies-v3, not public/; after changing one, run node scripts/precompute-trait-layers.mjs and commit the layers it writes (a test fails until you do). See art/README.md.
-- **Before pushing code:** `pnpm lint`, `pnpm test`, and `pnpm test:e2e` for anything a member can see.
+- **Before pushing code:** `pnpm lint`, `pnpm test`, and `pnpm test:e2e` for anything a member can see. CI also runs `pnpm test:clock-drift` and the size check; run them too when a test uses dates or a page's imports change (`docs/RULES.md` says how).
 - **After moving or renaming a document:** `node scripts/check-doc-links.mjs`, and update its row in `docs/README.md`.
 
 ## Where the documents are

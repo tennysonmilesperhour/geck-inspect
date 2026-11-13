@@ -116,7 +116,7 @@ Source: `docs/planning/app-store-resubmission-2026-10-26.md`.
 
 Source: `docs/planning/experience-review-2026-11-11.md`, sections 0 and 2.
 
-1. One package per commit. Run `pnpm lint`, `pnpm test` and `pnpm test:e2e` before pushing.
+1. One package per commit. Run `pnpm lint`, `pnpm test` and `pnpm test:e2e` before pushing. CI runs two more checks that those three do not, and each failed on `main` once in November 2026: `pnpm test:clock-drift` (the unit tests with the clock moved 400 days each way; run it when a new test uses a date) and the size check (`pnpm exec vite build`, then `node scripts/check-bundle-size.mjs`; run it when you change what a page imports, including adding or removing an icon).
 2. Add a dated status line under the package when it ships.
 3. The only new dependencies allowed are `@capacitor/haptics` and `@capacitor/keyboard` (package WP-11).
 4. That review is not the plan. Part E is.

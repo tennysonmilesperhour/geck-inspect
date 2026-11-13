@@ -57,7 +57,10 @@ function renderCard(sireName, damName, plan = PLAN) {
           { id: 'g-sire', name: sireName, sex: 'Male' },
           { id: 'g-dam', name: damName, sex: 'Female' },
         ]}
-        planEggs={[{ id: 'egg-old', breeding_plan_id: 'plan-1', lay_date: '2026-10-01', status: 'Incubating' }]}
+        // An old egg, dated well before any day these tests can run on, so
+        // the egg added "today" is always the latest one (CI also runs the
+        // tests with the clock 400 days back and 400 days ahead).
+        planEggs={[{ id: 'egg-old', breeding_plan_id: 'plan-1', lay_date: '2020-01-01', status: 'Incubating' }]}
         onPlanUpdate={onPlanUpdate}
         onPlanDelete={() => {}}
         onPlanArchive={() => {}}
