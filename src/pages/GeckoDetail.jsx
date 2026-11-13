@@ -1,16 +1,20 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { api } from '@/api/appClient';
 import { Gecko, CollectionMember } from '@/entities/all';
-import { canWriteGecko } from '@/lib/geckoAccess';
+import { canWriteGecko, getVisibleGeckos } from '@/lib/geckoAccess';
 import { isGeckoLimitError } from '@/lib/geckoLimit';
 import { queryClientInstance } from '@/lib/query-client';
 import { createPageUrl } from '@/utils';
 import GeckoRecord from '@/components/gecko/record/GeckoRecord';
 import { myGeckosHandoff, recordAccess } from '@/components/gecko/record/recordModel';
+
+// The long edit form. Loaded when Edit is tapped: this page is public, and
+// a visitor reading a record never needs the form's code.
+const GeckoForm = lazy(() => import('@/components/my-geckos/GeckoForm'));
 
 // What unarchiving clears, the same fields My Geckos clears
 // (handleArchiveGecko in src/pages/MyGeckos.jsx): the gecko is back in the
@@ -39,15 +43,20 @@ function collectionChanged() {
  * My Geckos (GeckoRecord), so the gecko's keepers can log a weigh-in, a
  * feeding or a vet visit right here; anyone else sees the public parts.
  *
- * The edit form and archiving with sale details live in My Geckos, so
- * Edit and Archive open this gecko there with the form or the dialog
- * ready. Unarchive and delete (after its confirmation) happen here.
+ * Edit opens the long form over this page and comes back to the record,
+ * refreshed, on save or cancel (experience review D6). Archiving with sale
+ * details still lives in My Geckos, so Archive and Mark sold open this
+ * gecko there with the dialog ready. Unarchive and delete (after its
+ * confirmation) happen here.
  */
 export default function GeckoDetail() {
   const navigate = useNavigate();
   const location = useLocation();
   const geckoId = new URLSearchParams(location.search).get('id');
   const [state, setState] = useState({ status: 'loading', gecko: null, user: null, memberships: [] });
+  // Set while the edit form is open: { collection }, the member's geckos
+  // for the form's sire and dam pickers.
+  const [editing, setEditing] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -143,6 +152,35 @@ export default function GeckoDetail() {
     }
   };
 
+  // Open the form at once, on My Geckos' cached copy of the collection
+  // when there is one. Otherwise it opens on this gecko alone (its parents
+  // show by their stored names) and the collection follows.
+  const startEdit = async () => {
+    if (editing) return;
+    const cached = queryClientInstance.getQueryData?.(['my-geckos', user?.email])?.geckos;
+    if (Array.isArray(cached) && cached.length > 0) {
+      setEditing({ collection: cached });
+      return;
+    }
+    setEditing({ collection: [gecko] });
+    try {
+      const collection = await getVisibleGeckos(user, {}, '-created_date', 500);
+      if (Array.isArray(collection) && collection.length > 0) {
+        setEditing((current) => (current ? { collection } : current));
+      }
+    } catch (error) {
+      console.error('Failed to load the collection for the edit form:', error);
+    }
+  };
+
+  const handleSaved = async (saved) => {
+    setEditing(null);
+    // Show what was saved straight away, then the fresh row.
+    if (saved?.id === gecko.id) setState((s) => ({ ...s, gecko: { ...s.gecko, ...saved } }));
+    toast({ title: `${saved?.name || gecko.name || 'Your gecko'} saved` });
+    await reloadGecko();
+  };
+
   const handleDelete = async (id) => {
     try {
       await Gecko.delete(id);
@@ -171,12 +209,25 @@ export default function GeckoDetail() {
             </Button>
           )}
           onUpdate={reloadGecko}
-          onEdit={() => navigate(myGeckosHandoff(gecko.id, 'edit'))}
+          onEdit={startEdit}
           onArchive={handleArchive}
           onMarkSold={(id) => navigate(myGeckosHandoff(id, 'sold'))}
           onDelete={handleDelete}
         />
       </div>
+      {editing && (
+        <Suspense fallback={null}>
+          <GeckoForm
+            gecko={gecko}
+            userGeckos={editing.collection}
+            currentUser={user}
+            onSubmit={handleSaved}
+            onCancel={() => setEditing(null)}
+            onArchive={(id) => handleArchive(id, true)}
+            onMarkSold={(id) => navigate(myGeckosHandoff(id, 'sold'))}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

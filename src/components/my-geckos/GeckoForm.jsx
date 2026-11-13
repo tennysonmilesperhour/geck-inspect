@@ -1,5 +1,6 @@
 import { captureEvent } from '@/lib/posthog';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -17,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CardHeader, CardFooter } from '@/components/ui/card';
 import { format } from "date-fns";
-import { Upload, X, DollarSign, Loader2, Archive, GripVertical, Camera, Star } from "lucide-react";
+import { Upload, X, DollarSign, Loader2, Archive, GripVertical, Camera, Star, ChevronDown } from "lucide-react";
 import { Switch } from '@/components/ui/switch';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import MorphIDSelector from './MorphIDSelector';
@@ -25,8 +26,11 @@ import QualityInput from './QualityInput';
 import { patternGradeForScore } from '@/lib/quality';
 // Extracted helpers / constants / sub-components, keeps this file focused
 // on the orchestration logic instead of static data and pure UI pieces.
-import { MONTHS, GECKO_SPECIES, INITIAL_FORM_DATA, LIFE_STAGES } from './form/constants';
+import { MONTHS, INITIAL_FORM_DATA, LIFE_STAGES } from './form/constants';
 import { generateNextGeckoId } from './form/helpers';
+import FormSection from './form/FormSection';
+import { hatchDateFromParts, hatchDateStatus, parseDateText } from './form/hatchDate';
+import { clearGeckoFormDraft, readGeckoFormDraft, saveGeckoFormDraft } from './form/draft';
 import ImageCropDialog from './form/ImageCropDialog';
 import ParentAutocomplete from './form/ParentAutocomplete';
 import { parentNameForSave } from '@/lib/parentNames';
@@ -38,17 +42,76 @@ import { normalizeGeckoArtStyle } from '@/lib/geckoPlaceholderProfiles';
 // Back-compat alias so the rest of this file doesn't need to change
 const initialFormData = INITIAL_FORM_DATA;
 
-export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, onCancel, isHatching = false, onArchive, onMarkSold, breedingPlan = null, feedingGroups: feedingGroupsProp = null, idSettings = null }) {
+/**
+ * The long gecko form: every field of a gecko, in six headed sections with
+ * photos first (experience review D2). "Add Gecko" opens Quick Add; this
+ * form is behind its "More details" button and behind Edit.
+ *
+ * restoreDraftOnOpen: open a new gecko with the member's kept draft already
+ * restored (Quick Add's "Pick it up"), instead of offering it.
+ */
+export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, onCancel, isHatching = false, onArchive, onMarkSold, breedingPlan = null, feedingGroups: feedingGroupsProp = null, idSettings = null, restoreDraftOnOpen = false }) {
     const { toast } = useToast();
     const saveRequestId = useRef(crypto.randomUUID());
     const savingRef = useRef(false);
+    const formRef = useRef(null);
     // Set by the first change the member makes (typing, a switch, a photo).
     // Closing the form used to throw away everything entered, and every
     // photo uploaded, without a word: a tap outside the window was enough.
     // Now a changed form asks once before it closes.
     const dirtyRef = useRef(false);
     const [confirmDiscard, setConfirmDiscard] = useState(false);
-    const markDirty = () => { dirtyRef.current = true; };
+    // An unsaved NEW gecko is also kept in this browser while the form is
+    // open, so a closed tab or a reload does not lose it (experience
+    // review D3; ./form/draft.js). A draft found when the form opens is
+    // offered back in one line at the top.
+    const keepsDraft = !gecko?.id && !isHatching;
+    const [draftOffer, setDraftOffer] = useState(() => (keepsDraft ? readGeckoFormDraft(currentUser) : null));
+    const draftOfferRef = useRef(draftOffer);
+    // Set once the gecko is saved or the form discarded: no draft after that.
+    const draftDoneRef = useRef(false);
+    const dropDraftOffer = () => {
+        if (!draftOfferRef.current) return;
+        draftOfferRef.current = null;
+        setDraftOffer(null);
+    };
+    const markDirty = () => {
+        dirtyRef.current = true;
+        // The first change takes over the draft slot, so the earlier draft
+        // is no longer on offer.
+        dropDraftOffer();
+    };
+    // Section toggles, the morph search and the draft line carry
+    // data-no-dirty: using them changes nothing about the gecko.
+    const countsAsChange = (target) => !target.closest?.('[data-no-dirty]');
+    // A phone opens on Photos and Identity with the rest folded; a wider
+    // screen shows every section.
+    const [openSections, setOpenSections] = useState(() => {
+        const narrow = typeof window !== 'undefined' && Boolean(window.matchMedia?.('(max-width: 639px)')?.matches);
+        return { photos: true, identity: true, parents: !narrow, morph: !narrow, selling: !narrow, care: !narrow };
+    });
+    const toggleSection = (id) => setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
+    const [artworkOpen, setArtworkOpen] = useState(false);
+    // A folded section must never hide a field with an error: the browser
+    // cannot point at a hidden field, so the save would fail with no word.
+    // Called before the browser checks the form, and before our own checks.
+    const showSections = (ids) => {
+        if (ids.length === 0) return;
+        flushSync(() => setOpenSections((prev) => (ids.every((id) => prev[id]) ? prev : { ...prev, ...Object.fromEntries(ids.map((id) => [id, true])) })));
+    };
+    const revealInvalidFields = () => {
+        let invalid = [];
+        try {
+            invalid = Array.from(formRef.current?.querySelectorAll(':invalid') || []);
+        } catch {
+            // a browser without :invalid has nothing to reveal
+        }
+        showSections([...new Set(invalid.map((el) => el.closest('[data-form-section]')?.getAttribute('data-form-section')).filter(Boolean))]);
+    };
+    const showField = (sectionId, fieldId) => {
+        showSections([sectionId]);
+        formRef.current?.querySelector(`#${fieldId}`)?.focus();
+    };
     const requestClose = () => {
         if (savingRef.current) return;
         if (dirtyRef.current) { setConfirmDiscard(true); return; }
@@ -136,7 +199,14 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     }, []);
 
     // Effect 1: Initialize form data when gecko changes or new gecko is created
+    const initialisedFor = useRef(undefined);
     useEffect(() => {
+        // The collection reloading behind the form (a new array, the same
+        // gecko) must not wipe what the member has typed since it opened.
+        const sameGecko = initialisedFor.current !== undefined
+            && (gecko?.id ? initialisedFor.current?.id === gecko.id : initialisedFor.current === (gecko || null));
+        if (sameGecko && dirtyRef.current) return;
+        initialisedFor.current = gecko || null;
         if (gecko) {
             // We are editing an existing gecko or initializing a new hatched one (with pre-filled parents).
             const formDataToSet = {
@@ -184,6 +254,12 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             // Drafts (from Quick Add's "More details" or an AI Morph ID
             // result) are new geckos too, so they get an ID code the same
             // way a blank add does. Hatchlings get theirs from Effect 2.
+            // What Quick Add or Morph ID handed over is unsaved work too:
+            // closing the form asks first, and it is kept as the draft.
+            if (!gecko.id && !isHatching && (gecko.name || gecko.morphs_traits || gecko.notes || gecko.weight_grams != null
+                || gecko.hatch_date || gecko.image_urls?.length || gecko.morph_tags?.length)) {
+                dirtyRef.current = true;
+            }
             if (!gecko.id && !gecko.gecko_id_code && !isHatching) {
                 const sire = gecko.sire_id ? userGeckos.find(g => g.id === gecko.sire_id) : null;
                 const dam = gecko.dam_id ? userGeckos.find(g => g.id === gecko.dam_id) : null;
@@ -217,15 +293,15 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             setDamId(gecko.dam_id || '');
 
         } else {
-            // We are creating a new gecko from scratch. Generate ID and set initial state.
-            const generateIdAndSet = async () => {
-                const newId = await generateNextGeckoId(currentUser, userGeckos, null, null, '', '', idSettings);
-                setFormData({
-                    ...initialFormData,
-                    gecko_id_code: newId
-                });
-            };
-            generateIdAndSet();
+            // We are creating a new gecko from scratch. Set the initial state,
+            // then fill in the ID code once it is generated (only the code,
+            // so a draft restored in the meantime is not wiped).
+            setFormData(initialFormData);
+            generateNextGeckoId(currentUser, userGeckos, null, null, '', '', idSettings)
+                .then((newId) => {
+                    setFormData(prev => (prev.gecko_id_code ? prev : { ...prev, gecko_id_code: newId }));
+                })
+                .catch((err) => console.warn('ID code not generated:', err));
             setIsForSale(false); // New geckos are not for sale by default
             setHatchYear('');
             setHatchMonth('');
@@ -252,28 +328,88 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
         generateIdForHatched();
     }, [gecko, currentUser, userGeckos, isHatching, formData.gecko_id_code, breedingPlan]);
 
-    // Effect 3: Construct date from parts
+    // Effect 3: Construct date from parts. Only a real, complete date is
+    // saved (see ./form/hatchDate.js); anything less saves no hatch date.
     useEffect(() => {
-        if (hatchYear && hatchYear.length === 4 && hatchMonth && hatchDay) {
-            // Use T00:00:00 to avoid timezone issues converting the date string
-            const dateStr = `${hatchYear}-${String(hatchMonth).padStart(2, '0')}-${String(hatchDay).padStart(2, '0')}T00:00:00`;
-            const newDate = new Date(dateStr);
-
-            // Robust validation
-            const isValidDate = !isNaN(newDate.getTime()) && 
-                                newDate.getFullYear() === parseInt(hatchYear, 10) &&
-                                newDate.getMonth() + 1 === parseInt(hatchMonth, 10) &&
-                                newDate.getDate() === parseInt(hatchDay, 10);
-
-            if (isValidDate) {
-                handleChange('hatch_date', newDate);
-            } else {
-                handleChange('hatch_date', null);
-            }
-        } else {
-            handleChange('hatch_date', null);
-        }
+        handleChange('hatch_date', hatchDateFromParts(hatchYear, hatchMonth, hatchDay));
     }, [hatchYear, hatchMonth, hatchDay, handleChange]);
+    const hatchDateNow = hatchDateFromParts(hatchYear, hatchMonth, hatchDay);
+    const hatchStatus = hatchDateStatus(hatchYear, hatchMonth, hatchDay);
+
+    // A full date pasted, autofilled or dropped into Year or Day fills all
+    // three boxes (2026-02-24, 02/24/2026, 24 Feb 2026).
+    const fillHatchDate = (text) => {
+        const parsed = parseDateText(text);
+        if (!parsed) return false;
+        setHatchYear(parsed.year);
+        setHatchMonth(parsed.month);
+        setHatchDay(parsed.day);
+        return true;
+    };
+    const handleHatchPaste = (event) => {
+        if (!fillHatchDate(event.clipboardData?.getData('text'))) return;
+        // The paste is handled here, so the box never fires its own change.
+        event.preventDefault();
+        markDirty();
+    };
+    const handleHatchBox = (value, setPart, maxLength) => {
+        if (/\D/.test(value) && fillHatchDate(value)) return;
+        setPart(value.replace(/[^0-9]/g, '').slice(0, maxLength));
+    };
+
+    // The kept draft: what the form holds now, without photo files.
+    const currentDraft = () => ({
+        form: formData,
+        hatch: { year: hatchYear, month: hatchMonth, day: hatchDay },
+        sire: { input: sireInput, id: sireId },
+        dam: { input: damInput, id: damId },
+        crop: cropData,
+    });
+    // Written on every change once the member has changed something, and
+    // never while an earlier draft is still on offer (that one stays put
+    // until the member restores it, starts fresh or makes a change).
+    useEffect(() => {
+        if (!keepsDraft || !dirtyRef.current || draftDoneRef.current || draftOfferRef.current) return;
+        saveGeckoFormDraft(currentUser, currentDraft());
+    });
+
+    const restoreDraft = (draft) => {
+        if (!draft) return;
+        dropDraftOffer();
+        const taken = new Set(userGeckos.map((g) => g.gecko_id_code).filter(Boolean));
+        setFormData((prev) => ({
+            ...initialFormData,
+            ...draft.form,
+            hatch_date: null,
+            image_crop_data: draft.crop,
+            // Keep the ID code typed back then, unless another gecko has
+            // taken it since; then keep the one generated for this form.
+            gecko_id_code: draft.form.gecko_id_code && !taken.has(draft.form.gecko_id_code) ? draft.form.gecko_id_code : prev.gecko_id_code,
+        }));
+        setHatchYear(draft.hatch.year);
+        setHatchMonth(draft.hatch.month);
+        setHatchDay(draft.hatch.day);
+        // A parent deleted since the draft was kept stays as a typed name.
+        const stillThere = (id) => (id && userGeckos.some((g) => g.id === id) ? id : '');
+        setSireInput(draft.sire.input);
+        setSireId(stillThere(draft.sire.id));
+        setDamInput(draft.dam.input);
+        setDamId(stillThere(draft.dam.id));
+        setCropData(draft.crop);
+        setIsForSale(draft.form.status === 'For Sale');
+        dirtyRef.current = true;
+    };
+    const startFresh = () => {
+        clearGeckoFormDraft(currentUser);
+        dropDraftOffer();
+    };
+    // Quick Add's "Pick it up" opens the form with the draft already in it.
+    const restoreOnOpenRef = useRef(restoreDraftOnOpen);
+    useEffect(() => {
+        if (!restoreOnOpenRef.current) return;
+        restoreOnOpenRef.current = false;
+        restoreDraft(draftOfferRef.current);
+    });
 
     const handleForSaleToggle = (checked) => {
         setIsForSale(checked);
@@ -533,8 +669,12 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             };
 
             const isNew = !gecko?.id || isHatching;
-            if (!dataToSave.name) throw new Error('Please enter a name.');
+            if (!dataToSave.name) {
+                showField('identity', 'name');
+                throw new Error('Please enter a name.');
+            }
             if (weightValue !== null && (!Number.isFinite(weightValue) || weightValue < 0)) {
+                showField('care', 'weight_grams');
                 throw new Error('Weight must be a valid, non-negative number.');
             }
             // Include automatic group assignment in the same transaction.
@@ -553,6 +693,9 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 p_record_date: todayLocalISO(),
             });
             if (saveError) throw saveError;
+            // Saved, so the kept draft has done its job.
+            draftDoneRef.current = true;
+            if (keepsDraft) clearGeckoFormDraft(currentUser);
             captureEvent(isNew ? 'animal_created' : 'animal_updated', { animal_id: savedGecko.id, recorded_weight: recordWeight, published: savedGecko.is_public === true });
             // The weight is written inside save_gecko_record, not through the
             // WeightRecord entity, so it is counted here.
@@ -582,9 +725,27 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
 
     const getSaveButtonText = () => {
         if (isSaving) return 'Saving...';
-        if (isHatching) return 'Record Hatchling';
-        if (gecko?.id) return 'Update Gecko';
-        return 'Add Gecko';
+        if (isHatching) return 'Record hatchling';
+        if (gecko?.id) return 'Update gecko';
+        return 'Add gecko';
+    };
+
+    // One line beside a folded section's heading, so it still says what is in it.
+    const photoCount = formData.image_urls.length;
+    const sectionSummary = {
+        photos: photoCount ? `${photoCount} ${photoCount === 1 ? 'photo' : 'photos'}` : 'No photos yet',
+        identity: [formData.name, formData.gecko_id_code].filter(Boolean).join(', '),
+        parents: [sireInput, damInput].filter(Boolean).join(' x ') || 'Not set',
+        morph: (formData.morph_tags || []).join(', ') || formData.morphs_traits || 'Not set',
+        selling: [
+            formData.status,
+            formData.asking_price !== '' && formData.asking_price != null ? `$${formData.asking_price}` : null,
+            formData.is_public === true ? 'public' : 'private',
+        ].filter(Boolean).join(', '),
+        care: [
+            formData.weight_grams !== '' && formData.weight_grams != null ? `${formData.weight_grams} g` : null,
+            formData.notes ? 'has notes' : null,
+        ].filter(Boolean).join(', ') || 'Not set',
     };
 
 
@@ -593,7 +754,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             <DialogContent hideCloseButton onEscapeKeyDown={(event) => { if (cropDialogOpen) { event.preventDefault(); setCropDialogOpen(false); } }} aria-describedby="gecko-form-description" className="w-[95vw] max-w-4xl h-[90svh] bg-slate-900 border-slate-700 flex flex-col gap-0 p-0 overflow-hidden">
                 <DialogDescription id="gecko-form-description" className="sr-only">Edit animal details and choose whether to publish them.</DialogDescription>
                 <CardHeader className="flex-shrink-0">
-                    <DialogTitle className="text-2xl text-slate-100">{gecko?.id && !isHatching ? `Edit ${gecko.name}` : (isHatching ? 'Record New Hatchling' : 'Add New Gecko')}</DialogTitle>
+                    <DialogTitle className="text-2xl text-slate-100">{gecko?.id && !isHatching ? `Edit ${gecko.name}` : (isHatching ? 'Record a new hatchling' : 'Add a gecko')}</DialogTitle>
                     {isHatching && breedingPlan && (
                         <p className="text-slate-400 text-sm">
                             From pairing: {breedingPlan.sire?.name || 'N/A'} x {breedingPlan.dam?.name || 'N/A'}
@@ -603,12 +764,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
 
                 <form
                     id="gecko-details-form"
+                    ref={formRef}
                     onSubmit={handleSave}
-                    onChangeCapture={markDirty}
+                    onChangeCapture={(event) => { if (countsAsChange(event.target)) markDirty(); }}
                     onPointerDownCapture={(event) => {
                         // Switches, selects and toggle buttons do not fire
                         // a change event the form can hear.
-                        if (event.target.closest?.('button, [role="switch"], [role="combobox"]')) markDirty();
+                        if (event.target.closest?.('button, [role="switch"], [role="combobox"]') && countsAsChange(event.target)) markDirty();
                     }}
                     className="flex-grow overflow-y-auto space-y-4 p-4"
                 >
@@ -657,479 +819,34 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         </div>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         <div>
-                             <Label htmlFor="name">Name *</Label>
-                             <Input id="name" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} required disabled={isArchived} className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed" />
-                         </div>
-                        <div>
-                             <Label htmlFor="gecko_id_code">ID Code</Label>
-                             <Input id="gecko_id_code" value={formData.gecko_id_code} onChange={(e) => handleChange('gecko_id_code', e.target.value)} disabled={isArchived} className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed" />
-                         </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <Label>Hatch Date</Label>
-                            <div className="grid grid-cols-3 gap-2">
-                                <Input
-                                    placeholder="YYYY"
-                                    maxLength={4}
-                                    value={hatchYear}
-                                     onChange={(e) => setHatchYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
-                                     disabled={isArchived}
-                                     className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                                />
-                                <Select value={hatchMonth} onValueChange={setHatchMonth} disabled={isArchived}>
-                                    <SelectTrigger aria-label="Hatch month" className="h-10 bg-slate-800 border-slate-600 text-slate-100">
-                                        <SelectValue placeholder="Month" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
-                                       <SelectItem value="none" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">None</SelectItem>
-                                       {MONTHS.map(m => (
-                                           <SelectItem key={m.value} value={m.value} className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">{m.label}</SelectItem>
-                                       ))}
-                                    </SelectContent>
-                                </Select>
-                                <Input
-                                    placeholder="DD"
-                                    maxLength={2}
-                                    value={hatchDay}
-                                     onChange={(e) => setHatchDay(e.target.value.replace(/[^0-9]/g, '').slice(0, 2))}
-                                     disabled={isArchived}
-                                     className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="sex">Sex *</Label>
-                            <Select value={formData.sex} onValueChange={(v) => handleChange('sex', v)} disabled={isArchived}>
-                                <SelectTrigger aria-label="Sex" className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
-                                    <SelectItem value="Unsexed" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Unsexed</SelectItem>
-                                    <SelectItem value="Male" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Male</SelectItem>
-                                    <SelectItem value="Female" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Female</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <Label htmlFor="species">Species</Label>
-                        <Select value={formData.species || 'Crested Gecko'} onValueChange={(v) => handleChange('species', v)} disabled={isArchived}>
-                            <SelectTrigger aria-label="Species" className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
-                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
-                                {GECKO_SPECIES.map(s => (
-                                    <SelectItem key={s} value={s} className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">{s}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <ParentAutocomplete
-                            id="sire_input"
-                            label="Sire (Father)"
-                            placeholder="Type or browse males..."
-                            value={sireInput}
-                            onChange={handleSireInputChange}
-                            onSelect={(s) => {
-                                setSireInput(`${s.name} (${s.gecko_id_code || 'No ID'})`);
-                                setSireId(s.id);
-                            }}
-                            geckos={userGeckos.filter((g) => g.sex === 'Male' && g.id !== gecko?.id && !g.archived && !g.notes?.startsWith('[Manual sale]'))}
-                            disabled={isArchived}
-                        />
-                        <ParentAutocomplete
-                            id="dam_input"
-                            label="Dam (Mother)"
-                            placeholder="Type or browse females..."
-                            value={damInput}
-                            onChange={handleDamInputChange}
-                            onSelect={(d) => {
-                                setDamInput(`${d.name} (${d.gecko_id_code || 'No ID'})`);
-                                setDamId(d.id);
-                            }}
-                            geckos={userGeckos.filter((g) => g.sex === 'Female' && g.id !== gecko?.id && !g.archived && !g.notes?.startsWith('[Manual sale]'))}
-                            disabled={isArchived}
-                        />
-                    </div>
-
-                    {/* For Sale Toggle */}
-                    <div className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
-                        <div className="flex-1">
-                            <Label className="text-base font-medium flex items-center gap-2">
-                                <DollarSign className="w-5 h-5 text-yellow-600" />
-                                List for Sale
-                            </Label>
-                            <p className="text-sm text-muted-foreground mt-1">Makes the gecko visible on the marketplace.</p>
-                        </div>
-                        <Switch
-                             checked={isForSale}
-                             onCheckedChange={handleForSaleToggle}
-                             disabled={isArchived}
-                             className="data-[state=checked]:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                         />
-                    </div>
-                    
-                    {/* Public Display Toggle */}
-                    <div className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
-                        <div>
-                            <Label htmlFor="is_public" className="text-base">Public Display</Label>
-                            <p className="text-xs text-slate-400">Show in public profile and marketplace</p>
-                        </div>
-                        <Switch
-                             id="is_public"
-                             checked={formData.is_public === true}
-                             onCheckedChange={(checked) => {
-                                 if (!checked && gecko?.passport_code && gecko?.is_public) {
-                                     setConfirmPrivate(true);
-                                     return;
-                                 }
-                                 setFormData(prev => ({ ...prev, is_public: checked, gallery_display: checked && prev.gallery_display }));
-                             }}
-                             disabled={isArchived}
-                             className="disabled:opacity-50 disabled:cursor-not-allowed"
-                         />
-                    </div>
-                    
-                    {/* Gallery Display Toggle */}
-                    <div className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
-                        <div>
-                            <Label htmlFor="gallery_display" className="text-base">Gallery Display</Label>
-                            <p className="text-xs text-slate-400">Show in public gallery</p>
-                        </div>
-                        <Switch
-                             id="gallery_display"
-                             checked={formData.is_public === true && formData.gallery_display === true}
-                             onCheckedChange={(checked) => handleChange('gallery_display', checked)}
-                             disabled={isArchived || formData.is_public !== true}
-                             className="disabled:opacity-50 disabled:cursor-not-allowed"
-                         />
-                    </div>
-
-                    {/* Gravid, Female only */}
-                    {formData.sex === 'Female' && (
-                        <div className="space-y-3 p-4 bg-pink-950/30 border border-pink-800/40 rounded-lg">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <Label className="text-base font-medium text-pink-300">Gravid (Pregnant)</Label>
-                                    <p className="text-xs text-slate-400 mt-0.5">Toggle on if this female is currently gravid</p>
-                                </div>
-                                <Switch
-                                    checked={formData.is_gravid || false}
-                                    onCheckedChange={(checked) => handleChange('is_gravid', checked)}
-                                    disabled={isArchived}
-                                    className="data-[state=checked]:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                />
-                            </div>
-                            {formData.is_gravid && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                                    <div>
-                                        <Label className="text-sm text-slate-300">Gravid Since</Label>
-                                        <Input
-                                            type="date"
-                                            value={formData.gravid_since || ''}
-                                            onChange={(e) => handleChange('gravid_since', e.target.value)}
-                                            disabled={isArchived}
-                                            className="bg-slate-800 border-slate-600 text-slate-100 mt-1"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label className="text-sm text-slate-300">Expected / Actual Egg Drop Date</Label>
-                                        <Input
-                                            type="date"
-                                            value={formData.egg_drop_date || ''}
-                                            onChange={(e) => handleChange('egg_drop_date', e.target.value)}
-                                            disabled={isArchived}
-                                            className="bg-slate-800 border-slate-600 text-slate-100 mt-1"
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <Label htmlFor="status">Status</Label>
-                            <Select
-                                value={formData.status}
-                                onValueChange={(v) => {
-                                    // A saved gecko marked Sold goes through the
-                                    // archive dialog, which asks for the sale
-                                    // price so Business Tools records the sale
-                                    // and the gecko leaves the active count.
-                                    if (v === 'Sold' && gecko?.id && onMarkSold) {
-                                        onMarkSold(gecko.id);
-                                        return;
-                                    }
-                                    handleChange('status', v);
-                                }}
-                                disabled={isForSale || isArchived}
-                            >
-                                <SelectTrigger aria-label="Status" className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
-                                    <SelectItem value="Pet" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Pet</SelectItem>
-                                    <SelectItem value="Future Breeder" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Future Breeder</SelectItem>
-                                    <SelectItem value="Holdback" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Holdback</SelectItem>
-                                    <SelectItem value="Ready to Breed" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Ready to Breed</SelectItem>
-                                    <SelectItem value="Proven" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Proven</SelectItem>
-                                    <SelectItem value="For Sale" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">For Sale</SelectItem>
-                                    <SelectItem value="Sold" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Sold</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label htmlFor="asking_price">Asking Price ($)</Label>
-                            <Input 
-                                 id="asking_price" 
-                                 type="number" 
-                                 step="0.01" 
-                                 value={formData.asking_price} 
-                                 onChange={(e) => handleChange('asking_price', e.target.value)} 
-                                 placeholder="e.g., 250.00"
-                                 disabled={isArchived}
-                                 className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                             />
-                        </div>
-                    </div>
-
-                    <div>
-                        <Label htmlFor="marketplace_description">Marketplace Description</Label>
-                        <Textarea
-                            id="marketplace_description"
-                            value={formData.marketplace_description}
-                            onChange={(e) => handleChange('marketplace_description', e.target.value)}
-                            disabled={isArchived}
-                            placeholder="Public-facing listing copy used on Geck Inspect, MorphMarket exports, and other marketplaces. Falls back to Notes if blank."
-                            rows={3}
-                            className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                        />
-                    </div>
-
-                    <div>
-                        <Label htmlFor="weight_grams">Current Weight (grams)</Label>
-                        <Input 
-                             id="weight_grams" 
-                             type="number" 
-                             step="0.1" 
-                             value={formData.weight_grams} 
-                             onChange={(e) => handleChange('weight_grams', e.target.value)} 
-                             placeholder="e.g., 50.3"
-                             disabled={isArchived}
-                             className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                         />
-                    </div>
-
-                    <div>
-                        <Label htmlFor="morphs_traits">Morphs & Traits (Free Text)</Label>
-                        <Textarea id="morphs_traits" value={formData.morphs_traits} onChange={(e) => handleChange('morphs_traits', e.target.value)} disabled={isArchived} className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed" />
-                    </div>
-
-                    {/* Morph ID Tags */}
-                     <MorphIDSelector
-                         selectedMorphs={formData.morph_tags || []}
-                         onMorphsChange={(tags) => handleChange('morph_tags', tags)}
-                         disabled={isArchived}
-                     />
-
-                    {/* Quality grade (Geck Inspect Standard 0-10). Tier
-                        is derived; pattern_grade is mirrored on save. */}
-                    <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-4">
-                        <QualityInput
-                            value={formData.quality_score}
-                            onChange={(score) => handleChange('quality_score', score)}
-                        />
-                    </div>
-
-                    {/* Tail status. Crested geckos drop tails readily and
-                        don't regrow them, so "Regenerating" is hidden for
-                        them; other species (leopard, gargoyle, leachie,
-                        etc.) can regrow tails so the option shows. */}
-                    <div>
-                        <Label>Tail Status</Label>
-                        <div className={`grid gap-2 mt-1 ${(formData.species || 'Crested Gecko') === 'Crested Gecko' ? 'grid-cols-2' : 'grid-cols-3'}`}>
-                            {[
-                                { value: 'intact',       label: 'Intact',       desc: 'Original tail' },
-                                { value: 'dropped',      label: 'Dropped',      desc: 'Caudal autotomy' },
-                                { value: 'regenerating', label: 'Regenerating', desc: 'Partial regrowth', hideFor: ['Crested Gecko'] },
-                            ]
-                                .filter(opt => !opt.hideFor?.includes(formData.species || 'Crested Gecko'))
-                                .map(opt => {
-                                    const active = formData.tail_status === opt.value;
-                                    return (
-                                        <button
-                                            key={opt.value}
-                                            type="button"
-                                            onClick={() => handleChange('tail_status', active ? null : opt.value)}
-                                            disabled={isArchived}
-                                            title={opt.desc}
-                                            className={`touch:min-h-11 px-2 py-2 rounded-lg border text-xs font-medium transition-colors ${
-                                                active
-                                                    ? 'border-emerald-500 bg-emerald-900/40 text-emerald-200'
-                                                    : 'border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-500'
-                                            } disabled:opacity-50 disabled:cursor-not-allowed`}
-                                        >
-                                            {opt.label}
-                                        </button>
-                                    );
-                                })}
-                        </div>
-                    </div>
-
-                    {/* Feeding Group */}
-                    <div>
-                        <Label>Feeding Group</Label>
-                        <Select value={formData.feeding_group_id || 'none'} onValueChange={(v) => handleChange('feeding_group_id', v === 'none' ? null : v)} disabled={isArchived}>
-                            <SelectTrigger aria-label="Feeding group" className="h-10 bg-slate-800 border-slate-600 text-slate-100">
-                                <SelectValue placeholder="No group assigned" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
-                                <SelectItem value="none" className="text-slate-100 focus:bg-slate-700 focus:text-white">No group</SelectItem>
-                                {feedingGroups.map(g => (
-                                    <SelectItem key={g.id} value={g.id} className="text-slate-100 focus:bg-slate-700 focus:text-white">
-                                        Group {g.label}{g.name ? `: ${g.name}` : ''} ({g.diet_type})
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {feedingGroups.length === 0 && (
-                            <p className="text-xs text-slate-500 mt-1">Create feeding groups in the Project Manager.</p>
-                        )}
-                    </div>
-
-                    {/* Collection picker, only renders when the user has more
-                        than one writable collection. Solo-collection users
-                        don't need a chooser; their default lands every gecko
-                        in the right place via the trigger. Only the gecko's
-                        owner may move it (the database refuses anyone else),
-                        so a collection editor never sees the picker on
-                        someone else's gecko. */}
-                    {writableCollections.length > 1 && isOwnGecko && (
-                        <div>
-                            <Label htmlFor="collection_id">Collection</Label>
-                            <Select
-                                value={formData.collection_id || ''}
-                                onValueChange={(v) => handleChange('collection_id', v)}
-                                disabled={isArchived}
-                            >
-                                <SelectTrigger aria-label="Collection" className="h-10 bg-slate-800 border-slate-600 text-slate-100">
-                                    <SelectValue placeholder="Default collection" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
-                                    {writableCollections.map((c) => (
-                                        <SelectItem
-                                            key={c.id}
-                                            value={c.id}
-                                            className="text-slate-100 focus:bg-slate-700 focus:text-white"
-                                        >
-                                            {c.name}{c.is_default ? ' (default)' : ''}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <p className="text-xs text-slate-500 mt-1">
-                                Move this gecko to a different collection. Manage collections in Settings.
+                    {draftOffer && (
+                        <div data-no-dirty className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-3 py-2">
+                            <p className="min-w-0 flex-1 basis-48 text-sm text-slate-100">
+                                Pick up where you left off?{' '}
+                                <span className="text-slate-400">
+                                    {draftOffer.form.name ? `You were adding ${draftOffer.form.name}.` : 'You have an unfinished gecko.'}
+                                </span>
                             </p>
+                            <div className="flex gap-2">
+                                <Button type="button" size="sm" onClick={() => restoreDraft(draftOffer)}>Restore</Button>
+                                <Button type="button" size="sm" variant="outline" className="border-slate-600 text-slate-200" onClick={startFresh}>Start fresh</Button>
+                            </div>
                         </div>
                     )}
 
+                    {/* Six headed sections, photos first (experience review
+                        D2). One wrapper, so the form's own spacing does not
+                        add gaps between them. */}
                     <div>
-                        <Label htmlFor="notes">Notes</Label>
-                        <Textarea id="notes" value={formData.notes} onChange={(e) => handleChange('notes', e.target.value)} disabled={isArchived} className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed" />
-                    </div>
-                    
-                    {/* Images: drag to reorder, first image is the primary
-                        display photo. Click a photo to open the crop /
-                        rotate dialog. The life-stage select tags the photo
-                        for the optional Growth Slideshow. */}
-                    <div>
-                        <Label>Images</Label>
-                        <p className="text-xs text-slate-500 mt-0.5 mb-2">
-                            Drag photos to reorder. The first photo is the primary display image on cards.
-                            Click any photo to crop or rotate. Tag a life stage to include it in the Growth Slideshow,
-                            and add a fired-up and a fired-down photo so buyers see both.
+                    <FormSection id="photos" title="Photos" summary={sectionSummary.photos} open={openSections.photos} onToggle={() => toggleSection('photos')}>
+                        {/* Drag to reorder; the first photo is the primary
+                            display photo. Tap a photo to open the crop and
+                            rotate dialog. The life-stage select tags the
+                            photo for the optional growth slideshow. */}
+                        <p className="text-xs text-slate-400">
+                            The first photo is the one shown on cards. Drag to reorder, tap a photo to crop or rotate,
+                            and tag a life stage to include it in the growth slideshow.
                         </p>
-
-                        <div className="mb-4">
-                            <GeckoArtworkPicker
-                                gecko={{ ...gecko, ...formData, inherited_placeholder_style: gecko?.id
-                                    ? gecko.inherited_placeholder_style
-                                    : currentUser?.gecko_artwork_style }}
-                                onChange={style => handleChange('placeholder_style', style)}
-                                disabled={isArchived || isSaving}
-                            />
-                        </div>
-
-                        {/* Fired-up and fired-down slots. Buyers ask to see
-                            both; the listing and passport show them side by
-                            side. Upload straight into a slot, or tag any
-                            photo below. */}
-                        <div className="grid grid-cols-2 gap-2 mb-3" data-fire-slots>
-                            {FIRE_SLOTS.map((slot) => {
-                                const slotUrl = fireSlotPhotos[slot.id];
-                                const slotMeta = slotUrl ? cropData[slotUrl] || {} : {};
-                                return (
-                                    <div key={slot.id} className="rounded border border-slate-700 bg-slate-800/40 overflow-hidden">
-                                        {slotUrl ? (
-                                            <div className="relative h-24 sm:h-28">
-                                                <img
-                                                    src={slotUrl}
-                                                    alt={`${formData.name || 'Gecko'} ${slot.label.toLowerCase()}`}
-                                                    className="w-full h-full object-cover"
-                                                    style={{
-                                                        objectPosition: `${slotMeta.x ?? 50}% ${slotMeta.y ?? 50}%`,
-                                                        transform: slotMeta.rotation ? `rotate(${slotMeta.rotation}deg)` : undefined,
-                                                    }}
-                                                />
-                                                {!isArchived && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setFireState(slotUrl, '')}
-                                                        className="touch-hit absolute top-1 right-1 h-7 w-7 rounded bg-slate-900/70 backdrop-blur-sm flex items-center justify-center text-slate-300 hover:text-red-300"
-                                                        title={`Take this photo out of the ${slot.label.toLowerCase()} slot`}
-                                                        aria-label={`Clear ${slot.label.toLowerCase()} slot`}
-                                                    >
-                                                        <X className="w-4 h-4" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <label
-                                                className={`h-24 sm:h-28 flex flex-col items-center justify-center gap-1 text-center px-2 text-slate-400 ${
-                                                    isArchived || isUploadingImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:text-emerald-300 hover:bg-slate-800'
-                                                }`}
-                                                onClick={async (event) => {
-                                                    if (!isNativePlatform() || isArchived || isUploadingImage) return;
-                                                    event.preventDefault();
-                                                    try {
-                                                        const file = await captureDevicePhoto();
-                                                        if (file) await handleSlotUpload({ target: { files: [file] } }, slot.id);
-                                                    } catch (err) {
-                                                        toast({ title: 'Could not open the camera', description: err.message || 'Try again.', variant: 'destructive' });
-                                                    }
-                                                }}
-                                            >
-                                                <Upload className="w-4 h-4" />
-                                                <span className="text-xs">Add {slot.label.toLowerCase()} photo</span>
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    className="hidden"
-                                                    onChange={(e) => handleSlotUpload(e, slot.id)}
-                                                    disabled={isArchived || isUploadingImage}
-                                                />
-                                            </label>
-                                        )}
-                                        <div className="px-2 py-1.5 border-t border-slate-700">
-                                            <p className="text-xs font-semibold text-slate-200">{slot.label}</p>
-                                            <p className="text-[11px] leading-snug text-slate-500">{slot.hint}</p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
                         <DragDropContext onDragEnd={handleImageDragEnd}>
                             <Droppable droppableId="gecko-images" direction="horizontal">
                                 {(droppable) => (
@@ -1191,6 +908,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                                                     size="icon"
                                                                     variant="destructive"
                                                                     className="absolute top-1 right-1 h-7 w-7"
+                                                                    aria-label={`Remove photo ${index + 1}`}
                                                                     onClick={() => removeImage(url)}
                                                                 >
                                                                     <X className="h-4 w-4" />
@@ -1273,7 +991,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     </>
                                 ) : (
                                     <>
-                                        <Upload className="w-4 h-4 mr-2"/> Upload Images
+                                        <Upload className="w-4 h-4 mr-2"/> Upload photos
                                     </>
                                 )}
                                 <input
@@ -1287,6 +1005,74 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             </label>
                         </Button>
 
+                        {/* Fired-up and fired-down slots. Buyers ask to see
+                            both; the listing and passport show them side by
+                            side. Upload straight into a slot, or tag any
+                            photo below. */}
+                        <div className="grid grid-cols-2 gap-2 mb-3" data-fire-slots>
+                            {FIRE_SLOTS.map((slot) => {
+                                const slotUrl = fireSlotPhotos[slot.id];
+                                const slotMeta = slotUrl ? cropData[slotUrl] || {} : {};
+                                return (
+                                    <div key={slot.id} className="rounded border border-slate-700 bg-slate-800/40 overflow-hidden">
+                                        {slotUrl ? (
+                                            <div className="relative h-24 sm:h-28">
+                                                <img
+                                                    src={slotUrl}
+                                                    alt={`${formData.name || 'Gecko'} ${slot.label.toLowerCase()}`}
+                                                    className="w-full h-full object-cover"
+                                                    style={{
+                                                        objectPosition: `${slotMeta.x ?? 50}% ${slotMeta.y ?? 50}%`,
+                                                        transform: slotMeta.rotation ? `rotate(${slotMeta.rotation}deg)` : undefined,
+                                                    }}
+                                                />
+                                                {!isArchived && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFireState(slotUrl, '')}
+                                                        className="touch-hit absolute top-1 right-1 h-7 w-7 rounded bg-slate-900/70 backdrop-blur-sm flex items-center justify-center text-slate-300 hover:text-red-300"
+                                                        title={`Take this photo out of the ${slot.label.toLowerCase()} slot`}
+                                                        aria-label={`Clear ${slot.label.toLowerCase()} slot`}
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <label
+                                                className={`h-24 sm:h-28 flex flex-col items-center justify-center gap-1 text-center px-2 text-slate-400 ${
+                                                    isArchived || isUploadingImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:text-emerald-300 hover:bg-slate-800'
+                                                }`}
+                                                onClick={async (event) => {
+                                                    if (!isNativePlatform() || isArchived || isUploadingImage) return;
+                                                    event.preventDefault();
+                                                    try {
+                                                        const file = await captureDevicePhoto();
+                                                        if (file) await handleSlotUpload({ target: { files: [file] } }, slot.id);
+                                                    } catch (err) {
+                                                        toast({ title: 'Could not open the camera', description: err.message || 'Try again.', variant: 'destructive' });
+                                                    }
+                                                }}
+                                            >
+                                                <Upload className="w-4 h-4" />
+                                                <span className="text-xs">Add {slot.label.toLowerCase()} photo</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => handleSlotUpload(e, slot.id)}
+                                                    disabled={isArchived || isUploadingImage}
+                                                />
+                                            </label>
+                                        )}
+                                        <div className="px-2 py-1.5 border-t border-slate-700">
+                                            <p className="text-xs font-semibold text-slate-200">{slot.label}</p>
+                                            <p className="text-[11px] leading-snug text-slate-500">{slot.hint}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                         {/* Growth Slideshow toggle. Only shows when at least
                             one photo carries a life-stage tag, since the
                             slideshow has nothing to show without tags. */}
@@ -1295,7 +1081,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 <div className="flex items-center gap-2">
                                     <Camera className="w-4 h-4 text-emerald-400" />
                                     <div>
-                                        <Label className="text-sm text-slate-200">Growth Slideshow</Label>
+                                        <Label className="text-sm text-slate-200">Growth slideshow</Label>
                                         <p className="text-xs text-slate-500">Show tagged photos as a life-stage slideshow on the detail view.</p>
                                     </div>
                                 </div>
@@ -1306,6 +1092,435 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 />
                             </div>
                         )}
+
+                        {/* The drawing a card shows while the gecko has no
+                            photo. Folded away so it does not push the rest
+                            of the form down. */}
+                        <div data-no-dirty>
+                            <button
+                                type="button"
+                                onClick={() => setArtworkOpen((open) => !open)}
+                                aria-expanded={artworkOpen}
+                                aria-controls="gecko-form-artwork"
+                                className="touch:min-h-11 inline-flex flex-wrap items-center gap-x-1.5 text-left text-sm font-medium text-emerald-300 hover:text-emerald-200"
+                            >
+                                <ChevronDown className={`h-4 w-4 transition-transform ${artworkOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+                                Placeholder artwork
+                                <span className="font-normal text-slate-400">shown while there is no photo</span>
+                            </button>
+                        </div>
+                        {artworkOpen && (
+                            <div id="gecko-form-artwork">
+                                <GeckoArtworkPicker
+                                    gecko={{ ...gecko, ...formData, inherited_placeholder_style: gecko?.id
+                                        ? gecko.inherited_placeholder_style
+                                        : currentUser?.gecko_artwork_style }}
+                                    onChange={style => handleChange('placeholder_style', style)}
+                                    disabled={isArchived || isSaving}
+                                />
+                            </div>
+                        )}
+                    </FormSection>
+
+                    <FormSection id="identity" title="Identity" summary={sectionSummary.identity} open={openSections.identity} onToggle={() => toggleSection('identity')}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                 <Label htmlFor="name">Name *</Label>
+                                 <Input id="name" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} required disabled={isArchived} className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed" />
+                             </div>
+                            <div>
+                                 <Label htmlFor="gecko_id_code">ID code</Label>
+                                 <Input id="gecko_id_code" value={formData.gecko_id_code} onChange={(e) => handleChange('gecko_id_code', e.target.value)} disabled={isArchived} className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed" />
+                             </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="sex">Sex *</Label>
+                                <Select value={formData.sex} onValueChange={(v) => handleChange('sex', v)} disabled={isArchived}>
+                                    <SelectTrigger aria-label="Sex" className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                        <SelectItem value="Unsexed" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Unsexed</SelectItem>
+                                        <SelectItem value="Male" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Male</SelectItem>
+                                        <SelectItem value="Female" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Female</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            {/* One labelled row. A full date pasted (or
+                                autofilled) into Year or Day fills all three
+                                (experience review D7). */}
+                            <div className="min-w-0">
+                                <Label id="hatch_date_label" htmlFor="hatch_year">Hatch date</Label>
+                                <div role="group" aria-labelledby="hatch_date_label" className="grid grid-cols-[minmax(0,4fr)_minmax(0,6fr)_minmax(0,3fr)] gap-2 [&>input]:h-10">
+                                    <Input
+                                        id="hatch_year"
+                                        inputMode="numeric"
+                                        placeholder="Year"
+                                        aria-label="Hatch year"
+                                        aria-describedby="hatch_date_hint"
+                                        autoComplete="off"
+                                        value={hatchYear}
+                                        onChange={(e) => handleHatchBox(e.target.value, setHatchYear, 4)}
+                                        onPaste={handleHatchPaste}
+                                        disabled={isArchived}
+                                        className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    />
+                                    <Select value={hatchMonth} onValueChange={(v) => setHatchMonth(v === 'none' ? '' : v)} disabled={isArchived}>
+                                        <SelectTrigger aria-label="Hatch month" className="h-10 touch:h-11 bg-slate-800 border-slate-600 text-slate-100">
+                                            <SelectValue placeholder="Month" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                            <SelectItem value="none" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">No month</SelectItem>
+                                            {MONTHS.map(m => (
+                                                <SelectItem key={m.value} value={m.value} className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">{m.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Input
+                                        id="hatch_day"
+                                        inputMode="numeric"
+                                        placeholder="Day"
+                                        aria-label="Hatch day"
+                                        aria-describedby="hatch_date_hint"
+                                        autoComplete="off"
+                                        value={hatchDay}
+                                        onChange={(e) => handleHatchBox(e.target.value, setHatchDay, 2)}
+                                        onPaste={handleHatchPaste}
+                                        disabled={isArchived}
+                                        className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    />
+                                </div>
+                                <p id="hatch_date_hint" aria-live="polite" className={`mt-1.5 text-xs ${hatchStatus === 'invalid' ? 'text-amber-300' : 'text-slate-400'}`}>
+                                    {hatchStatus === 'complete' && `Hatched ${format(hatchDateNow, 'MMMM d, yyyy')}.`}
+                                    {hatchStatus === 'invalid' && 'That day does not exist. Check the month and the day.'}
+                                    {hatchStatus === 'partial' && 'A hatch date is saved once all three are filled in. If you only know the month, you can enter the 1st and say so in the notes.'}
+                                    {hatchStatus === 'empty' && 'You can paste a full date, such as 24 Feb 2026, into Year.'}
+                                </p>
+                            </div>
+                        </div>
+                    </FormSection>
+
+                    <FormSection id="parents" title="Parents" summary={sectionSummary.parents} open={openSections.parents} onToggle={() => toggleSection('parents')}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <ParentAutocomplete
+                                id="sire_input"
+                                label="Sire (father)"
+                                placeholder="Type or browse males..."
+                                value={sireInput}
+                                onChange={handleSireInputChange}
+                                onSelect={(s) => {
+                                    setSireInput(`${s.name} (${s.gecko_id_code || 'No ID'})`);
+                                    setSireId(s.id);
+                                }}
+                                geckos={userGeckos.filter((g) => g.sex === 'Male' && g.id !== gecko?.id && !g.archived && !g.notes?.startsWith('[Manual sale]'))}
+                                disabled={isArchived}
+                            />
+                            <ParentAutocomplete
+                                id="dam_input"
+                                label="Dam (mother)"
+                                placeholder="Type or browse females..."
+                                value={damInput}
+                                onChange={handleDamInputChange}
+                                onSelect={(d) => {
+                                    setDamInput(`${d.name} (${d.gecko_id_code || 'No ID'})`);
+                                    setDamId(d.id);
+                                }}
+                                geckos={userGeckos.filter((g) => g.sex === 'Female' && g.id !== gecko?.id && !g.archived && !g.notes?.startsWith('[Manual sale]'))}
+                                disabled={isArchived}
+                            />
+                        </div>
+                    </FormSection>
+
+                    <FormSection id="morph" title="Morph and quality" summary={sectionSummary.morph} open={openSections.morph} onToggle={() => toggleSection('morph')}>
+                        {/* One group for the morph: tags from the catalogue
+                            and the free-text line (experience review D4). */}
+                        <MorphIDSelector
+                            selectedMorphs={formData.morph_tags || []}
+                            onMorphsChange={(tags) => handleChange('morph_tags', tags)}
+                            freeText={formData.morphs_traits}
+                            onFreeTextChange={(text) => handleChange('morphs_traits', text)}
+                            disabled={isArchived}
+                        />
+
+                        {/* Quality grade (Geck Inspect Standard 0-10). Tier
+                            is derived; pattern_grade is mirrored on save. */}
+                        <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-4">
+                            <QualityInput
+                                value={formData.quality_score}
+                                onChange={(score) => handleChange('quality_score', score)}
+                            />
+                        </div>
+
+                        {/* Tail status. Crested geckos drop tails readily and
+                            don't regrow them, so "Regenerating" is hidden for
+                            them; other species (leopard, gargoyle, leachie,
+                            etc.) can regrow tails so the option shows. */}
+                        <div>
+                            <Label>Tail status</Label>
+                            <div className={`grid gap-2 mt-1 ${(formData.species || 'Crested Gecko') === 'Crested Gecko' ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                                {[
+                                    { value: 'intact',       label: 'Intact',       desc: 'Original tail' },
+                                    { value: 'dropped',      label: 'Dropped',      desc: 'Caudal autotomy' },
+                                    { value: 'regenerating', label: 'Regenerating', desc: 'Partial regrowth', hideFor: ['Crested Gecko'] },
+                                ]
+                                    .filter(opt => !opt.hideFor?.includes(formData.species || 'Crested Gecko'))
+                                    .map(opt => {
+                                        const active = formData.tail_status === opt.value;
+                                        return (
+                                            <button
+                                                key={opt.value}
+                                                type="button"
+                                                onClick={() => handleChange('tail_status', active ? null : opt.value)}
+                                                disabled={isArchived}
+                                                title={opt.desc}
+                                                className={`touch:min-h-11 px-2 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                                                    active
+                                                        ? 'border-emerald-500 bg-emerald-900/40 text-emerald-200'
+                                                        : 'border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-500'
+                                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        );
+                                    })}
+                            </div>
+                        </div>
+                    </FormSection>
+
+                    <FormSection id="selling" title="Selling and visibility" summary={sectionSummary.selling} open={openSections.selling} onToggle={() => toggleSection('selling')}>
+                        {/* For Sale Toggle */}
+                        <div className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
+                            <div className="flex-1">
+                                <Label className="text-base font-medium flex items-center gap-2">
+                                    <DollarSign className="w-5 h-5 text-yellow-600" />
+                                    List for sale
+                                </Label>
+                                <p className="text-sm text-muted-foreground mt-1">Makes the gecko visible on the marketplace.</p>
+                            </div>
+                            <Switch
+                                 checked={isForSale}
+                                 onCheckedChange={handleForSaleToggle}
+                                 disabled={isArchived}
+                                 className="data-[state=checked]:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                             />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="asking_price">Asking price ($)</Label>
+                                <Input 
+                                     id="asking_price" 
+                                     type="number" 
+                                     step="0.01" 
+                                     value={formData.asking_price} 
+                                     onChange={(e) => handleChange('asking_price', e.target.value)} 
+                                     placeholder="e.g., 250.00"
+                                     disabled={isArchived}
+                                     className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                 />
+                            </div>
+                            <div>
+                                <Label htmlFor="status">Status</Label>
+                                <Select
+                                    value={formData.status}
+                                    onValueChange={(v) => {
+                                        // A saved gecko marked Sold goes through the
+                                        // archive dialog, which asks for the sale
+                                        // price so Business Tools records the sale
+                                        // and the gecko leaves the active count.
+                                        if (v === 'Sold' && gecko?.id && onMarkSold) {
+                                            onMarkSold(gecko.id);
+                                            return;
+                                        }
+                                        handleChange('status', v);
+                                    }}
+                                    disabled={isForSale || isArchived}
+                                >
+                                    <SelectTrigger aria-label="Status" className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                        <SelectItem value="Pet" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Pet</SelectItem>
+                                        <SelectItem value="Future Breeder" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Future Breeder</SelectItem>
+                                        <SelectItem value="Holdback" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Holdback</SelectItem>
+                                        <SelectItem value="Ready to Breed" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Ready to Breed</SelectItem>
+                                        <SelectItem value="Proven" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Proven</SelectItem>
+                                        <SelectItem value="For Sale" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">For Sale</SelectItem>
+                                        <SelectItem value="Sold" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Sold</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="marketplace_description">Marketplace description</Label>
+                            <Textarea
+                                id="marketplace_description"
+                                value={formData.marketplace_description}
+                                onChange={(e) => handleChange('marketplace_description', e.target.value)}
+                                disabled={isArchived}
+                                placeholder="What buyers read on your listing. Uses Notes if left blank."
+                                rows={3}
+                                className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                        </div>
+
+                        {/* Public Display Toggle */}
+                        <div className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
+                            <div>
+                                <Label htmlFor="is_public" className="text-base">Public display</Label>
+                                <p className="text-xs text-slate-400">Show in public profile and marketplace</p>
+                            </div>
+                            <Switch
+                                 id="is_public"
+                                 checked={formData.is_public === true}
+                                 onCheckedChange={(checked) => {
+                                     if (!checked && gecko?.passport_code && gecko?.is_public) {
+                                         setConfirmPrivate(true);
+                                         return;
+                                     }
+                                     setFormData(prev => ({ ...prev, is_public: checked, gallery_display: checked && prev.gallery_display }));
+                                 }}
+                                 disabled={isArchived}
+                                 className="disabled:opacity-50 disabled:cursor-not-allowed"
+                             />
+                        </div>
+
+                        {/* Gallery Display Toggle */}
+                        <div className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
+                            <div>
+                                <Label htmlFor="gallery_display" className="text-base">Gallery display</Label>
+                                <p className="text-xs text-slate-400">Show in public gallery</p>
+                            </div>
+                            <Switch
+                                 id="gallery_display"
+                                 checked={formData.is_public === true && formData.gallery_display === true}
+                                 onCheckedChange={(checked) => handleChange('gallery_display', checked)}
+                                 disabled={isArchived || formData.is_public !== true}
+                                 className="disabled:opacity-50 disabled:cursor-not-allowed"
+                             />
+                        </div>
+
+                        {/* Gravid, Female only */}
+                        {formData.sex === 'Female' && (
+                            <div className="space-y-3 p-4 bg-slate-800 rounded-lg">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <Label className="text-base">Gravid</Label>
+                                        <p className="text-xs text-slate-400 mt-0.5">Switch on while this female is carrying eggs</p>
+                                    </div>
+                                    <Switch
+                                        checked={formData.is_gravid || false}
+                                        onCheckedChange={(checked) => handleChange('is_gravid', checked)}
+                                        disabled={isArchived}
+                                        aria-label="Gravid"
+                                        className="disabled:opacity-50 disabled:cursor-not-allowed"
+                                    />
+                                </div>
+                                {formData.is_gravid && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                                        <div>
+                                            <Label className="text-sm text-slate-300">Gravid since</Label>
+                                            <Input
+                                                type="date"
+                                                value={formData.gravid_since || ''}
+                                                onChange={(e) => handleChange('gravid_since', e.target.value)}
+                                                disabled={isArchived}
+                                                className="bg-slate-800 border-slate-600 text-slate-100 mt-1"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-sm text-slate-300">Expected or actual egg drop date</Label>
+                                            <Input
+                                                type="date"
+                                                value={formData.egg_drop_date || ''}
+                                                onChange={(e) => handleChange('egg_drop_date', e.target.value)}
+                                                disabled={isArchived}
+                                                className="bg-slate-800 border-slate-600 text-slate-100 mt-1"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Collection picker, only renders when the user has more
+                            than one writable collection. Solo-collection users
+                            don't need a chooser; their default lands every gecko
+                            in the right place via the trigger. Only the gecko's
+                            owner may move it (the database refuses anyone else),
+                            so a collection editor never sees the picker on
+                            someone else's gecko. */}
+                        {writableCollections.length > 1 && isOwnGecko && (
+                            <div>
+                                <Label htmlFor="collection_id">Collection</Label>
+                                <Select
+                                    value={formData.collection_id || ''}
+                                    onValueChange={(v) => handleChange('collection_id', v)}
+                                    disabled={isArchived}
+                                >
+                                    <SelectTrigger aria-label="Collection" className="h-10 bg-slate-800 border-slate-600 text-slate-100">
+                                        <SelectValue placeholder="Default collection" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                        {writableCollections.map((c) => (
+                                            <SelectItem
+                                                key={c.id}
+                                                value={c.id}
+                                                className="text-slate-100 focus:bg-slate-700 focus:text-white"
+                                            >
+                                                {c.name}{c.is_default ? ' (default)' : ''}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-slate-500 mt-1">
+                                    Move this gecko to a different collection. Manage collections in Settings.
+                                </p>
+                            </div>
+                        )}
+                    </FormSection>
+
+                    <FormSection id="care" title="Care and notes" summary={sectionSummary.care} open={openSections.care} onToggle={() => toggleSection('care')}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="weight_grams">Current weight (grams)</Label>
+                                <Input 
+                                     id="weight_grams" 
+                                     type="number" 
+                                     step="0.1" 
+                                     value={formData.weight_grams} 
+                                     onChange={(e) => handleChange('weight_grams', e.target.value)} 
+                                     placeholder="e.g., 50.3"
+                                     disabled={isArchived}
+                                     className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                 />
+                            </div>
+                            {/* Feeding Group */}
+                            <div>
+                                <Label>Feeding group</Label>
+                                <Select value={formData.feeding_group_id || 'none'} onValueChange={(v) => handleChange('feeding_group_id', v === 'none' ? null : v)} disabled={isArchived}>
+                                    <SelectTrigger aria-label="Feeding group" className="h-10 bg-slate-800 border-slate-600 text-slate-100">
+                                        <SelectValue placeholder="No group assigned" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                        <SelectItem value="none" className="text-slate-100 focus:bg-slate-700 focus:text-white">No group</SelectItem>
+                                        {feedingGroups.map(g => (
+                                            <SelectItem key={g.id} value={g.id} className="text-slate-100 focus:bg-slate-700 focus:text-white">
+                                                Group {g.label}{g.name ? `: ${g.name}` : ''} ({g.diet_type})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {feedingGroups.length === 0 && (
+                                    <p className="text-xs text-slate-500 mt-1">Create feeding groups in the Project Manager.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="notes">Notes</Label>
+                            <Textarea id="notes" value={formData.notes} onChange={(e) => handleChange('notes', e.target.value)} disabled={isArchived} className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed" />
+                        </div>
+                    </FormSection>
                     </div>
 
                     {/* Certificates live on the gecko record rather than the
@@ -1313,10 +1528,12 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 </form>
 
                 <CardFooter className="flex-shrink-0 mt-auto bg-slate-900 border-t border-slate-700 p-3 sm:p-4 flex flex-wrap justify-end items-center gap-2 sm:gap-3">
-                    {gecko && onArchive && !isArchived && (
+                    {/* Only a saved gecko can be archived; a draft has no id. */}
+                    {gecko?.id && onArchive && !isArchived && (
                         <Button
                             type="button"
                             variant="outline"
+                            aria-label="Archive"
                             onClick={() => onArchive(gecko.id, true)}
                             className="h-10 px-3 sm:px-4 border-red-600 text-red-400 hover:bg-red-950/40 hover:text-red-300 mr-auto"
                         >
@@ -1330,7 +1547,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         </div>
                     )}
                     <Button variant="outline" onClick={requestClose} disabled={isSaving} className="h-10 px-3 sm:px-4 border-slate-600 text-slate-300 hover:bg-slate-800">Cancel</Button>
-                    <Button type="submit" form="gecko-details-form" disabled={isSaving || isArchived} className="bg-emerald-600 hover:bg-emerald-700 h-10 px-3 sm:px-4">
+                    <Button type="submit" form="gecko-details-form" onClick={revealInvalidFields} disabled={isSaving || isArchived} className="bg-emerald-600 hover:bg-emerald-700 h-10 px-3 sm:px-4">
                         {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                         {getSaveButtonText()}
                     </Button>
@@ -1383,7 +1600,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <AlertDialogCancel className="border-slate-600">Keep editing</AlertDialogCancel>
                         <AlertDialogAction
                             className="bg-red-700 hover:bg-red-600 text-white"
-                            onClick={() => { setConfirmDiscard(false); onCancel(); }}
+                            onClick={() => {
+                                setConfirmDiscard(false);
+                                // Discarded on purpose: the kept draft goes too.
+                                draftDoneRef.current = true;
+                                if (keepsDraft) clearGeckoFormDraft(currentUser);
+                                onCancel();
+                            }}
                         >
                             Discard
                         </AlertDialogAction>

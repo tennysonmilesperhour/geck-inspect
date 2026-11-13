@@ -242,4 +242,42 @@ describe('QuickAddGecko', () => {
     expect(textOf(tree)).toContain('Back to the demo');
     expect(JSON.parse(mem.get('geck_pending_first_gecko_v1')).draft).toMatchObject({ name: 'Mango', morphs_traits: 'Lilly White' });
   });
+
+  // Experience review D1: every "Add Gecko" opens this form, so for a
+  // collection that already has geckos it is no longer the "first".
+  it('reads "Add a gecko" for a later gecko, saves it and shows its own success screen', async () => {
+    const { tree, onSaved } = await mount({ existingGeckos: [{ id: 'old', name: 'Mango', archived: false }] });
+    expect(textOf(tree)).toContain('Add a gecko');
+    expect(textOf(tree)).not.toContain('Add your first gecko');
+    expect(textOf(tree)).not.toContain('Import it instead');
+    expect(buttonWithText(tree, 'More details')).toBeTruthy();
+    await act(async () => { byId(tree, 'qa-name').props.onChange({ target: { value: 'Pip' } }); });
+    await act(async () => { buttonWithText(tree, 'Save gecko').props.onClick(); });
+    expect(state.rpcCalls).toHaveLength(1);
+    expect(onSaved).toHaveBeenCalledTimes(1);
+    expect(textOf(tree)).toContain('Pip is in your collection');
+  });
+
+  it('still reads "first" when every gecko in the collection is archived', async () => {
+    const { tree } = await mount({ existingGeckos: [{ id: 'old', name: 'Mango', archived: true }] });
+    expect(textOf(tree)).toContain('Add your first gecko');
+  });
+
+  // Experience review D3: an unfinished gecko from the long form is kept
+  // in this browser; one line here leads back to it.
+  it('offers an unfinished gecko kept from the long form, and never to a guest', async () => {
+    const kept = JSON.stringify({ saved_at: Date.now(), draft: { form: { name: 'Mango', image_urls: [] } } });
+    const mem = new Map([['geck_gecko_form_draft_v1:u1', kept]]);
+    globalThis.localStorage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v), removeItem: (k) => mem.delete(k) };
+    const onResumeDraft = vi.fn();
+    const { tree } = await mount({ onResumeDraft });
+    expect(textOf(tree)).toContain('Pick up where you left off?');
+    expect(textOf(tree)).toContain('Mango is unfinished.');
+    await act(async () => { buttonWithText(tree, 'Pick it up').props.onClick(); });
+    expect(onResumeDraft).toHaveBeenCalledTimes(1);
+
+    const guest = await mount({ onResumeDraft, guest: true });
+    expect(textOf(guest.tree)).not.toContain('Pick up where you left off?');
+    delete globalThis.localStorage;
+  });
 });

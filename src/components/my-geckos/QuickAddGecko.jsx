@@ -12,6 +12,7 @@ import { todayLocalISO } from '@/lib/dateUtils';
 import { captureEvent } from '@/lib/posthog';
 import { isGeckoLimitError } from '@/lib/geckoLimit';
 import { saveQuickGecko } from './quickGeckoSave';
+import { readGeckoFormDraft } from './form/draft';
 import { holdOnboarding, releaseOnboarding } from '@/lib/onboardingState';
 import { DEFAULT_FEEDING_INTERVAL_DAYS, flowEvent, savePendingGecko } from '@/lib/firstGeckoFlow';
 import { isNativePlatform } from '@/lib/revenuecat';
@@ -23,13 +24,17 @@ const GUEST_SIGNUP_URL = `/AuthPortal?mode=signup&redirect=${encodeURIComponent(
 const SEXES = ['Unsexed', 'Female', 'Male'];
 
 /**
- * Quick add for a keeper's first crested gecko (VIP audit P1.2, 27 Sep 2026).
+ * Quick add for a crested gecko (VIP audit P1.2, 27 Sep 2026). First built
+ * for a keeper's first gecko; since the experience review (D1, 12 Nov
+ * 2026) every "Add Gecko" opens it, whatever the size of the collection.
  *
- * The full GeckoForm has 20+ fields with photos last; two of three new
- * accounts never finished it. This asks for the photo first, then name,
- * sex, and optional hatch date, morph and weight, and offers feeding-day
+ * The full GeckoForm has 20+ fields; two of three new accounts never
+ * finished it. This asks for the photo first, then name, sex, and
+ * optional hatch date, morph and weight, and offers feeding-day
  * reminders (served by the enqueue_feeding_reminders cron). "More details"
- * hands everything to the full form. It saves through save_gecko_record,
+ * hands everything to the full form, and onResumeDraft() opens the full
+ * form on an unfinished gecko kept in this browser (./form/draft.js), which
+ * is offered in one line here. It saves through save_gecko_record,
  * the same atomic RPC the full form uses, so a weight entered here becomes
  * the first point on the growth chart.
  *
@@ -66,10 +71,15 @@ const SEXES = ['Unsexed', 'Female', 'Male'];
  * suggestion the member can change on the record, and when Morph ID was
  * unsure (the draft's check_morph) it is a field to check, not a line.
  */
-export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDetails, onLogWeight, onOpenRecord, onImport, slotsLeftAtOpen = Infinity, onLimitReached, existingGeckos = [], idSettings = null, offerPhotoChoice = false, onChoosePhoto, initialDraft = null, stepLabel = null, onContinue, guest = false, saveSource = 'quick_add' }) {
+export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDetails, onResumeDraft, onLogWeight, onOpenRecord, onImport, slotsLeftAtOpen = Infinity, onLimitReached, existingGeckos = [], idSettings = null, offerPhotoChoice = false, onChoosePhoto, initialDraft = null, stepLabel = null, onContinue, guest = false, saveSource = 'quick_add' }) {
   const { toast } = useToast();
   const fileInputRef = useRef(null);
   const requestIdRef = useRef(crypto.randomUUID());
+  // "First" only while nothing is in the collection (and in the demo, where
+  // it is the visitor's first). A later gecko reads "Add a gecko".
+  const firstGecko = guest || !existingGeckos.some((g) => !g.archived);
+  // An unfinished gecko from the long form, kept in this browser.
+  const [keptDraft] = useState(() => (guest || initialDraft ? null : readGeckoFormDraft(user)));
 
   // Keep the first-run keeper-or-breeder question from opening on top of
   // this form; it can follow once the form closes.
@@ -441,7 +451,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
           <div className="space-y-4">
             <div>
               {stepLabel && addedCount === 0 && <p className="text-[11px] uppercase tracking-wider font-semibold text-emerald-300">{stepLabel}</p>}
-              <DialogTitle className="text-xl text-slate-100">{addedCount > 0 ? 'Add another gecko' : 'Add your first gecko'}</DialogTitle>
+              <DialogTitle className="text-xl text-slate-100">{addedCount > 0 ? 'Add another gecko' : firstGecko ? 'Add your first gecko' : 'Add a gecko'}</DialogTitle>
               <DialogDescription className="text-slate-400 mt-1">
                 {initialDraft?.morph_tags?.length || initialDraft?.notes
                   ? 'Morph ID filled in the morph and photo. Give your gecko a name and check the rest.'
@@ -449,7 +459,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
                     ? 'Try it with any name. This is the demo, so you keep it by creating a free account.'
                     : 'Start with a photo and a name. Everything else can wait.'}
               </DialogDescription>
-              {addedCount === 0 && onImport && !offerPhotoChoice && !guest && (
+              {addedCount === 0 && firstGecko && onImport && !offerPhotoChoice && !guest && (
                 <button
                   type="button"
                   onClick={() => onImport()}
@@ -459,6 +469,20 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
                 </button>
               )}
             </div>
+
+            {keptDraft && onResumeDraft && addedCount === 0 && (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-3 py-2">
+                <p className="min-w-0 flex-1 basis-40 text-sm text-slate-100">
+                  Pick up where you left off?{' '}
+                  <span className="text-slate-400">
+                    {keptDraft.form.name ? `${keptDraft.form.name} is unfinished.` : 'You have an unfinished gecko.'}
+                  </span>
+                </p>
+                <Button variant="outline" className="min-h-11 border-slate-600 text-slate-100" onClick={() => onResumeDraft()}>
+                  Pick it up
+                </Button>
+              </div>
+            )}
 
             {guest ? (
               <p className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-xs text-slate-400">

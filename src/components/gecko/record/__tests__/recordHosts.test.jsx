@@ -110,13 +110,13 @@ describe('/GeckoDetail shows the one record as a page', () => {
     expect(state.lastRecordProps).toMatchObject({ canEdit: false, isMember: false, currentUser: null });
   });
 
-  it('sends Edit and Archive to My Geckos, where the form and the archive dialog live', async () => {
+  // Edit no longer leaves the page (experience review D6): the form opens
+  // over the record. That is covered in src/pages/__tests__/GeckoDetailEdit.test.jsx.
+  it('sends Archive and Mark sold to My Geckos, where the archive dialog lives', async () => {
     await mountPage();
-    await act(async () => { state.lastRecordProps.onEdit(state.gecko); });
     await act(async () => { state.lastRecordProps.onArchive('g1', true); });
     await act(async () => { state.lastRecordProps.onMarkSold('g1'); });
     expect(state.navigations.map(([to]) => to)).toEqual([
-      '/MyGeckos?gecko=g1&open=edit',
       '/MyGeckos?gecko=g1&open=archive',
       '/MyGeckos?gecko=g1&open=sold',
     ]);

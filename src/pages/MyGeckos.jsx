@@ -96,6 +96,11 @@ export default function MyGeckosPage() {
     // attributed to the Morph ID path in analytics.
     const morphDraftOpenRef = React.useRef(false);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    // True while the edit form was opened from a gecko's record window.
+    const editFromRecordRef = React.useRef(false);
+    // Open the long add form with the member's kept draft already in it
+    // (Quick Add's "Pick it up"; src/components/my-geckos/form/draft.js).
+    const [restoreDraftOnOpen, setRestoreDraftOnOpen] = useState(false);
     // The first-run question waits while the full gecko form is open.
     useEffect(() => {
         if (!isFormOpen) return undefined;
@@ -254,6 +259,10 @@ export default function MyGeckosPage() {
 
     // Effect to update selectedGecko after geckos list reloads
     useEffect(() => {
+        // An unsaved draft in the add form (Quick Add's "More details", a
+        // Morph ID result) has no id and is not in the list. Leave it be:
+        // it used to be cleared here, which emptied the form it was in.
+        if (selectedGecko && !selectedGecko.id) return;
         if (selectedGecko && geckos.length > 0) {
             const updatedSelectedGecko = geckos.find(g => g.id === selectedGecko.id);
             if (updatedSelectedGecko !== selectedGecko) {
@@ -277,9 +286,13 @@ export default function MyGeckosPage() {
         loadGeckos();
     };
 
-    const handleEdit = (gecko) => {
+    const handleEdit = (gecko, fromRecord = false) => {
         // Save current scroll position before opening form
         scrollPositionRef.current = window.scrollY;
+        // Edit tapped on the record window: saving or cancelling goes back
+        // to that record, not to the list (experience review D6).
+        editFromRecordRef.current = fromRecord;
+        setRestoreDraftOnOpen(false);
         setSelectedGecko(gecko);
         setIsDetailModalOpen(false);
         setIsFormOpen(true);
@@ -527,9 +540,8 @@ export default function MyGeckosPage() {
         }
     }, [isLoading, user, geckos, memberships, location.search, location.pathname]);
 
-    // One entry point for "add a gecko": respects the plan limit, and gives
-    // an empty collection the short photo-first quick add instead of the
-    // full 20-field form. Existing collections keep the full form.
+    // Quick Add, the short photo-first form. Every "add a gecko" opens it
+    // (experience review D1); the long form is behind its "More details".
     function openQuickAdd({ flow = false, offerPhotoChoice = false, initialDraft = null, saveSource = 'quick_add', guest = false } = {}) {
         setSelectedGecko(null);
         setIsDetailModalOpen(false);
@@ -537,9 +549,12 @@ export default function MyGeckosPage() {
         setIsQuickAddOpen(true);
     }
 
-    // The empty collection's add is the guided first gecko: step 1 offers
-    // "by photo" (Morph ID, one free a month) or "type it" unless the member
-    // already chose (opts.type).
+    // One entry point for "add a gecko". It respects the plan limit, then
+    // opens Quick Add whatever the size of the collection. The empty
+    // collection's add is the guided first gecko: step 1 offers "by photo"
+    // (Morph ID, one free a month) or "type it" unless the member already
+    // chose (opts.type), then the parents and the payoff. A later gecko
+    // gets plain Quick Add: it saves and shows its own success screen.
     function openAddFlow(opts = {}) {
         const live = geckos.filter((g) => !g.archived).length;
         if (geckoLimitStatus(user, geckos).atLimit) {
@@ -549,7 +564,17 @@ export default function MyGeckosPage() {
         setSelectedGecko(null);
         setIsDetailModalOpen(false);
         if (live === 0) openQuickAdd({ flow: true, offerPhotoChoice: !opts.type });
-        else setIsFormOpen(true);
+        else openQuickAdd();
+    }
+
+    // Quick Add hands over to the long form: with what was typed so far
+    // ("More details"), or with the kept draft of an unfinished gecko.
+    function openLongAddForm(draft, { restoreDraft = false } = {}) {
+        setIsQuickAddOpen(false);
+        editFromRecordRef.current = false;
+        setRestoreDraftOnOpen(restoreDraft);
+        setSelectedGecko(draft);
+        setIsFormOpen(true);
     }
 
     const choosePhotoPath = () => {
@@ -587,7 +612,19 @@ export default function MyGeckosPage() {
     const handleFormSubmit = async (geckoData, isNew) => {
         const savedScroll = scrollPositionRef.current;
         setIsFormOpen(false);
-        setSelectedGecko(null);
+        if (!isNew && geckoData?.id) {
+            // Show the saved values at once; the reload below confirms them.
+            setGeckos((prev) => prev.map((g) => (g.id === geckoData.id ? { ...g, ...geckoData } : g)));
+        }
+        if (editFromRecordRef.current && !isNew && geckoData?.id) {
+            // Back to the record the edit started from, showing what was saved.
+            setSelectedGecko((current) => ({ ...(current || {}), ...geckoData }));
+            setIsDetailModalOpen(true);
+        } else {
+            setSelectedGecko(null);
+        }
+        editFromRecordRef.current = false;
+        setRestoreDraftOnOpen(false);
         const source = morphDraftOpenRef.current ? 'morph_id_draft' : 'full_form';
         morphDraftOpenRef.current = false;
         announceSavedGecko(geckoData, isNew, source);
@@ -611,7 +648,11 @@ export default function MyGeckosPage() {
     const handleFormCancel = () => {
         const savedScroll = scrollPositionRef.current;
         setIsFormOpen(false);
-        setSelectedGecko(null);
+        // Cancelled an edit that began on the record window: back to it.
+        if (editFromRecordRef.current && selectedGecko?.id) setIsDetailModalOpen(true);
+        else setSelectedGecko(null);
+        editFromRecordRef.current = false;
+        setRestoreDraftOnOpen(false);
         morphDraftOpenRef.current = false;
         // Restore scroll position on cancel too
         setTimeout(() => {
@@ -1352,6 +1393,7 @@ export default function MyGeckosPage() {
                                         }}
                                         feedingGroups={feedingGroups}
                                         idSettings={idSettings}
+                                        restoreDraftOnOpen={restoreDraftOnOpen}
                                     />
                                 </motion.div>
                             )}
@@ -1389,11 +1431,8 @@ export default function MyGeckosPage() {
                             announceSavedGecko(gecko, true, quickAddConfig.saveSource);
                             loadGeckos();
                         }}
-                        onMoreDetails={(draft) => {
-                            setIsQuickAddOpen(false);
-                            setSelectedGecko(draft);
-                            setIsFormOpen(true);
-                        }}
+                        onMoreDetails={(draft) => openLongAddForm(draft)}
+                        onResumeDraft={() => openLongAddForm(null, { restoreDraft: true })}
                         onLogWeight={(gecko) => {
                             setIsQuickAddOpen(false);
                             setSelectedGecko(gecko);
@@ -1450,7 +1489,7 @@ export default function MyGeckosPage() {
                         canEdit={canWriteGecko(selectedGecko, user, memberships)}
                         onClose={handleCloseDetailModal}
                         onUpdate={() => loadGeckos()}
-                        onEdit={handleEdit}
+                        onEdit={(gecko) => handleEdit(gecko, true)}
                         onArchive={handleArchiveGecko}
                         onMarkSold={(geckoId) => {
                             setArchiveDialogReason('sold');
