@@ -6,7 +6,7 @@ written but must not run yet, and say why in the table below.
 
 | File | Why it is here |
 |---|---|
-| (none) | Nothing is waiting. |
+| `owner_emails_step2.sql` | Step 2 of owner decision E16: signed-in members lose `created_by` (the owner's email) on geckos, breeding plans and the weight, feeding, shed, vet and ownership records. It makes a request from a tab opened before step 1's app change fail, so it waits until that change has been live for at least 3 days and the API logs show no request still naming the column. Then it moves to `supabase/migrations/` with a new timestamp, and the `\ir` path in `supabase/tests/owner_emails_step2_regressions.sql` changes with it. Plan and status: `docs/planning/owner-emails-2026-11.md`. |
 
 ## Retired
 

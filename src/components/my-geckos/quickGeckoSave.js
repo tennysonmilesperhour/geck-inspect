@@ -69,6 +69,10 @@ export async function saveQuickGecko({ user, fields, remind = true, feedingGroup
     p_record_date: todayLocalISO(),
   });
   if (error) throw error;
+  // The saved row carries no owner email once members stop reading it
+  // (decision E16). A new gecko is the saver's, so put their email back
+  // and the list treats it as theirs.
+  if (gecko && gecko.created_by == null && user?.email) gecko.created_by = user.email;
   // "Remind me on feeding days" was unticked. A new gecko in no feeding
   // group gets an every-3-days reminder by default, so record the choice.
   if (!remind && gecko?.id) {

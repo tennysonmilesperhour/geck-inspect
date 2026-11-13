@@ -109,3 +109,92 @@ export const MEMBER_COLUMNS_BY_TABLE = {
   giveaways: GIVEAWAY_MEMBER_COLUMNS,
   community_event_reactions: COMMUNITY_EVENT_REACTION_MEMBER_COLUMNS,
 };
+
+// ---------------------------------------------------------------------------
+// Owner email addresses on the seven tables whose owner is an email
+// (owner decision E16, docs/planning/owner-emails-2026-11.md). Members read
+// every column but created_by; "mine" is found by owner_profile_id, and the
+// entity layer puts the member's own email back on their own rows
+// (src/lib/ownerRows.js). Step 2 of that plan grants members exactly these
+// lists. Each is the signed-out list (src/lib/publicColumns.js) plus the
+// columns in OWNED_MEMBER_EXTRAS in src/lib/ownerRows.js; a test keeps the
+// three in step.
+// ---------------------------------------------------------------------------
+
+export const GECKO_MEMBER_COLUMNS = [
+  'id', 'name', 'species', 'hatch_date', 'sex', 'sire_id', 'dam_id',
+  'sire_name', 'dam_name', 'morphs_traits', 'morph_tags', 'notes', 'status',
+  'image_urls', 'gecko_id_code', 'display_order', 'asking_price',
+  'weight_grams', 'market_price_estimate', 'morphmarket_id', 'morphmarket_url',
+  'palm_street_id', 'palm_street_url', 'marketplace_description', 'is_public',
+  'gallery_display', 'image_crop_data', 'incubation_days', 'archived',
+  'archived_date', 'archive_reason', 'feeding_group_id', 'is_gravid',
+  'gravid_since', 'egg_drop_date', 'created_date', 'updated_date',
+  'passport_code', 'pattern_grade', 'genetics_notes', 'breeder_name',
+  'breeder_user_id', 'hatch_facility', 'listing_price', 'estimated_hatch_year',
+  'collection_id', 'quality_score', 'last_meaningful_change_at', 'tail_status',
+  'growth_slideshow_enabled', 'sale_category', 'owner_profile_id',
+  'placeholder_style', 'inherited_placeholder_style', 'sold_price',
+  'moderation_hidden', 'status_before_listing',
+];
+
+export const BREEDING_PLAN_MEMBER_COLUMNS = [
+  'id', 'sire_id', 'dam_id', 'breeding_id', 'pairing_date', 'copulation_events',
+  'egg_check_day', 'egg_check_count', 'first_egg_lay_date',
+  'expected_lay_interval', 'laying_active', 'dormant_since', 'status', 'notes',
+  'archived', 'archived_date', 'breeding_season', 'is_public', 'created_date',
+  'updated_date', 'owner_profile_id',
+];
+
+export const WEIGHT_RECORD_MEMBER_COLUMNS = [
+  'id', 'gecko_id', 'weight_grams', 'record_date', 'notes', 'created_date',
+  'updated_date', 'client_request_id', 'owner_profile_id',
+];
+
+export const FEEDING_RECORD_MEMBER_COLUMNS = [
+  'id', 'animal_id', 'date', 'food_type', 'accepted', 'notes',
+  'created_date', 'updated_date', 'logged_by', 'client_request_id',
+  'owner_profile_id',
+];
+
+export const SHED_RECORD_MEMBER_COLUMNS = [
+  'id', 'animal_id', 'date', 'quality', 'notes', 'created_date',
+  'updated_date', 'logged_by', 'client_request_id', 'owner_profile_id',
+];
+
+export const VET_RECORD_MEMBER_COLUMNS = [
+  'id', 'animal_id', 'date', 'vet_name', 'reason', 'findings', 'treatment',
+  'follow_up', 'attachments', 'created_date', 'updated_date',
+  'owner_profile_id',
+];
+
+export const OWNERSHIP_RECORD_MEMBER_COLUMNS = [
+  'id', 'animal_id', 'owner_user_id', 'owner_name', 'owner_avatar_url',
+  'acquired_date', 'transfer_method', 'sale_price', 'contributed_to_market_data',
+  'notes', 'created_date', 'updated_date', 'owner_profile_id',
+];
+
+/** What step 2 of E16 takes from signed-in members, by table. */
+export const OWNED_HIDDEN_COLUMNS = {
+  geckos: ['created_by'],
+  breeding_plans: ['created_by'],
+  weight_records: ['created_by'],
+  feeding_records: ['created_by'],
+  shed_records: ['created_by'],
+  vet_records: ['created_by'],
+  ownership_records: ['created_by'],
+};
+
+/** The seven lists above, by table. */
+export const OWNED_COLUMNS_BY_TABLE = {
+  geckos: GECKO_MEMBER_COLUMNS,
+  breeding_plans: BREEDING_PLAN_MEMBER_COLUMNS,
+  weight_records: WEIGHT_RECORD_MEMBER_COLUMNS,
+  feeding_records: FEEDING_RECORD_MEMBER_COLUMNS,
+  shed_records: SHED_RECORD_MEMBER_COLUMNS,
+  vet_records: VET_RECORD_MEMBER_COLUMNS,
+  ownership_records: OWNERSHIP_RECORD_MEMBER_COLUMNS,
+};
+
+/** A select list from one of the lists above. */
+export const columnList = (cols) => cols.join(',');

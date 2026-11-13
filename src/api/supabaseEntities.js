@@ -381,6 +381,9 @@ export function applyFilter(query, filterObj) {
 // with named columns too: the signed-out list, plus approval_status on
 // photos and forum rows (an author sees "Awaiting approval" on their own).
 // src/lib/memberColumns.js lists the result; a test keeps the two in step.
+// src/lib/ownerRows.js adds the seven tables whose owner is an email
+// (geckos, breeding plans, weight, feeding, shed, vet and ownership
+// records) when it loads, which is before any read of them.
 const APPROVAL = ',approval_status';
 export const MEMBER_COLUMN_EXTRAS = {
   GeckoImage: APPROVAL, ForumPost: APPROVAL, ForumComment: APPROVAL,
@@ -551,7 +554,20 @@ function createEntityClient(entityName) {
 // Named entity exports
 export const AppSettings = createEntityClient('AppSettings');
 export const BreederStorePage = createEntityClient('BreederStorePage');
-export const BreedingPlan = createEntityClient('BreedingPlan');
+// Owner emails (decision E16): reads and writes of the seven tables whose
+// rows carry the owner's email go through src/lib/ownerRows.js, which
+// reads named columns, finds rows by owner_profile_id and puts the
+// member's own email back on their own rows. It loads with the first such
+// read, not with the app.
+const owned = (name) => {
+  const base = createEntityClient(name);
+  const call = (method) => async (...args) => {
+    const rows = await import('@/lib/ownerRows').catch(() => null);
+    return rows ? rows.ownedCall(name, method, base, args, { getSupabase, isGuestMode, withAuthRetry }) : base[method](...args);
+  };
+  return { filter: call('filter'), list: call('list'), get: call('get'), create: call('create'), update: call('update'), delete: call('delete') };
+};
+export const BreedingPlan = owned('BreedingPlan');
 export const CareGuideSection = createEntityClient('CareGuideSection');
 export const ChangeLog = createEntityClient('ChangeLog');
 export const ClassificationVote = createEntityClient('ClassificationVote');
@@ -572,7 +588,7 @@ export const FutureBreedingPlan = createEntityClient('FutureBreedingPlan');
 // loads with the first gecko read, not with the app (public pages are
 // size-budgeted). If it cannot load, geckos are read without prices rather
 // than not at all.
-const geckoBase = createEntityClient('Gecko');
+const geckoBase = owned('Gecko');
 const geckoCall = (method) => async (...args) => {
   const prices = await import('@/lib/geckoSalePrices').catch(() => null);
   if (prices) return prices.geckoCall(method, geckoBase, args, { getSupabase, isGuestMode, withAuthRetry });
@@ -617,16 +633,16 @@ export const Task = createEntityClient('Task');
 export const UserActivity = createEntityClient('UserActivity');
 export const UserBadge = createEntityClient('UserBadge');
 export const UserFollow = createEntityClient('UserFollow');
-export const WeightRecord = createEntityClient('WeightRecord');
+export const WeightRecord = owned('WeightRecord');
 export const UserEntity = createEntityClient('User');
 
 // P1, Animal Passport + Ownership Transfer
-export const OwnershipRecord = createEntityClient('OwnershipRecord');
+export const OwnershipRecord = owned('OwnershipRecord');
 export const OwnershipRecordPrice = createEntityClient('OwnershipRecordPrice');
-export const ShedRecord = createEntityClient('ShedRecord');
-export const VetRecord = createEntityClient('VetRecord');
+export const ShedRecord = owned('ShedRecord');
+export const VetRecord = owned('VetRecord');
 export const TransferRequest = createEntityClient('TransferRequest');
-export const FeedingRecord = createEntityClient('FeedingRecord');
+export const FeedingRecord = owned('FeedingRecord');
 // P2, Market Pricing Intelligence
 export const MorphPriceEntry = createEntityClient('MorphPriceEntry');
 export const PriceAlert = createEntityClient('PriceAlert');

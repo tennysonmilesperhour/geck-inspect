@@ -171,6 +171,10 @@ export default function MyStore() {
         (async () => {
             setLoading(true);
             const ownerUserId = user.auth_user_id || user.id;
+            // The member's geckos and plans by owner_profile_id, their
+            // profile id (useAuth's user.id): members cannot filter on
+            // created_by, an email (owner decision E16).
+            const ownerId = user.id ?? '~no-owner~';
             const [pageRes, geckoRes, planRes, profileRes, waitlistRes] = await Promise.all([
                 supabase
                     .from('breeder_store_pages')
@@ -180,12 +184,12 @@ export default function MyStore() {
                 supabase
                     .from('geckos')
                     .select('id, name, morphs_traits, morph_tags, species, image_urls, status, sex, asking_price, passport_code, is_public, archived')
-                    .eq('created_by', user.email)
+                    .eq('owner_profile_id', ownerId)
                     .eq('archived', false),
                 supabase
                     .from('breeding_plans')
                     .select('id, sire_id, dam_id, pairing_date, status, notes, is_public, archived')
-                    .eq('created_by', user.email)
+                    .eq('owner_profile_id', ownerId)
                     .eq('archived', false),
                 // The member's own breeder profile, by sign-in id: the
                 // database sets user_id to it on every member insert and

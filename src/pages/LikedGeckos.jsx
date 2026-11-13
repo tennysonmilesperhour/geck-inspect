@@ -11,6 +11,11 @@ import { createPageUrl } from '@/utils';
 import SmartImage from '@/components/shared/SmartImage';
 import SignInRequired, { AccountOnly } from '@/components/shared/SignInRequired';
 import PageHeader from '@/components/shared/PageHeader';
+import { publicDisplayName } from '@/lib/publicColumns';
+
+// Liked geckos belong to other members, whose email is not readable on a
+// gecko (owner decision E16): owners are keyed by owner_profile_id.
+const ownerKey = (gecko) => (gecko?.owner_profile_id == null ? null : String(gecko.owner_profile_id));
 
 function LikedGeckosScreen() {
     const [likedGeckos, setLikedGeckos] = useState([]);
@@ -44,12 +49,13 @@ function LikedGeckosScreen() {
                 const geckos = await Gecko.filter({ id: { $in: geckoIds } });
                 setLikedGeckos(geckos);
 
-                // Get owners
-                const ownerEmails = [...new Set(geckos.map(g => g.created_by))];
-                if (ownerEmails.length > 0) {
-                    const ownerData = await User.filter({ email: { $in: ownerEmails } });
+                // Get owners, by profile id (read_profiles gives the name
+                // and picture, never another member's email)
+                const ownerIds = [...new Set(geckos.map(ownerKey).filter(Boolean))];
+                if (ownerIds.length > 0) {
+                    const ownerData = await User.filter({ id: { $in: ownerIds } });
                     const ownersMap = ownerData.reduce((acc, u) => {
-                        acc[u.email] = u;
+                        if (u?.id != null) acc[String(u.id)] = u;
                         return acc;
                     }, {});
                     setOwners(ownersMap);
@@ -110,7 +116,9 @@ function LikedGeckosScreen() {
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {likedGeckos.map(gecko => {
-                            const owner = owners[gecko.created_by];
+                            const key = ownerKey(gecko);
+                            const owner = key ? owners[key] : undefined;
+                            const ownerName = publicDisplayName(owner, '');
                             return (
                                 <Card key={gecko.id} className="overflow-hidden hover:border-pink-500/50 transition-all">
                                     <div className="aspect-square w-full overflow-hidden relative group">
@@ -151,16 +159,16 @@ function LikedGeckosScreen() {
                                         
                                         {owner && (
                                             <div className="mt-3 pt-3 border-t border-slate-700">
-                                                <Link 
-                                                    to={createPageUrl(`PublicProfile?email=${encodeURIComponent(owner.email)}`)}
+                                                <Link
+                                                    to={createPageUrl(`PublicProfile?userId=${encodeURIComponent(owner.id)}`)}
                                                     className="touch:min-h-11 flex items-center gap-2 text-sm text-slate-300 hover:text-emerald-400"
                                                 >
-                                                    <img 
-                                                        src={owner.profile_image_url || initialsAvatarUrl(owner.full_name)}
+                                                    <img
+                                                        src={owner.profile_image_url || initialsAvatarUrl(ownerName)}
                                                         className="w-6 h-6 rounded-full shrink-0"
-                                                        alt={owner.full_name}
+                                                        alt={ownerName}
                                                     />
-                                                    <span className="min-w-0 truncate">{owner.full_name}</span>
+                                                    <span className="min-w-0 truncate">{ownerName || 'Breeder'}</span>
                                                 </Link>
                                                 {(owner.city || owner.country) && (
                                                     <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">

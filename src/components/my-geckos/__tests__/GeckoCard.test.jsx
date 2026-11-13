@@ -99,6 +99,18 @@ describe('the gecko card', () => {
     vi.unstubAllEnvs();
   });
 
+  // Owner decision E16: another member's gecko carries no created_by (their
+  // email), and a public profile's rows, which still carry it, must never
+  // show it. The chip and the card's layout stay as they were.
+  it('says who shared a gecko without ever showing the owner\'s email', () => {
+    const { unmount } = render(<GeckoCard gecko={{ ...NIMBUS, owner_profile_id: 'p-ana' }} isOwner={false} canEdit={false} onView={() => {}} />);
+    expect(screen.getByText('Shared').getAttribute('title')).toBe('Shared by another keeper');
+    unmount();
+    render(<GeckoCard gecko={{ ...NIMBUS, created_by: 'ana@example.com' }} isOwner={false} canEdit={false} onView={() => {}} />);
+    expect(screen.getByText('Shared').getAttribute('title')).toBe('Shared by another keeper');
+    expect(document.body.innerHTML).not.toContain('ana@example.com');
+  });
+
   // Owner decision E13: a hatch year on its own is kept, and shown as a year.
   it('shows a hatch year with no date as the year only, and a whole date as before', () => {
     const { unmount } = render(<GeckoCard gecko={{ ...NIMBUS, hatch_date: null, estimated_hatch_year: 2025 }} onView={() => {}} canEdit />);

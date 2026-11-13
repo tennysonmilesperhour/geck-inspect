@@ -34,8 +34,10 @@ const MS_PER_MONTH = 1000 * 60 * 60 * 24 * 30.44;
 /**
  * Compute the individual trust signals for a seller.
  *
- * @param {string} identifier - the seller's email (contains '@') or their
- *   profile/user id.
+ * @param {string} identifier - the seller's profile id, which is what pages
+ *   have: members cannot read another member's email (owner decision E16),
+ *   and read_profiles gives none for them. An email (contains '@') still
+ *   finds the member's own profile, or anyone's for an admin.
  * @returns {Promise<{
  *   accountAgeMonths: number,
  *   animalsTracked: number,
@@ -62,14 +64,17 @@ async function findBreederProfile(profile) {
 export async function computeTrustSignals(identifier) {
   if (!identifier) throw new Error('computeTrustSignals: identifier required');
 
-  // Resolve the profile first; everything else hangs off email + user id.
+  // Resolve the profile first; everything else hangs off its id.
   const isEmail = String(identifier).includes('@');
   const profile = isEmail
     ? (await UserEntity.filter({ email: identifier }, null, 1))[0]
     : await UserEntity.get(identifier);
-  if (!profile) throw new Error('computeTrustSignals: profile not found');
+  if (profile?.id == null) throw new Error('computeTrustSignals: profile not found');
 
-  const email = profile.email;
+  // The seller's rows by owner_profile_id, the owner's profile id on every
+  // gecko, weight and ownership record. Another member's profile carries no
+  // email, so the old created_by filter could not find their rows.
+  const ownedBySeller = { owner_profile_id: String(profile.id) };
 
   // Breeder storefront profile (optional). Reviews are keyed by the
   // breeder profile's auth user_id, so fetch this before reviews.
@@ -81,9 +86,9 @@ export async function computeTrustSignals(identifier) {
   const reviewUserId = UUID_RE.test(String(reviewCandidate || '')) ? reviewCandidate : null;
 
   const [geckos, weights, transfers, reviews] = await Promise.all([
-    Gecko.filter({ created_by: email }).catch(() => []),
-    WeightRecord.filter({ created_by: email }).catch(() => []),
-    OwnershipRecord.filter({ created_by: email }).catch(() => []),
+    Gecko.filter(ownedBySeller).catch(() => []),
+    WeightRecord.filter(ownedBySeller).catch(() => []),
+    OwnershipRecord.filter(ownedBySeller).catch(() => []),
     reviewUserId
       ? BreederReview.filter({ reviewed_user_id: reviewUserId }).catch(() => [])
       : Promise.resolve([]),
@@ -114,15 +119,15 @@ export async function computeTrustSignals(identifier) {
 /**
  * The same signals for a curated breeder page, by its slug, from the
  * database function breeder_page_trust (migration 20261015151000). The
- * breeder page needs this for signed-out buyers: they cannot read the
- * owner's email, which computeTrustSignals starts from, and the function
- * returns only the numbers, never the email. It counts what anyone can
- * already see one by one (public geckos, records on public passports,
- * verified reviews).
+ * breeder page uses this for every visitor, signed out included: the
+ * function needs neither the owner's email nor their profile id, and
+ * returns only the numbers. It counts what anyone can already see one by
+ * one (public geckos, records on public passports, verified reviews), so
+ * its numbers can be lower than computeTrustSignals gives a member who
+ * also sees a shared collection.
  *
  * Resolves with null when the page has no visible owner. Rejects when the
- * function is missing (the migration is not applied yet), so the caller
- * can fall back to the email path for signed-in visitors.
+ * function is missing.
  */
 export async function breederPageTrustSignals(slug, { client = supabase } = {}) {
   if (!slug) return null;

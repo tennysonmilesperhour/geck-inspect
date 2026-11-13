@@ -247,9 +247,13 @@ export const EVERYONE_READ_COLUMNS = {
   GeckoOfTheDay: GECKO_OF_THE_DAY_COLUMNS.join(','),
 };
 
-/** The select list for a geckos read: everything when signed in, the public columns otherwise. */
+/**
+ * The select list for a geckos read: the signed-out list, plus for members
+ * the three columns only they read. Never created_by, which holds the
+ * owner's email (owner decision E16; src/lib/ownerRows.js).
+ */
 export function geckoSelect(signedIn) {
-  return signedIn ? '*' : PUBLIC_READ_COLUMNS.Gecko;
+  return signedIn ? `${PUBLIC_READ_COLUMNS.Gecko},sold_price,moderation_hidden,status_before_listing` : PUBLIC_READ_COLUMNS.Gecko;
 }
 
 /** A stored name, or the fallback when it is empty or looks like an email address. */

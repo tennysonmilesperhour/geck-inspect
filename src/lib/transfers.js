@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabaseClient';
 import { captureEvent } from '@/lib/posthog';
+import { isOwnRow } from '@/lib/ownRow';
 
 /**
  * Ownership transfers: the owner creates a QR or email claim link, and the
@@ -57,9 +58,6 @@ export function transferPriceDefault(animal) {
   return '';
 }
 
-const sameEmail = (a, b) =>
-  Boolean(a) && Boolean(b) && String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
-
 /**
  * Whether to offer "Send <name> to the buyer" right after a gecko is
  * archived as sold. Only the owner can transfer (the database refuses
@@ -68,7 +66,7 @@ const sameEmail = (a, b) =>
  */
 export function shouldOfferSoldTransfer({ gecko, user, reason, guest = false } = {}) {
   if (guest || reason !== 'sold' || !gecko?.id || !user?.email || user.is_guest) return false;
-  return sameEmail(gecko.created_by, user.email);
+  return isOwnRow(gecko, user);
 }
 
 /**

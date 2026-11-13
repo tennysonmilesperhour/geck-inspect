@@ -25,8 +25,9 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
-// The author's email for each post or comment, from read_profiles by
-// owner_profile_id (rows no longer carry another member's address). The
+// The author's email for each post or comment, and the owner's for each
+// listed gecko, from read_profiles by owner_profile_id (rows no longer
+// carry another member's address, docs/planning/owner-emails-2026-11.md). The
 // same lookup as withOwnerEmailsFetched in src/lib/ownerEmails.js, written
 // out here because importing that module from this lazy tab turned
 // AdminPanel into a shared chunk that the size budget does not check.
@@ -263,7 +264,9 @@ export default function ContentModeration() {
           <TabsContent value="marketplace" className="mt-5">
             <ModerationList
               entity={Gecko}
-              loadFn={() => Gecko.filter({ status: 'For Sale', is_public: true }, '-created_date')}
+              // The owner's email comes from their profile: an admin reads
+              // created_by only on their own geckos.
+              loadFn={() => Gecko.filter({ status: 'For Sale', is_public: true }, '-created_date').then((rows) => withAuthorEmails(rows))}
               removeItem={gecko => Gecko.update(gecko.id, { is_public: false })}
               actionLabel="Unpublish"
               actionDescription="Hide this animal's public listing and passport. Its owner's private animal, care and breeding records remain available."
@@ -285,7 +288,7 @@ export default function ContentModeration() {
                     </p>
                   )}
                   <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-[11px] text-slate-500">{g.created_by}</span>
+                    <span className="text-[11px] text-slate-500">{g.created_by || 'Unknown owner'}</span>
                     <span className="text-[11px] text-slate-500">·</span>
                     <span className="text-[11px] text-slate-500">{timeAgo(g.created_date)}</span>
                   </div>

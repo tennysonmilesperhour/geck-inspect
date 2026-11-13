@@ -297,10 +297,15 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
                 {showTailBadge && (showSpeciesBadge || !isOwner) && <span aria-hidden="true">·</span>}
                 {showSpeciesBadge && <span>{gecko.species}</span>}
                 {showSpeciesBadge && !isOwner && <span aria-hidden="true">·</span>}
+                {/* Never the owner's email: another member's gecko carries
+                    none (owner decision E16), and a public profile's rows,
+                    which still do, must not show it. The card loads no
+                    names of its own and also shows on public profiles, so
+                    the line stays neutral. */}
                 {!isOwner && (
                   <span
                     className="inline-flex items-center gap-1 text-slate-300"
-                    title={`Shared by ${gecko.created_by || 'another keeper'}`}
+                    title="Shared by another keeper"
                   >
                     <Users2 className="w-3 h-3 shrink-0" />
                     Shared

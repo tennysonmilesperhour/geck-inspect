@@ -4,9 +4,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // guided first gecko from one with a leftover flag. It must count what My
 // Geckos counts as the collection (own plus shared, not archived), or the
 // two pages disagree about whether this is the first gecko.
-const fx = vi.hoisted(() => ({ collectionIds: [] }));
+const fx = vi.hoisted(() => ({ collectionIds: [], profileId: 'p-sam' }));
 vi.mock('@/lib/geckoAccess', () => ({
   getAccessibleCollectionIds: async () => fx.collectionIds,
+}));
+// Members cannot filter on created_by (an email) since decision E16; the
+// member's own rows are found by their profile id.
+vi.mock('@/lib/ownerRows', () => ({
+  myProfileId: async () => fx.profileId,
 }));
 
 const { countLiveGeckos } = await import('../liveGeckoCount');
@@ -29,6 +34,7 @@ function fakeClient(result) {
 describe('countLiveGeckos', () => {
   beforeEach(() => {
     fx.collectionIds = [];
+    fx.profileId = 'p-sam';
   });
 
   it('counts live geckos in every collection the member can open, without downloading rows', async () => {
@@ -46,8 +52,14 @@ describe('countLiveGeckos', () => {
   it("falls back to the member's own rows before their first collection exists", async () => {
     const client = fakeClient({ count: 0, error: null });
     expect(await countLiveGeckos(client, 'sam@example.com')).toBe(0);
-    expect(client.calls).toContainEqual(['eq', 'created_by', 'sam@example.com']);
+    expect(client.calls).toContainEqual(['eq', 'owner_profile_id', 'p-sam']);
+    expect(client.calls.some(([, col]) => col === 'created_by')).toBe(false);
     expect(client.calls.some(([name]) => name === 'in')).toBe(false);
+  });
+
+  it('throws when the member\'s profile cannot be read, instead of counting nothing', async () => {
+    fx.profileId = null;
+    await expect(countLiveGeckos(fakeClient({ count: 0, error: null }), 'sam@example.com')).rejects.toThrow('profile could not be read');
   });
 
   it('throws a failed read instead of calling the collection empty', async () => {

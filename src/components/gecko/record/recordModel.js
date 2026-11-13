@@ -8,9 +8,7 @@
  * check without a browser.
  */
 import { canDeleteGecko } from '@/lib/geckoAccess';
-
-const sameEmail = (a, b) =>
-  Boolean(a) && Boolean(b) && String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+import { isOwnRow } from '@/lib/ownRow';
 
 /**
  * What the viewer may see and do on this gecko's record.
@@ -40,7 +38,7 @@ const sameEmail = (a, b) =>
  */
 export function recordAccess({ gecko, user, canEdit = false, isMember = false } = {}) {
   const signedIn = Boolean(user?.email);
-  const isOwner = signedIn && sameEmail(gecko?.created_by, user.email);
+  const isOwner = signedIn && isOwnRow(gecko, user);
   const write = signedIn && (isOwner || Boolean(canEdit));
   return {
     isOwner,

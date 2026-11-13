@@ -151,7 +151,8 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     // A new gecko is the member's own; an existing one only when they
     // created it.
     const isOwnGecko = !gecko?.id
-        || String(gecko.created_by || '').toLowerCase() === String(currentUser?.email || '').toLowerCase();
+        || String(gecko.created_by || '').toLowerCase() === String(currentUser?.email || '').toLowerCase()
+        || (gecko.owner_profile_id != null && currentUser?.id != null && String(gecko.owner_profile_id) === String(currentUser.id));
     // sire/dam suggestion visibility + refs now live inside ParentAutocomplete
 
     useEffect(() => {
@@ -726,6 +727,12 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             } catch {
                 // Shown without its price until the next read.
             }
+            // The saved row carries no owner email once members stop reading
+            // it (decision E16). A new gecko is the saver's; an edited one
+            // keeps the owner it had (none shown when that is another
+            // member). So My Geckos still treats the member's own as theirs.
+            const ownerEmail = isNew ? currentUser?.email : gecko?.created_by;
+            if (savedGecko && savedGecko.created_by == null && ownerEmail) savedGecko.created_by = ownerEmail;
             // Saved, so the kept draft has done its job.
             draftDoneRef.current = true;
             if (keepsDraft) clearGeckoFormDraft(currentUser);

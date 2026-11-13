@@ -386,6 +386,16 @@ function CenteredState({ icon, title, children }) {
    MAIN PASSPORT PAGE
    ═══════════════════════════════════════════════════════════════════ */
 
+/**
+ * The signed-in member owns this gecko: its owner_profile_id is their
+ * profile id (auth's user.id). The page never reads created_by, the
+ * owner's email (decision E16).
+ */
+function ownsPassportGecko(gecko, user) {
+  return Boolean(user?.email) && gecko?.owner_profile_id != null && user?.id != null
+    && String(gecko.owner_profile_id) === String(user.id);
+}
+
 export default function AnimalPassport() {
   const { passportCode } = useParams();
   const auth = useAuth?.() || {};
@@ -413,6 +423,8 @@ export default function AnimalPassport() {
     // whether the visitor owns the gecko. No code, name or email is sent
     // (the page column already says which passport it was).
     const signedIn = Boolean(currentUser?.email);
+    const viewer = { email: currentUser?.email, id: currentUser?.id };
+    const ownsIt = (row) => ownsPassportGecko(row, viewer);
     const logView = (state, extra = {}) => {
       const key = `${passportCode}:${currentUser?.email || ''}`;
       if (viewLogged.current === key) return;
@@ -422,8 +434,10 @@ export default function AnimalPassport() {
     const load = async () => {
       setIsLoading(true);
       try {
-        // Signed-out visitors read the public columns only: created_by holds
-        // the owner's email (see publicColumns.js).
+        // Never created_by, the owner's email: signed-out visitors read the
+        // public columns, members those plus three of their own (see
+        // publicColumns.js and decision E16). The owner is found by
+        // owner_profile_id.
         const columns = geckoSelect(Boolean(currentUser?.email));
         const { data: geckos, error: gErr } = await supabase
           .from('geckos')
@@ -443,7 +457,7 @@ export default function AnimalPassport() {
           return;
         }
         const g = geckos[0];
-        if (!g.is_public && g.created_by !== currentUser?.email) {
+        if (!g.is_public && !ownsIt(g)) {
           setError('private');
           logView('private');
           setIsLoading(false);
@@ -451,7 +465,7 @@ export default function AnimalPassport() {
         }
         setGecko(g);
         logView('shown', {
-          is_owner: signedIn && g.created_by === currentUser.email,
+          is_owner: signedIn && ownsIt(g),
           for_sale: (g.status || '').toLowerCase() === 'for sale',
         });
 
@@ -484,7 +498,7 @@ export default function AnimalPassport() {
       }
     };
     load();
-  }, [passportCode, currentUser?.email]);
+  }, [passportCode, currentUser?.email, currentUser?.id]);
 
   if (isLoading) {
     return (
@@ -541,16 +555,19 @@ export default function AnimalPassport() {
   const morphTags = Array.isArray(gecko.morph_tags) ? gecko.morph_tags.filter(Boolean) : [];
   const baseMorph = gecko.morphs_traits || null;
   const status = (gecko.status || 'owned').toLowerCase().replace(/\s/g, '_');
-  const isOwner = Boolean(currentUser?.email) && gecko.created_by === currentUser.email;
+  const isOwner = ownsPassportGecko(gecko, currentUser);
   // The record that opened this page says where to return; an owner who
   // arrived by a link goes to the record page.
   const backTo = safeInternalPath(location.state?.backTo, '') || (isOwner ? `/GeckoDetail?id=${gecko.id}` : '');
   const url = passportUrl(passportCode);
   const hasProvenance = ownershipRecords.length > 0
     || Boolean(gecko.sire_id || gecko.dam_id || gecko.sire_name || gecko.dam_name || gecko.breeder_name);
-  // Messages opens a conversation from ?recipient= (this used ?recipientEmail=,
-  // which it never read, so these buttons opened an empty inbox).
-  const messageSeller = currentUser ? `/Messages?recipient=${encodeURIComponent(gecko.created_by)}` : '/AuthPortal';
+  // Messages opens a conversation with the owner from ?profile=: members
+  // cannot read the owner's email on the gecko (decision E16), so the first
+  // message goes by profile id.
+  const messageSeller = currentUser && gecko.owner_profile_id
+    ? `/Messages?profile=${encodeURIComponent(gecko.owner_profile_id)}`
+    : currentUser ? '/Messages' : '/AuthPortal';
 
   // Until 24 Oct 2026 this button only opened an empty chat, so the owner
   // heard nothing unless the buyer wrote and sent a message. Now it sends the
@@ -619,7 +636,6 @@ export default function AnimalPassport() {
               <ReportContent
                 targetType="gecko"
                 targetId={gecko.id}
-                authorEmail={gecko.created_by}
                 authorProfileId={gecko.owner_profile_id}
                 excerpt={[gecko.name, gecko.morphs_traits, gecko.marketplace_description].filter(Boolean).join('\n')}
                 label="Report"

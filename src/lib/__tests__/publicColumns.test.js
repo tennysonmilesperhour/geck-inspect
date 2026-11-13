@@ -119,8 +119,10 @@ describe('columns a signed-out visitor may read', () => {
     expect(grantedColumns(GECKO_MIGRATION, 'gecko_images')).toEqual(GECKO_IMAGE_PUBLIC_COLUMNS);
   });
 
-  it('geckoSelect reads everything only when signed in', () => {
-    expect(geckoSelect(true)).toBe('*');
+  it('geckoSelect never reads the owner\'s email: members get three columns more, never *', () => {
+    // Members cannot read created_by on geckos either (decision E16).
+    expect(geckoSelect(true)).toBe(`${GECKO_PUBLIC_COLUMNS.join(',')},sold_price,moderation_hidden,status_before_listing`);
+    expect(geckoSelect(true)).not.toMatch(/\*|created_by/);
     expect(geckoSelect(false)).toBe(GECKO_PUBLIC_COLUMNS.join(','));
   });
 });

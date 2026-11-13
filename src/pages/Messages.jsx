@@ -401,12 +401,14 @@ export default function MessagesPage() {
                 const otherEmails = conversationList
                     .map((c) => c.email)
                     .filter((e) => e && e !== SYSTEM_EMAIL);
+                let inboxProfiles = [];
                 if (otherEmails.length > 0 && !guest) {
                     const { data: profiles } = await supabase
                         .rpc('read_profiles', { p_emails: otherEmails })
                         .select('id, email, full_name, profile_image_url')
                         .in('email', otherEmails);
                     if (profiles) {
+                        inboxProfiles = profiles;
                         setProfileMap((prev) => {
                             const next = new Map(prev);
                             for (const p of profiles) next.set(p.email, p);
@@ -418,6 +420,35 @@ export default function MessagesPage() {
                 if (isInitial) {
                     const urlParams = new URLSearchParams(window.location.search);
                     const recipientEmail = urlParams.get('recipient');
+                    // ?profile=<id> opens a conversation with a member known
+                    // only by profile id (a gecko's owner: members cannot
+                    // read another member's email on a gecko, decision
+                    // E16). The first message goes by profile id, as from
+                    // the member list.
+                    const recipientProfileId = recipientEmail ? null : urlParams.get('profile');
+                    if (recipientProfileId) {
+                        const { data: profile } = await supabase
+                            .rpc('read_profiles')
+                            .select('id, full_name, business_name, profile_image_url')
+                            .eq('id', recipientProfileId)
+                            .maybeSingle();
+                        const target = profile || { id: recipientProfileId, full_name: null };
+                        const known = inboxProfiles.find((p) => String(p.id) === String(recipientProfileId));
+                        const existing = known ? conversationList.find((c) => c.email === known.email) : null;
+                        if (existing) {
+                            setSelectedConversation(existing);
+                            await markConversationRead(existing, user);
+                        } else {
+                            setSelectedConversation({
+                                email: null,
+                                profile: target,
+                                messages: [],
+                                latestMessage: null,
+                                unreadCount: 0,
+                                isSystem: false,
+                            });
+                        }
+                    }
                     if (recipientEmail) {
                         const conversation = conversationList.find(c => c.email === recipientEmail);
                         if (conversation) {

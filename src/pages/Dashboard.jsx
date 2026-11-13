@@ -109,9 +109,21 @@ async function loadCommunityDashboard() {
     return { users: usersData, recentImages: recentImagesData, stats, geckoOfTheDay, fallbackGecko };
 }
 
+/**
+ * The member's geckos and plans are found by owner_profile_id: members
+ * cannot filter on created_by, an email, on those tables (owner decision
+ * E16, src/lib/ownerRows.js). Eggs keep created_by.
+ */
+async function ownerIdOrThrow() {
+    const ownerId = await import('@/lib/ownerRows').then((m) => m.myProfileId()).catch(() => null);
+    if (!ownerId) throw new Error('Your profile could not be read.');
+    return ownerId;
+}
+
 /** The member's own gecko and pairing counts for the stat cards. */
-async function loadPersonalCounts(email) {
-    const own = (q) => q.eq('created_by', email).or('archived.is.null,archived.eq.false');
+async function loadPersonalCounts() {
+    const ownerId = await ownerIdOrThrow();
+    const own = (q) => q.eq('owner_profile_id', ownerId).or('archived.is.null,archived.eq.false');
     const [geckos, pairings] = await Promise.all([
         headCount('geckos', own),
         headCount('breeding_plans', own),
@@ -125,11 +137,12 @@ async function loadPersonalCounts(email) {
  */
 async function loadHatcheryCounts(email) {
     const mine = (q) => q.eq('created_by', email);
+    const ownerId = await ownerIdOrThrow();
     const [hatched, incubating, total, plans] = await Promise.all([
         headCount('eggs', (q) => mine(q).eq('status', 'Hatched')),
         headCount('eggs', (q) => mine(q).eq('status', 'Incubating').or('archived.is.null,archived.eq.false')),
         headCount('eggs', mine),
-        headCount('breeding_plans', (q) => mine(q).or('archived.is.null,archived.eq.false')),
+        headCount('breeding_plans', (q) => q.eq('owner_profile_id', ownerId).or('archived.is.null,archived.eq.false')),
     ]);
     return { hatched, incubating, total, plans };
 }
@@ -185,7 +198,7 @@ export default function Dashboard() {
 
     const personalQuery = useQuery({
         queryKey: ['dashboard', 'personal', email],
-        queryFn: () => loadPersonalCounts(email),
+        queryFn: () => loadPersonalCounts(),
         enabled: Boolean(email),
         // Always recheck on arrival (the cached counts still render first),
         // so a gecko added anywhere replaces "Add your first gecko" at once.

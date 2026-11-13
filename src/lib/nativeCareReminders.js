@@ -27,9 +27,15 @@ function writeIds(ids) {
 
 async function loadScheduleInput(email, feedingAlertsEnabled) {
   const supabase = await getSupabase();
+  // The member's geckos by owner_profile_id: members cannot filter on
+  // created_by, an email (owner decision E16, src/lib/ownerRows.js).
+  // Without it, stop here and leave the reminders as they are, rather than
+  // schedule as if there were no geckos.
+  const ownerId = await import('@/lib/ownerRows').then((m) => m.myProfileId()).catch(() => null);
+  if (!ownerId) throw new Error('Your profile could not be read, so reminders were left as they were.');
   const [profileRes, geckoRes, groupRes, defaultsFrom] = await Promise.all([
     supabase.from('profiles').select('extra_data, feeding_alerts_enabled').eq('email', email).maybeSingle(),
-    supabase.from('geckos').select('id,name,archived,created_date,hatch_date,weight_grams').eq('created_by', email),
+    supabase.from('geckos').select('id,name,archived,created_date,hatch_date,weight_grams').eq('owner_profile_id', ownerId),
     supabase.from('feeding_groups').select('id,name,label,last_fed_date,interval_days,feeding_reminder_enabled').eq('created_by', email),
     // The day the defaults start, the same one the server's jobs use.
     loadCareDefaultsFrom(),

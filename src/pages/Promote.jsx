@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sparkles, Search, Settings as SettingsIcon, Clock, Send, Archive, Image as ImageIcon, Calendar, X as XIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { Gecko } from '@/entities/all';
 import { useAuth } from '@/lib/AuthContext';
 import { tierOf, getTierLimits } from '@/lib/tierLimits';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
@@ -57,14 +58,9 @@ export default function PromotePage() {
     if (!user?.email || !user?.auth_user_id) return;
     setLoading(true);
     try {
-      // 1. User's geckos (filtered by created_by email; matches existing pattern).
-      const { data: geckoRows, error: geckoErr } = await supabase
-        .from('geckos')
-        .select('*')
-        .eq('created_by', user.email)
-        .order('last_meaningful_change_at', { ascending: false, nullsFirst: false })
-        .limit(200);
-      if (geckoErr) throw geckoErr;
+      // 1. The member's geckos, through the Gecko entity, which reads named
+      // columns and finds them by owner_profile_id (owner decision E16).
+      const geckoRows = await Gecko.filter({ created_by: user.email }, '-last_meaningful_change_at', 200);
       setGeckos(geckoRows || []);
 
       // 2. This month's usage (or seeded with tier defaults if missing).

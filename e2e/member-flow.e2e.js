@@ -237,6 +237,10 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
   // The whole run, from the sign-up form to the transfer, logged nothing
   // to the console as an error and threw nothing uncaught.
   expect(problems).toEqual([]);
+  // Nothing asked for the owner's email on geckos, plans or care records
+  // (decision E16): the fake refuses those reads, as production will once
+  // members lose the column.
+  expect(fake.refusals).toEqual([]);
 
   // After the console check, because requests fail with no signal.
   await test.step('with no signal the signed-in member sees the offline badge', async () => {

@@ -15,6 +15,7 @@
  * by `created_by` directly.
  */
 import { Gecko, CollectionMember } from '@/entities/all';
+import { isOwnRow } from '@/lib/ownRow';
 
 /**
  * Resolve every collection_id the caller can read (owner OR accepted
@@ -99,9 +100,7 @@ export async function getBusinessGeckos(user) {
  */
 export function canWriteGecko(gecko, user, memberships) {
   if (!gecko || !user?.email) return false;
-  if (gecko.created_by && gecko.created_by.toLowerCase() === user.email.toLowerCase()) {
-    return true;
-  }
+  if (isOwnRow(gecko, user)) return true;
   const m = (memberships || []).find(
     (cm) =>
       cm.collection_id === gecko.collection_id &&
@@ -120,7 +119,7 @@ export function canWriteGecko(gecko, user, memberships) {
 export function canDeleteGecko(gecko, user) {
   if (!gecko || !user?.email) return false;
   if (user.role === 'admin') return true;
-  return Boolean(gecko.created_by) && gecko.created_by.toLowerCase() === user.email.toLowerCase();
+  return isOwnRow(gecko, user);
 }
 
 /**
@@ -131,9 +130,8 @@ export function canDeleteGecko(gecko, user) {
 export function partitionGeckosByOwnership(geckos, user) {
   const owned = [];
   const shared = [];
-  const email = user?.email?.toLowerCase();
   for (const g of geckos || []) {
-    if (email && g.created_by && g.created_by.toLowerCase() === email) {
+    if (isOwnRow(g, user)) {
       owned.push(g);
     } else {
       shared.push(g);

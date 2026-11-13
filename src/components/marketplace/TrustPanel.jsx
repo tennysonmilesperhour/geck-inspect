@@ -28,20 +28,20 @@ const signalsCache = new Map();
 
 /**
  * The signals for a breeder page slug (works signed out, never sees the
- * email) or a seller email. A slug falls back to the email when the
- * database function is not there yet and the visitor can read the email.
+ * email) or a seller's profile id. A slug falls back to the profile id
+ * when the database function fails or finds no visible owner.
  */
-async function loadSignals({ breederSlug, email }) {
+async function loadSignals({ breederSlug, profileId }) {
   if (breederSlug) {
     try {
       const signals = await breederPageTrustSignals(breederSlug);
       if (!signals) throw new Error('no visible owner for this breeder page');
       return signals;
     } catch (err) {
-      if (!email) throw err;
+      if (!profileId) throw err;
     }
   }
-  return computeTrustSignals(email);
+  return computeTrustSignals(profileId);
 }
 
 function getTrustData(key, source) {
@@ -123,22 +123,23 @@ function SignalRow({ icon: Icon, children }) {
 }
 
 /**
- * `breederSlug` (a curated breeder page) works for signed-out visitors;
- * `email` is the seller's address, which only signed-in members can read.
- * The breeder page passes both: the slug first, the email as a fallback.
+ * `breederSlug` (a curated breeder page) works for signed-out visitors.
+ * `profileId` is the seller's profile id (a listing's owner_profile_id):
+ * members cannot read another member's email (owner decision E16), so the
+ * panel never takes one. Given both, the slug comes first.
  */
-export default function TrustPanel({ email, breederSlug, variant = 'compact' }) {
+export default function TrustPanel({ profileId, breederSlug, variant = 'compact' }) {
   const [data, setData] = useState(null);
-  const key = breederSlug ? `slug:${breederSlug}` : email ? `email:${email}` : null;
+  const key = breederSlug ? `slug:${breederSlug}` : profileId ? `profile:${profileId}` : null;
 
   useEffect(() => {
     if (!key) return undefined;
     let cancelled = false;
-    getTrustData(key, { breederSlug, email })
+    getTrustData(key, { breederSlug, profileId })
       .then((d) => { if (!cancelled) setData(d); })
       .catch(() => { if (!cancelled) setData(null); });
     return () => { cancelled = true; };
-  }, [key, breederSlug, email]);
+  }, [key, breederSlug, profileId]);
 
   if (!key || !data) return null;
   const { signals, tier } = data;

@@ -696,3 +696,17 @@ Migration: `20261113172624_private_sale_prices.sql`, dated after `20261110183000
 
 **If something breaks.** A page that shows no sale price where it should: the read of `gecko_sale_prices` failed or the merge did not run; the price is still in the table (`select * from gecko_sale_prices`). To stop the trigger in an emergency: `alter table public.geckos disable trigger geckos_keep_sale_price_private;` in the SQL editor (prices written after that stay on the public row again, so turn it back on once fixed).
 
+
+## 13 November: owner emails, step 1 (decision E16)
+
+Migrations: `20261113215000_owner_emails_step1.sql` (pushed and applied first, about 22:22 UTC) and `20261113225505_owner_emails_functions.sql` (pushed with the app change). No edge function changed. Step 2 waits in `supabase/pending/owner_emails_step2.sql`. The plan, the checks and when step 2 may move are `docs/planning/owner-emails-2026-11.md`.
+
+**Why.** Any signed-in member could read the owner's email (`created_by`) on public geckos, public breeding plans and the weight, feeding, shed, vet and ownership records of public passports.
+
+**What it does.** `owner_profile_id` on the six record tables, kept by the database and filled in; four functions and three row rules off `created_by`; `public_profile_content` without the email for anyone; `community_gecko_counts` for the server only. The app reads named columns on the seven tables, finds owners by profile id and puts the member's own email back on their own rows. Nothing is taken away yet, so open tabs keep working.
+
+**Checked before the push.** Locally: all 44 SQL test files (three new ones, each failing against the old definitions), the transfer race checks, lint, the whole unit suite and the clock-moved runs, all browser tests against a fake database that refuses any read of `created_by` on the seven tables, and the size check.
+
+**Checked after the database push.** Every row of the six tables has its owner id and none disagrees with `created_by`; the functions and rules are the new ones; a read-only probe as a real member read their own 253 weigh-ins and none of anyone else's, their sale prices and listing details, and all 325 public geckos.
+
+**If something breaks.** "My Geckos is empty" or "my gecko shows as someone else's": the member's profile id could not be read (src/lib/ownerRows.js, whoAmI), or a row has no owner id (check `select count(*) from geckos where owner_profile_id is null and created_by is not null`, which should be 0). Step 2 is not applied, so nothing a member reads is refused yet.

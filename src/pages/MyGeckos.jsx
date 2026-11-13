@@ -8,6 +8,7 @@ import Seo from '@/components/seo/Seo';
 import { Gecko, FeedingGroup, CollectionMember } from '@/entities/all';
 import { loadRecentWeights } from '@/lib/recentWeights';
 import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
+import { isOwnRow } from '@/lib/ownRow';
 import { bredInHouseIds, saleCategoryFor } from '@/lib/businessLedger';
 import { api } from '@/api/appClient';
 import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet, Scale, LayoutGrid, MoreHorizontal, Upload } from 'lucide-react';
@@ -341,7 +342,7 @@ export default function MyGeckosPage() {
         // here first shows the upgrade prompt without a round trip.
         if (!shouldArchive) {
             const target = geckos.find((g) => g.id === geckoId);
-            const ownsIt = target && String(target.created_by || '').toLowerCase() === String(user?.email || '').toLowerCase();
+            const ownsIt = isOwnRow(target, user);
             if (ownsIt && geckoLimitStatus(user, geckos).atLimit) {
                 setShowUpgradeModal(true);
                 return;
@@ -1169,7 +1170,7 @@ export default function MyGeckosPage() {
                                                                 feedingGroups={feedingGroups}
                                                                 onView={handleOpenDetailModal}
                                                                 onEdit={handleEdit}
-                                                                isOwner={!user?.email || gecko.created_by?.toLowerCase() === user.email.toLowerCase()}
+                                                                isOwner={!user?.email || isOwnRow(gecko, user)}
                                                                 canEdit={canWriteGecko(gecko, user, memberships)}
                                                             />
                                                         ))}
@@ -1206,7 +1207,7 @@ export default function MyGeckosPage() {
                                                                     feedingGroups={feedingGroups}
                                                                     onView={handleOpenDetailModal}
                                                                     onEdit={handleEdit}
-                                                                    isOwner={!user?.email || gecko.created_by?.toLowerCase() === user.email.toLowerCase()}
+                                                                    isOwner={!user?.email || isOwnRow(gecko, user)}
                                                                     canEdit={canWriteGecko(gecko, user, memberships)}
                                                                 />
                                                             ))}
@@ -1252,7 +1253,7 @@ export default function MyGeckosPage() {
                                                         feedingGroups={feedingGroups}
                                                         onView={handleOpenDetailModal}
                                                         onEdit={handleEdit}
-                                                        isOwner={!user?.email || gecko.created_by?.toLowerCase() === user.email.toLowerCase()}
+                                                        isOwner={!user?.email || isOwnRow(gecko, user)}
                                                         canEdit={canWriteGecko(gecko, user, memberships)}
                                                     />
 

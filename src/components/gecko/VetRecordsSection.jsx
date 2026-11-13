@@ -80,7 +80,15 @@ export default function VetRecordsSection({ gecko, canEdit = true, currentUserEm
   if (!gecko) return null;
 
   const today = todayLocalISO();
-  const canChange = (record) => canEdit && (!currentUserEmail || !record.created_by || record.created_by === currentUserEmail);
+  // The member's own visits (the entity layer puts their email back as
+  // created_by) and visits with no owner at all may change. Another
+  // member's visit has owner_profile_id but no created_by (owner decision
+  // E16), so a missing created_by alone no longer means "anyone may".
+  const canChange = (record) => canEdit && (
+    !currentUserEmail
+    || (!record.created_by && !record.owner_profile_id)
+    || String(record.created_by || '').trim().toLowerCase() === String(currentUserEmail).trim().toLowerCase()
+  );
   const onPassport = Boolean(gecko.passport_code && gecko.is_public);
 
   const startAdd = () => { setEditingId(null); setForm(emptyVetForm(today)); };

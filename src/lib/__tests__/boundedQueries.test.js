@@ -74,12 +74,16 @@ describe('My Geckos latest weights', () => {
   it('falls back to the old read while the database function is not live yet', async () => {
     calls.responses.push(
       { data: null, error: { code: 'PGRST202', message: 'Could not find the function public.recent_weight_records' } },
-      { data: [{ id: 'old', gecko_id: 'g1', record_date: '2026-01-01' }], error: null },
+      // The entity layer looks up the member's profile id for the filter:
+      // members cannot filter on created_by, an email (decision E16).
+      { data: [{ id: 'p-a', email: 'a@example.com' }], error: null },
+      { data: [{ id: 'old', gecko_id: 'g1', record_date: '2026-01-01', owner_profile_id: 'p-a' }], error: null },
     );
     const out = await loadRecentWeights('a@example.com');
-    expect(out).toEqual([{ id: 'old', gecko_id: 'g1', record_date: '2026-01-01' }]);
-    expect(calls.log[1][0]).toEqual(['from', 'weight_records']);
-    expect(step(calls.log[1], 'eq')).toEqual(['eq', 'created_by', 'a@example.com']);
+    expect(out).toEqual([{ id: 'old', gecko_id: 'g1', record_date: '2026-01-01', owner_profile_id: 'p-a' }]);
+    const read = calls.log.find((entry) => entry[0][0] === 'from' && entry[0][1] === 'weight_records');
+    expect(step(read, 'eq')).toEqual(['eq', 'owner_profile_id', 'p-a']);
+    expect(read.some((s) => Array.isArray(s) && s.includes('created_by'))).toBe(false);
   });
 
   it('surfaces other errors instead of hiding them', async () => {

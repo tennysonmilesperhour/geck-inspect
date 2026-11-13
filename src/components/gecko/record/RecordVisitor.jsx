@@ -20,7 +20,6 @@ export default function VisitorAside({ gecko, owner, currentUser, headingAs }) {
         <ReportContent
           targetType="gecko"
           targetId={gecko.id}
-          authorEmail={gecko.created_by}
           authorProfileId={gecko.owner_profile_id}
           excerpt={[gecko.name, gecko.morphs_traits, gecko.marketplace_description].filter(Boolean).join('\n')}
         />
@@ -49,11 +48,12 @@ export default function VisitorAside({ gecko, owner, currentUser, headingAs }) {
               )}
             </div>
           </Link>
-          {/* A signed-in member reads the owner's address on the gecko row;
-              profiles no longer carry it. */}
+          {/* Members cannot read another member's address (decision E16),
+              so the first message goes by the owner's profile id. */}
           {currentUser && !currentUser.is_guest ? (
             <MessageUserButton
-              recipientEmail={owner.email || gecko.created_by}
+              recipientEmail={owner.email || null}
+              recipientProfileId={gecko.owner_profile_id || owner.id}
               recipientName={owner.full_name}
               variant="outline"
               size="sm"
@@ -67,7 +67,6 @@ export default function VisitorAside({ gecko, owner, currentUser, headingAs }) {
           <ReportContent
             targetType="gecko"
             targetId={gecko.id}
-            authorEmail={gecko.created_by}
             authorProfileId={gecko.owner_profile_id}
             excerpt={[gecko.name, gecko.morphs_traits, gecko.marketplace_description].filter(Boolean).join('\n')}
           />

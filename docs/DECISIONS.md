@@ -81,9 +81,10 @@ Each status was set by reading the entry and checking the code or the later entr
 | 62 | Sign in with Apple in the iPhone app | Live | In the code; it reaches iPhones with build 15. |
 | 63 | Today is the home screen on every device | Live |  |
 | 64 | One screen for logging care | Live |  |
-| 65 | Five colour roles and a 12 px text floor in app screens | Live | Applied to seven pages so far. |
-| 66 | A sale never offers to make the gecko public | Live | Sold prices were made private the same day (67); switching the passport step on is owner decision E15. |
+| 65 | Five colour roles and a 12 px text floor in app screens | Live | Applied to eleven pages on 13 November. |
+| 66 | A sale never offers to make the gecko public | Live | Sold prices were made private the same day (67). Owner decision E15 (13 November): switch the passport step on once owner emails are held back too (68). |
 | 67 | Sale prices live in tables only the owner can read | Live |  |
+| 68 | Owner emails come off rows other members can read, in two steps | Live | Step 1 built 13 November; step 2 waits in `supabase/pending/`. |
 
 > **Title note (15 October 2026).** This file was titled "Geck Inspect Landing Page: DECISIONS.md" because entries 1 to 16 were written in an April 2026 landing page session. From entry 17 on it records decisions about the whole product: pricing, billing, data, security, positioning and process. The title now says so. No entry's text was changed.
 
@@ -814,3 +815,12 @@ The Privacy Policy (18 Oct) says the sign-up box starts unticked in the EEA and 
 **Decision:** The prices live in `gecko_sale_prices` and `ownership_record_prices` (migration `20261113172624_private_sale_prices.sql`). A gecko's price is read by its owner, the members of a shared collection it sits in, and admins, and cleared by the owner, collection editors and admins. An ownership record's price is read by that record's member and admins. Triggers move a price written to the old columns and leave them null; a gecko's price goes when it is unarchived or changes owner. The app puts the price back on the gecko objects it reads (`src/lib/geckoSalePrices.js`).
 **Reasoning:** Nothing an older open tab asks for is refused, and the app saves a price exactly as before. A price is money and the seller's business; a warning is not enough.
 **Consequences:** A new money column never goes on a row other members can read (`docs/RULES.md`, section 5). The old columns stay, always null. A save that takes a price away must name `sold_price: null` through the Gecko entity, which deletes the row; the database cannot tell it from a save that left the price alone. The plan and checks are `docs/planning/private-sale-prices-2026-11.md`.
+
+### 68. Owner emails come off rows other members can read, in two steps
+
+**Date:** 2026-11-13
+**Status:** Accepted (Tennyson took the recommendation for owner decision E16)
+**Context:** Seven tables carry the owner's email in `created_by`: geckos, breeding plans, and the weight, feeding, shed, vet and ownership records. Any signed-in member could read it on a public gecko or plan (325 of 391 geckos are public) and on the records of a public passport. No screen showed it; the data was readable. Signed-out visitors lost the column in October. The plan first listed six tables; a check of every table found the feeding records too.
+**Decision:** The same two steps used for photos and forum posts on 31 October (`20261031061000_member_email_columns_revoke.sql`). Step 1: the app reads named columns on the seven tables, finds "mine" and "whose" by `owner_profile_id`, and puts the member's own email back on their own rows (`src/lib/ownerRows.js`); four functions and three row rules that read the column some other way were moved off it, and two functions that run as their owner stopped handing it out (`20261113215000_owner_emails_step1.sql`, `20261113225505_owner_emails_functions.sql`). Step 2 (`supabase/pending/owner_emails_step2.sql`) takes the column from signed-in accounts, admins included, at least three days after step 1's app change is live.
+**Reasoning:** One step would have failed every `select *` in tabs that were already open. Putting the member's own email back on their own rows keeps the many "is this mine" checks working without touching each one.
+**Consequences:** A message to a gecko's owner goes by profile id (`MessageUserButton`, `/Messages?profile=`); the first reply tells each side the other's address, as any message does. Admin screens show owners' emails from their profiles. Once step 2 is live, a new column on one of the seven tables is not readable by members until a migration grants it (`docs/RULES.md`, section 5). The plan, checks and status are `docs/planning/owner-emails-2026-11.md`.

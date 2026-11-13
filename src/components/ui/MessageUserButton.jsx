@@ -7,9 +7,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Mail, Send } from 'lucide-react';
 import { notifyNewMessage } from '@/components/notifications/NotificationService';
 import { useToast } from '@/components/ui/use-toast';
-import { messageSendErrorText } from '@/lib/memberActions';
+import { messageSendErrorText, sendMessageToProfile } from '@/lib/memberActions';
 
-export default function MessageUserButton({ recipientEmail, recipientName, variant = "outline", size = "sm", className = "", context = null }) {
+/**
+ * Message a member from a dialog. recipientProfileId is enough on its own:
+ * members cannot read another member's email on a gecko or plan (owner
+ * decision E16), so the database sends a first message by profile id and
+ * the saved message carries the address from then on.
+ */
+export default function MessageUserButton({ recipientEmail, recipientProfileId = null, recipientName, variant = "outline", size = "sm", className = "", context = null }) {
     const [isOpen, setIsOpen] = useState(false);
     const [message, setMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
@@ -21,16 +27,19 @@ export default function MessageUserButton({ recipientEmail, recipientName, varia
         setIsSending(true);
         try {
             const currentUser = await User.me();
-            await DirectMessage.create({
-                sender_email: currentUser.email,
-                recipient_email: recipientEmail,
-                content: message.trim(),
-                ...(context ? { message_type: context } : {})
-            });
+            const saved = recipientEmail
+                ? await DirectMessage.create({
+                    sender_email: currentUser.email,
+                    recipient_email: recipientEmail,
+                    content: message.trim(),
+                    ...(context ? { message_type: context } : {})
+                })
+                : await sendMessageToProfile(recipientProfileId, message.trim(), context || 'direct');
+            const sentTo = recipientEmail || saved?.recipient_email;
 
             // Trigger notification for the recipient
-            await notifyNewMessage(
-                recipientEmail,
+            if (sentTo) await notifyNewMessage(
+                sentTo,
                 currentUser.email,
                 currentUser.full_name || currentUser.breeder_name,
             ).catch(e => console.error('Notification failed:', e));
@@ -57,7 +66,7 @@ export default function MessageUserButton({ recipientEmail, recipientName, varia
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Send Message to {recipientName || recipientEmail}</DialogTitle>
+                    <DialogTitle>Send Message to {recipientName || recipientEmail || 'this member'}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                     <Textarea

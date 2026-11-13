@@ -125,6 +125,50 @@ function matchesPart(row, part) {
 
 const RESERVED = new Set(['select', 'order', 'limit', 'offset', 'on_conflict', 'columns']);
 
+// Owner emails (decision E16, docs/planning/owner-emails-2026-11.md). These
+// seven tables carry the owner's email in created_by. Signed-out visitors
+// cannot read it, and step 2 takes it from signed-in members too, so the
+// fake refuses every read that names it (select=* included, and filters or
+// orders on it) the way Postgres does, and returns only the columns asked
+// for. The database keeps owner_profile_id in step with created_by; so
+// does the fake (syncOwners below).
+const OWNED_TABLES = new Set([
+  'geckos', 'breeding_plans', 'weight_records', 'feeding_records',
+  'shed_records', 'vet_records', 'ownership_records',
+]);
+
+/** The plain column list a request asks for, or null for * or embedded resources. */
+function plainColumns(params) {
+  const select = params.get('select');
+  if (select == null || select.includes('(')) return null;
+  const cols = select.split(',').map((c) => c.trim()).filter(Boolean);
+  return cols.includes('*') ? null : cols;
+}
+
+/** The Postgres refusal for a read that names created_by on an owned table, or null. */
+function ownedReadRefusal(name, params, { checkSelect = true } = {}) {
+  if (!OWNED_TABLES.has(name)) return null;
+  const refuse = { code: '42501', message: `permission denied for table ${name}`, details: null, hint: null };
+  if (checkSelect) {
+    const select = params.get('select');
+    const cols = (select ?? '*').split(',').map((c) => c.trim());
+    if (cols.includes('*') || cols.includes('created_by') || cols.some((c) => /^created_by[:!]/.test(c))) return refuse;
+  }
+  for (const [key, value] of params) {
+    if (key === 'created_by') return refuse;
+    if ((key === 'or' || key === 'and') && /(^|[(,])(not\.)?created_by\./.test(value)) return refuse;
+    if (key === 'order' && /(^|,)created_by(\.|,|$)/.test(value)) return refuse;
+  }
+  return null;
+}
+
+/** Rows cut down to the columns asked for (owned tables only). */
+function project(name, rows, params) {
+  const cols = OWNED_TABLES.has(name) ? plainColumns(params) : null;
+  if (!cols) return rows;
+  return rows.map((row) => Object.fromEntries(cols.map((c) => [c, row[c] ?? null])));
+}
+
 function applyFilters(rows, params) {
   return rows.filter((row) => {
     for (const [key, value] of params) {
@@ -185,6 +229,8 @@ export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confir
   };
   const accounts = new Map(); // email -> { user, password }
   const calls = [];
+  // Reads refused for naming created_by on an owned table (see OWNED_TABLES).
+  const refusals = [];
   let currentUser = null;
 
   const nowIso = () => new Date().toISOString();
@@ -222,6 +268,17 @@ export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confir
       refresh_token: `refresh-${user.id}`,
       user,
     };
+  }
+
+  // public.set_owner_profile_id(): owner_profile_id is the profile of the
+  // row's created_by. Run before every request on an owned table, so seeds
+  // and accounts added after them line up too.
+  function syncOwners(name) {
+    if (!OWNED_TABLES.has(name)) return;
+    const idByEmail = new Map(table('profiles').map((p) => [p.email, String(p.id)]));
+    for (const row of table(name)) {
+      if (row.created_by && idByEmail.has(row.created_by)) row.owner_profile_id = idByEmail.get(row.created_by);
+    }
   }
 
   function profileFor(user) {
@@ -279,10 +336,13 @@ export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confir
       if (args.p_gecko_id) {
         const row = rows.find((g) => g.id === args.p_gecko_id);
         Object.assign(row, record, { updated_date: nowIso() });
-        return row;
+        syncOwners('geckos');
+        return { ...row, created_by: null };
       }
       const existing = rows.find((g) => g.save_request_id && g.save_request_id === args.p_request_id);
-      if (existing) return existing;
+      // Members cannot read created_by (decision E16): the saved row comes
+      // back without it, as gecko_row_as_member returns it after step 2.
+      if (existing) return { ...existing, created_by: null };
       const row = {
         id: uuid(),
         created_by: currentUser?.email,
@@ -304,7 +364,9 @@ export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confir
           created_date: nowIso(),
         });
       }
-      return row;
+      syncOwners('geckos');
+      syncOwners('weight_records');
+      return { ...row, created_by: null };
     },
     read_profiles: () => table('profiles').map(({ id, full_name, business_name, profile_image_url, email }) => ({ id, full_name, business_name, profile_image_url, email })),
     // The profile ids of the members the caller blocked, public profile or not.
@@ -470,14 +532,17 @@ export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confir
     // ---- Tables ----
     if (path.startsWith('/rest/v1/')) {
       const name = path.slice('/rest/v1/'.length);
+      syncOwners(name);
       const rows = table(name);
       const wantsObject = (request.headers()['accept'] || '').includes('application/vnd.pgrst.object+json');
       const prefer = request.headers()['prefer'] || '';
       const returnRows = prefer.includes('return=representation');
 
       if (method === 'GET' || method === 'HEAD') {
+        const refusal = ownedReadRefusal(name, params);
+        if (refusal) { refusals.push({ method, path, search: url.search }); return json(refusal, 403); }
         const matched = applyFilters(rows, params);
-        const page = applyOrderAndLimit(matched, params);
+        const page = project(name, applyOrderAndLimit(matched, params), params);
         const range = { 'content-range': `0-${Math.max(page.length - 1, 0)}/${matched.length}` };
         if (method === 'HEAD') return route.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*', 'access-control-expose-headers': 'content-range', ...range } });
         if (wantsObject) {
@@ -490,6 +555,10 @@ export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confir
       }
 
       if (method === 'POST') {
+        if (returnRows) {
+          const refusal = ownedReadRefusal(name, params);
+          if (refusal) { refusals.push({ method, path, search: url.search }); return json(refusal, 403); }
+        }
         const input = Array.isArray(body) ? body : [body];
         const upsert = prefer.includes('resolution=merge-duplicates');
         const conflict = (params.get('on_conflict') || 'id').split(',');
@@ -508,26 +577,34 @@ export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confir
           keepSalePricesPrivate(name, row, null);
           return row;
         });
+        syncOwners(name);
         if (!returnRows) return route.fulfill({ status: 201, headers: { 'access-control-allow-origin': '*' }, body: '' });
-        return json(wantsObject ? written[0] : written, 201);
+        const shown = project(name, written, params);
+        return json(wantsObject ? shown[0] : shown, 201);
       }
 
       if (method === 'PATCH') {
+        const refusal = ownedReadRefusal(name, params, { checkSelect: returnRows });
+        if (refusal) { refusals.push({ method, path, search: url.search }); return json(refusal, 403); }
         const matched = applyFilters(rows, params);
         for (const row of matched) {
           const before = { ...row };
           Object.assign(row, body || {});
           keepSalePricesPrivate(name, row, before);
         }
+        syncOwners(name);
         if (!returnRows) return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
-        return json(wantsObject ? matched[0] ?? null : matched);
+        const shown = project(name, matched, params);
+        return json(wantsObject ? shown[0] ?? null : shown);
       }
 
       if (method === 'DELETE') {
+        const refusal = ownedReadRefusal(name, params, { checkSelect: returnRows });
+        if (refusal) { refusals.push({ method, path, search: url.search }); return json(refusal, 403); }
         const matched = applyFilters(rows, params);
         tables.set(name, rows.filter((r) => !matched.includes(r)));
         if (!returnRows) return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*' } });
-        return json(matched);
+        return json(project(name, matched, params));
       }
     }
 
@@ -561,6 +638,7 @@ export function createFakeSupabase({ seed = {}, rpc = {}, functions = {}, confir
 
   return {
     calls,
+    refusals,
     table,
     addAccount,
     account: (email) => accounts.get(email.toLowerCase())?.user,

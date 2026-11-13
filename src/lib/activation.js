@@ -138,10 +138,14 @@ export async function recordGeckoAdded(source, count = 1, options = {}) {
   if (firstGeckoSettled.has(who.id) || readFlag(flag)) return false;
   try {
     const supabase = await getSupabase();
+    // By owner_profile_id: members cannot filter on created_by, an email
+    // (owner decision E16). Loaded here, not with the app.
+    const ownerId = await import('@/lib/ownerRows').then((m) => m.myProfileId()).catch(() => null);
+    if (!ownerId) return false;
     const { count: total, error } = await supabase
       .from('geckos')
       .select('id', { count: 'exact', head: true })
-      .eq('created_by', who.email);
+      .eq('owner_profile_id', ownerId);
     // Zero means the new row is not readable yet; try again next add.
     if (error || typeof total !== 'number' || total === 0) return false;
     firstGeckoSettled.add(who.id);

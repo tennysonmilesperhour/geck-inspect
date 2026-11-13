@@ -53,6 +53,7 @@ Source: `docs/planning/launch-offer-tests-2026-10.md`.
 4. `MORPH_SHARE_VIEW_KEY` never gets a `VITE_` name (that would publish it). Source: `docs/planning/deploy-queue-2026-10-03.md`.
 5. `tennyscrestedgeckos.com` is not Tennyson's site. It never appears as his brand or as founder credibility. Source: `CLAUDE.md`.
 6. **What someone paid or was paid never sits on a row other members can read.** A gecko's sale price lives in `gecko_sale_prices` and a claimed transfer's price in `ownership_record_prices`, which only the owner (and a shared collection's members, and admins) can read; the old `geckos.sold_price` and `ownership_records.sale_price` columns are always null. A new money column goes in a table like those. Source: `docs/DECISIONS.md`, entry 67; `docs/planning/private-sale-prices-2026-11.md`.
+7. **The app never reads the owner's email on geckos, breeding plans or the weight, feeding, shed, vet and ownership records.** It reads named columns (`OWNED_COLUMNS_BY_TABLE` in `src/lib/memberColumns.js`) and finds the owner by `owner_profile_id`; the entity layer does this for those seven entities (`src/lib/ownerRows.js`), and a test fails on a direct read that names `created_by` or uses `select *`. Message an owner by profile id. Once step 2 (`supabase/pending/owner_emails_step2.sql`) is live, a new column on one of these tables is not readable by members until a migration grants it and it is added to that list. Source: `docs/DECISIONS.md`, entry 68; `docs/planning/owner-emails-2026-11.md`.
 
 ## 6. The database and edge functions
 

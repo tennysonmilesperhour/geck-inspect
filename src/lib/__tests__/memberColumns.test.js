@@ -37,12 +37,19 @@ vi.mock('@/lib/activation', () => ({ noteEntityCreated: () => {} }));
 const {
   MEMBER_COLUMNS_BY_TABLE,
   MEMBER_HIDDEN_COLUMNS,
+  OWNED_COLUMNS_BY_TABLE,
   GECKO_IMAGE_MEMBER_COLUMNS,
   FORUM_POST_MEMBER_COLUMNS,
   FORUM_COMMENT_MEMBER_COLUMNS,
 } = await import('@/lib/memberColumns');
 const { BREEDER_PROFILE_PUBLIC_COLUMNS, PUBLIC_READ_COLUMNS } = await import('@/lib/publicColumns');
 const entities = await import('@/api/supabaseEntities');
+// The seven tables whose owner is an email (decision E16) join the member
+// lists when src/lib/ownerRows.js loads; load it now so every test below
+// sees the same lists. Their own checks are in ownerRows.test.js.
+const ownerRows = await import('@/lib/ownerRows');
+ownerRows.registerOwnedColumns();
+const OWNED = new Set(Object.keys(ownerRows.OWNED_TABLES));
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '../../..');
 const read = (path) => readFileSync(join(ROOT, path), 'utf8');
@@ -96,18 +103,20 @@ describe('the member column lists', () => {
 
   it('are what the entity layer reads with (it builds them from the signed-out lists)', () => {
     for (const entity of Object.keys(entities.MEMBER_COLUMN_EXTRAS)) {
-      expect(member(entity).split(',').sort()).toEqual([...LISTS_BY_TABLE[entities.TABLE_MAP[entity]]].sort());
+      const lists = OWNED.has(entity) ? OWNED_COLUMNS_BY_TABLE : LISTS_BY_TABLE;
+      expect(member(entity).split(',').sort()).toEqual([...lists[entities.TABLE_MAP[entity]]].sort());
     }
-    // Every member-read entity is one of these tables.
+    // Every member-read entity is one of these tables, or one of the seven
+    // whose owner is an email.
     for (const entity of Object.keys(entities.MEMBER_COLUMN_EXTRAS)) {
-      expect(Object.keys(MEMBER_HIDDEN_COLUMNS)).toContain(entities.TABLE_MAP[entity]);
+      expect([...Object.keys(MEMBER_HIDDEN_COLUMNS), ...Object.keys(OWNED_COLUMNS_BY_TABLE)]).toContain(entities.TABLE_MAP[entity]);
     }
   });
 
   it('cover every entity on these tables the app reads through the entity layer', () => {
     // UserBadge, MorphGuideComment and Giveaway have no entity reads: My
     // Profile reads badges with its own list, and nothing reads the other two.
-    const covered = Object.keys(entities.MEMBER_COLUMN_EXTRAS);
+    const covered = Object.keys(entities.MEMBER_COLUMN_EXTRAS).filter((e) => !OWNED.has(e));
     expect(covered.sort()).toEqual(['BreederProfile', 'BreederReview', 'ForumComment', 'ForumLike', 'ForumPost', 'GeckoImage', 'MorphPriceEntry']);
     for (const path of sourceFiles(join(ROOT, 'src'))) {
       const text = readFileSync(path, 'utf8');
@@ -149,7 +158,8 @@ describe('entity reads and writes on these tables', () => {
     expect(await entities.readColumns('GeckoImage')).toBe(member('GeckoImage'));
     expect(await entities.readColumns('ForumComment')).toBe(member('ForumComment'));
     expect(await entities.readColumns('BreederProfile')).toBe(BREEDER_PROFILE_PUBLIC_COLUMNS.join(','));
-    expect(await entities.readColumns('Gecko')).toBe('*');
+    expect(await entities.readColumns('Gecko')).toBe(member('Gecko'));
+    expect(member('Gecko')).not.toMatch(/created_by|\*/);
     fx.session = null;
     expect(await entities.readColumns('GeckoImage')).toBe(PUBLIC_READ_COLUMNS.GeckoImage);
   });
@@ -164,9 +174,9 @@ describe('entity reads and writes on these tables', () => {
       ['gecko_images', member('GeckoImage')],
       ['forum_posts', member('ForumPost')],
       ['forum_comments', member('ForumComment')],
-      ['geckos', '*'],
+      ['geckos', member('Gecko')],
     ]);
-    for (const [, cols] of selects.slice(0, 3)) expect(cols).not.toMatch(/created_by|\*/);
+    for (const [, cols] of selects) expect(cols).not.toMatch(/created_by|\*/);
     // The member's own email still goes on their new row.
     const insert = fx.calls.find(([table, m]) => table === 'gecko_images' && m === 'insert');
     expect(insert[2].created_by).toBe('sam@example.com');
@@ -198,7 +208,9 @@ const ALLOWED = [
 const EMAIL = '(created_by|user_email|winner_emails)';
 // An email key anywhere in the filter's argument, conditional ones included
 // (cond ? {...} : { created_by: x }), up to the end of the statement.
-const ENTITY_FILTER = new RegExp(`\\b(${[...Object.keys(entities.MEMBER_COLUMN_EXTRAS), 'UserBadge', 'MorphGuideComment', 'Giveaway'].join('|')})\\.filter\\([^;)]{0,300}?\\b${EMAIL}\\s*:`, 'g');
+// The seven owned entities are left out: their created_by filters become
+// owner_profile_id filters in src/lib/ownerRows.js.
+const ENTITY_FILTER = new RegExp(`\\b(${[...Object.keys(entities.MEMBER_COLUMN_EXTRAS).filter((e) => !OWNED.has(e)), 'UserBadge', 'MorphGuideComment', 'Giveaway'].join('|')})\\.filter\\([^;)]{0,300}?\\b${EMAIL}\\s*:`, 'g');
 const TABLE_FROM = new RegExp(`\\.from\\(\\s*['"\`](${Object.keys(MEMBER_HIDDEN_COLUMNS).join('|')})['"\`]\\s*\\)`, 'g');
 const BAD_IN_CHAIN = [
   /\.select\(\s*\)/,

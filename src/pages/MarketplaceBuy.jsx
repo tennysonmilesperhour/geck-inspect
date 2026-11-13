@@ -32,6 +32,7 @@ import { useBlockedMembers } from '@/hooks/useBlockedAuthors';
 import { getSexIcon, getSexColor } from '@/lib/utils';
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 import { swapToFallback } from '@/lib/imgFallback';
+import { nameWithoutEmail, publicDisplayName } from '@/lib/publicColumns';
 
 // Cap the per-page Product graph at 24 listings. The full result set can
 // run hundreds of geckos deep, emitting all of them blows up the
@@ -41,10 +42,31 @@ import { swapToFallback } from '@/lib/imgFallback';
 // geckos are for sale on Geck Inspect right now".
 const MAX_LISTINGS_IN_SCHEMA = 24;
 
+// A listing names its owner by profile id. Members cannot read another
+// member's email on a gecko (owner decision E16), so the owner map is keyed
+// by owner_profile_id and filled from read_profiles by id, which never
+// returns another member's email.
+const ownerKey = (gecko) => (gecko?.owner_profile_id == null ? null : String(gecko.owner_profile_id));
+const ownerOf = (owners, gecko) => {
+  const key = ownerKey(gecko);
+  return key ? owners?.[key] : undefined;
+};
+// The name shown for an owner: never an email address, '' when unknown.
+const ownerNameOf = (owner) => publicDisplayName(owner, '');
+
+async function loadOwners(geckos) {
+  const ids = [...new Set((geckos || []).map(ownerKey).filter(Boolean))];
+  if (ids.length === 0) return {};
+  const rows = await User.filter({ id: { $in: ids } });
+  return Object.fromEntries((rows || []).filter((p) => p?.id != null).map((p) => [String(p.id), p]));
+}
+
 function buildMarketplaceListJsonLd(geckos, owners) {
   const top = (geckos || []).slice(0, MAX_LISTINGS_IN_SCHEMA);
   const items = top.map((g, i) => {
-    const owner = owners?.[g.created_by];
+    const owner = ownerOf(owners, g);
+    const sellerName = ownerNameOf(owner);
+    const sellerBusiness = nameWithoutEmail(owner?.business_name, '');
     const detailUrl = `${SITE_URL}/GeckoDetail?id=${g.id}`;
     const product = {
       '@type': 'Product',
@@ -69,12 +91,12 @@ function buildMarketplaceListJsonLd(geckos, owners) {
           priceCurrency: g.price_currency || 'USD',
           availability: 'https://schema.org/InStock',
           url: detailUrl,
-          ...(owner && {
+          ...(sellerName && {
             seller: {
               '@type': 'Person',
-              name: owner.full_name,
-              ...(owner.business_name && {
-                affiliation: { '@type': 'Organization', name: owner.business_name },
+              name: sellerName,
+              ...(sellerBusiness && {
+                affiliation: { '@type': 'Organization', name: sellerBusiness },
               }),
             },
           }),
@@ -122,6 +144,7 @@ function buildMarketplaceListJsonLd(geckos, owners) {
 // 4-up layout.
 const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike, onViewLineage, size = 'large' }) => {
     const isRegular = size === 'regular';
+    const ownerName = ownerNameOf(owner);
 
     return (
         <Card className="overflow-hidden group-hover:border-emerald-500/50 group-hover:shadow-lg group-hover:shadow-emerald-500/10 transition-colors duration-200 h-full flex flex-col">
@@ -180,14 +203,14 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                             className="flex items-center gap-2 group min-w-0 touch:min-h-11"
                         >
                             <img
-                                src={owner?.profile_image_url || initialsAvatarUrl(owner?.full_name || '')}
+                                src={owner?.profile_image_url || initialsAvatarUrl(ownerName)}
                                 className={`${isRegular ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg group-hover:opacity-80 transition-opacity shrink-0`}
-                                alt={owner?.full_name}
+                                alt={ownerName}
                                 loading="lazy"
                                 decoding="async"
                                 onError={(e) => swapToFallback(e, 'https://geckinspect.com/logo.png')}
                             />
-                            <span className="truncate group-hover:underline">{owner?.full_name || 'Breeder'}</span>
+                            <span className="truncate group-hover:underline">{ownerName || 'Breeder'}</span>
                         </Link>
                     </div>
                     {owner?.location && !isRegular && (
@@ -198,10 +221,14 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                     )}
                     {/* Seller trust layer: provable on-platform history,
                         cached per seller so a grid of listings from the
-                        same breeder costs one fetch. */}
-                    {owner?.email && (
+                        same breeder costs one fetch. By profile id: the
+                        seller's email is not readable (owner decision E16).
+                        Signed in only, as before: a signed-out visitor
+                        cannot count weigh-ins or ownership records by
+                        owner, so the numbers would come out short. */}
+                    {currentUser && owner?.id != null && (
                        <div onClick={(e) => e.stopPropagation()}>
-                           <TrustPanel email={owner.email} variant="compact" />
+                           <TrustPanel profileId={String(owner.id)} variant="compact" />
                        </div>
                     )}
                     <div className={`flex items-center ${isRegular ? 'gap-1' : 'gap-2'} touch:gap-2`}>
@@ -213,10 +240,10 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                         >
                             <GitBranch className="w-3 h-3 mr-1 shrink-0" /> Lineage
                         </Button>
-                       {currentUser && owner && currentUser.id !== owner.id && (
+                       {currentUser && owner && String(currentUser.id) !== String(owner.id) && (
                            <MessageUserButton
-                              recipientEmail={owner.email}
-                              recipientName={owner.full_name}
+                              recipientProfileId={gecko.owner_profile_id}
+                              recipientName={ownerName || undefined}
                               variant="outline"
                               size="sm"
                               className={`flex-1 inline-flex items-center justify-center ${isRegular ? 'h-7 text-[10px] px-1.5' : 'h-9'}`}
@@ -228,7 +255,6 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                         <ReportContent
                             targetType="gecko"
                             targetId={gecko.id}
-                            authorEmail={gecko.created_by}
                             authorProfileId={gecko.owner_profile_id}
                             excerpt={[gecko.name, gecko.morphs_traits, gecko.marketplace_description].filter(Boolean).join('\n')}
                             label="Report"
@@ -323,21 +349,10 @@ export default function MarketplaceBuyPage({ embedded = false }) {
                     }
                 }
                 
-                const ownerEmails = [...new Set(batch.map(g => g.created_by))];
-                
-                if (ownerEmails.length > 0) {
-                    try {
-                        const ownerData = await User.filter({ email: { $in: ownerEmails } });
-                        const ownersMap = (ownerData || []).reduce((acc, user) => {
-                            acc[user.email] = user;
-                            return acc;
-                        }, {});
-                        setOwners(ownersMap);
-                    } catch (err) {
-                        console.error('Could not load marketplace owners:', err);
-                        setOwners({});
-                    }
-                } else {
+                try {
+                    setOwners(await loadOwners(batch));
+                } catch (err) {
+                    console.error('Could not load marketplace owners:', err);
                     setOwners({});
                 }
             } catch (error) {
@@ -355,18 +370,11 @@ export default function MarketplaceBuyPage({ embedded = false }) {
         const batch = await fetchGeckoBatch(newOffset, true);
         
         // Load owner data for new batch
-        const newOwnerEmails = [...new Set(batch.map(g => g.created_by))];
-        if (newOwnerEmails.length > 0) {
-            try {
-                const ownerData = await User.filter({ email: { $in: newOwnerEmails } });
-                const ownersMap = ownerData.reduce((acc, user) => {
-                    acc[user.email] = user;
-                    return acc;
-                }, {});
-                setOwners(prev => ({ ...prev, ...ownersMap }));
-            } catch (err) {
-                console.error('Could not load marketplace owners (paginated):', err);
-            }
+        try {
+            const ownersMap = await loadOwners(batch);
+            setOwners(prev => ({ ...prev, ...ownersMap }));
+        } catch (err) {
+            console.error('Could not load marketplace owners (paginated):', err);
         }
         
         setGeckoOffset(newOffset);
@@ -418,7 +426,7 @@ export default function MarketplaceBuyPage({ embedded = false }) {
                 !blocked.isBlocked(gecko) && (
                 (gecko.name?.toLowerCase() || '').includes(q) ||
                 (gecko.morphs_traits?.toLowerCase() || '').includes(q) ||
-                (owners[gecko.created_by]?.full_name?.toLowerCase() || '').includes(q))
+                ownerNameOf(ownerOf(owners, gecko)).toLowerCase().includes(q))
         );
         if (sexFilter !== 'all') {
             list = list.filter((g) => g.sex === sexFilter);
@@ -652,7 +660,7 @@ export default function MarketplaceBuyPage({ embedded = false }) {
                                <div key={gecko.id} onClick={() => handleViewDetails(gecko.id)} className="cursor-pointer group">
                                    <MarketplaceGeckoCard
                                        gecko={gecko}
-                                       owner={owners[gecko.created_by]}
+                                       owner={ownerOf(owners, gecko)}
                                        currentUser={currentUser}
                                        isLiked={likedGeckoIds.has(gecko.id)}
                                        onToggleLike={handleToggleLike}

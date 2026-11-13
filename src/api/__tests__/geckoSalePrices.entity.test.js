@@ -12,6 +12,8 @@ const db = vi.hoisted(() => ({
   pricesError: null,
   geckos: [],
   prices: [],
+  // Members find their geckos by profile id (decision E16, src/lib/ownerRows.js).
+  profiles: [],
   calls: [],
 }));
 
@@ -39,7 +41,7 @@ function trigger(row, before) {
 
 function query(table) {
   const q = { op: 'select', filters: [], patch: null };
-  const rows = () => (table === 'geckos' ? db.geckos : table === 'gecko_sale_prices' ? db.prices : []);
+  const rows = () => (table === 'geckos' ? db.geckos : table === 'gecko_sale_prices' ? db.prices : table === 'profiles' ? db.profiles : []);
   const hits = () => rows().filter((r) => q.filters.every(([col, val]) => (Array.isArray(val) ? val.includes(r[col]) : r[col] === val)));
   const run = () => {
     db.calls.push([table, q.op]);
@@ -85,6 +87,13 @@ function fakeClient() {
       refreshSession: async () => ({ error: null }),
     },
     from: (table) => query(table),
+    // read_profiles answers a caller about the addresses it passes.
+    rpc: (name, args) => {
+      const wanted = (args?.p_emails || []).map((e) => e.toLowerCase());
+      const data = name === 'read_profiles' ? db.profiles.filter((p) => wanted.includes(p.email)) : null;
+      const r = { select: () => r, then: (resolve, reject) => Promise.resolve({ data, error: null }).then(resolve, reject) };
+      return r;
+    },
   };
 }
 
@@ -94,10 +103,11 @@ const priceDeletes = () => db.calls.filter(([table, op]) => table === 'gecko_sal
 let Gecko;
 beforeEach(async () => {
   Object.assign(db, { session: { user: ME }, guest: false, noTrigger: false, pricesError: null, calls: [] });
+  db.profiles = [{ id: 'p-me', email: ME.email }, { id: 'p-other', email: 'other@example.com' }];
   db.geckos = [
-    { id: 'g-mango', name: 'Mango', created_by: ME.email, archived: true, archive_reason: 'sold', status: 'Sold', sold_price: null },
-    { id: 'g-pip', name: 'Pip', created_by: ME.email, archived: false, sold_price: null },
-    { id: 'g-other', name: 'Someone else\'s Lilly White', created_by: 'other@example.com', is_public: true, archived: true, sold_price: null },
+    { id: 'g-mango', name: 'Mango', created_by: ME.email, owner_profile_id: 'p-me', archived: true, archive_reason: 'sold', status: 'Sold', sold_price: null },
+    { id: 'g-pip', name: 'Pip', created_by: ME.email, owner_profile_id: 'p-me', archived: false, sold_price: null },
+    { id: 'g-other', name: 'Someone else\'s Lilly White', created_by: 'other@example.com', owner_profile_id: 'p-other', is_public: true, archived: true, sold_price: null },
   ];
   db.prices = [{ gecko_id: 'g-mango', sold_price: 300 }];
   vi.resetModules();

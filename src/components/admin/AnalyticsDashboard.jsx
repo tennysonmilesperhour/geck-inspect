@@ -190,21 +190,23 @@ export default function AnalyticsDashboard() {
         failed.push(label);
         return [];
       };
-      const owned = 'id,created_by,created_date';
-      // Photos and forum rows say who owns them by profile id; the email
-      // comes from the profiles list below (signed-in accounts, admins
-      // included, cannot read created_by on those tables).
+      // Geckos, breeding plans, photos and forum rows say who owns them by
+      // profile id; the email comes from the profiles list below
+      // (signed-in accounts, admins included, cannot read created_by on
+      // those tables: docs/planning/owner-emails-2026-11.md).
       const ownedById = 'id,owner_profile_id,created_date';
-      const [users, geckos, imageRows, postRows, commentRows, plans, messages, events] = await Promise.all([
+      const [users, geckoRows, imageRows, postRows, commentRows, planRows, messages, events] = await Promise.all([
         fetchAllProfiles('id,email,role,full_name,breeder_name,created_date').catch(orEmpty('profiles')),
-        fetchAdminTable('geckos', owned).catch(orEmpty('geckos')),
+        fetchAdminTable('geckos', ownedById).catch(orEmpty('geckos')),
         fetchAdminTable('gecko_images', ownedById).catch(orEmpty('gecko_images')),
         fetchAdminTable('forum_posts', ownedById).catch(orEmpty('forum_posts')),
         fetchAdminTable('forum_comments', ownedById).catch(orEmpty('forum_comments')),
-        fetchAdminTable('breeding_plans', owned).catch(orEmpty('breeding_plans')),
+        fetchAdminTable('breeding_plans', ownedById).catch(orEmpty('breeding_plans')),
         fetchAdminTable('direct_messages', 'id,sender_email,created_date').catch(orEmpty('direct_messages')),
         fetchAdminTable('user_events', USER_EVENT_COLUMNS, { since: sinceIso }).catch(orEmpty('user_events')),
       ]);
+      const geckos = withOwnerEmails(geckoRows, users);
+      const plans = withOwnerEmails(planRows, users);
       const images = withOwnerEmails(imageRows, users);
       const posts = withOwnerEmails(postRows, users);
       const comments = withOwnerEmails(commentRows, users);

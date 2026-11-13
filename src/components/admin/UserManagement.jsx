@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { User, Notification, DirectMessage, Gecko, GeckoImage, ForumPost, UserEvent } from '@/entities/all';
-import { activityLabel } from '@/lib/adminData';
+import { activityLabel, fetchAdminTable } from '@/lib/adminData';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -71,7 +71,7 @@ function timeAgo(date) {
 
 export default function UserManagement() {
     const [users, setUsers] = useState([]);
-    const [geckoCounts, setGeckoCounts] = useState({}); // email -> count
+    const [geckoCounts, setGeckoCounts] = useState({}); // profile id -> count
     const [loginById, setLoginById] = useState(null); // profile id -> has a login
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -91,15 +91,19 @@ export default function UserManagement() {
         try {
             const [allUsers, allGeckos, directory] = await Promise.all([
                 User.list(),
-                Gecko.list().catch(() => []),
+                // Only the owner of every gecko, a page at a time. Owners
+                // are profile ids: signed-in accounts, admins included,
+                // cannot read another member's created_by on geckos
+                // (docs/planning/owner-emails-2026-11.md).
+                fetchAdminTable('geckos', 'id,owner_profile_id').catch(() => []),
                 fetchAccountDirectory().catch(() => null),
             ]);
             setUsers(allUsers);
             setLoginById(directory ? Object.fromEntries(directory.map((d) => [d.id, d.has_login])) : null);
-            // Pre-compute gecko counts per email so sorting is instant.
+            // Pre-compute gecko counts per profile id so sorting is instant.
             const counts = {};
             for (const g of allGeckos) {
-                if (g.created_by) counts[g.created_by] = (counts[g.created_by] || 0) + 1;
+                if (g.owner_profile_id != null) counts[g.owner_profile_id] = (counts[g.owner_profile_id] || 0) + 1;
             }
             setGeckoCounts(counts);
         } catch (error) {
@@ -149,9 +153,9 @@ export default function UserManagement() {
                 case 'name_desc':
                     return -byName(a, b);
                 case 'geckos_desc':
-                    return (geckoCounts[b.email] || 0) - (geckoCounts[a.email] || 0) || byName(a, b);
+                    return (geckoCounts[b.id] || 0) - (geckoCounts[a.id] || 0) || byName(a, b);
                 case 'geckos_asc':
-                    return (geckoCounts[a.email] || 0) - (geckoCounts[b.email] || 0) || byName(a, b);
+                    return (geckoCounts[a.id] || 0) - (geckoCounts[b.id] || 0) || byName(a, b);
                 case 'role': {
                     const score = (u) => (u.role === 'admin' ? 2 : u.is_expert ? 1 : 0);
                     return score(b) - score(a) || byName(a, b);
@@ -173,9 +177,10 @@ export default function UserManagement() {
         
         try {
             const [geckos, images, posts, activity] = await Promise.all([
-                Gecko.filter({ created_by: user.email }),
-                // Photos and posts by profile id: signed-in accounts,
-                // admins included, cannot filter on their created_by.
+                // Geckos, photos and posts by profile id: signed-in
+                // accounts, admins included, cannot filter on another
+                // member's created_by.
+                Gecko.filter({ owner_profile_id: user.id }),
                 GeckoImage.filter({ owner_profile_id: user.id }),
                 ForumPost.filter({ owner_profile_id: user.id }),
                 // The member's latest product events (page views left out).
@@ -389,7 +394,7 @@ export default function UserManagement() {
                                         {user.location && <span>{user.location}</span>}
                                         <span className="flex items-center gap-1">
                                             <Activity className="w-3 h-3" />
-                                            {geckoCounts[user.email] || 0} geckos
+                                            {geckoCounts[user.id] || 0} geckos
                                         </span>
                                         {user.created_date && (
                                             <span>

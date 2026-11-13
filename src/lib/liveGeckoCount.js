@@ -20,8 +20,15 @@ export async function countLiveGeckos(client, email) {
     .select('id', { count: 'exact', head: true })
     .or('archived.is.null,archived.eq.false');
   // No memberships yet: a new member's default collection is made with
-  // their first gecko, so their own rows are found by created_by.
-  query = ids.length > 0 ? query.in('collection_id', ids) : query.eq('created_by', email);
+  // their first gecko, so their own rows are found by owner_profile_id
+  // (members cannot filter on created_by, an email; owner decision E16).
+  if (ids.length > 0) {
+    query = query.in('collection_id', ids);
+  } else {
+    const ownerId = await import('@/lib/ownerRows').then((m) => m.myProfileId()).catch(() => null);
+    if (!ownerId) throw new Error('Your profile could not be read.');
+    query = query.eq('owner_profile_id', ownerId);
+  }
   const { count, error } = await query;
   if (error) throw error;
   return Number.isFinite(count) ? count : 0;
