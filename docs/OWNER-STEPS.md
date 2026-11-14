@@ -15,7 +15,7 @@ How to use it:
 |---|---|---|---|
 | A1 | **Breeder conversations: 15 by 17 November.** 0 recorded on 31 October. Under the Day 30 rule, fewer than 15 means engineering pauses. | Book the calls. After each, Admin panel, Overview, Weekly scoreboard, "Record by hand". The questions and the $120 Founding Breeder offer are in the source. | `planning/breeder-interviews-2026-10.md` |
 | A2 | **Hand-import 5 breeder collections.** 0 recorded. | Offer it in each call; record each under "Record by hand". | Part E, item 14 |
-| A4 | **Rewrite the top ten in `NOW.md`.** It is still the 31 October draft; the Mondays of 3 and 10 November were missed. | Copy the scoreboard card's numbers into `docs/NOW.md` and rewrite the list. | Part E, rule E0.5 |
+| A4 | **Rewrite the top ten in `NOW.md`.** A session refreshed the numbers and drafted a top ten on 14 November; the list is yours to rewrite. | `docs/NOW.md`, then each Monday copy the scoreboard card's numbers in. | Part E, rule E0.5 |
 
 ## B. App Store (the iPhone app is in review work)
 

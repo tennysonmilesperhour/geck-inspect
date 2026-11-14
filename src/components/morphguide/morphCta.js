@@ -1,9 +1,10 @@
 import { captureEvent } from '@/lib/posthog';
-import {
-  CALCULATOR_PAGES_BY_SLUG,
-  GUIDE_CALCULATOR_ALIASES,
-  MORPH_GUIDE_SLUGS,
-} from '@/lib/genetics/calculatorCatalog';
+// Small tables, not the whole calculator catalog: the Morph Guide's pages
+// have a size budget (scripts/write-calculator-links.mjs, guideSlugs.js).
+import { CALCULATOR_PAGE_BADGES } from '@/lib/genetics/calculatorLinkData';
+import { GUIDE_CALCULATOR_ALIASES, MORPH_GUIDE_SLUGS } from '@/lib/genetics/guideSlugs';
+
+const hasCalculatorPage = (slug) => Object.hasOwn(CALCULATOR_PAGE_BADGES, String(slug));
 
 /**
  * One event name for every call to action on a Morph Guide detail page,
@@ -23,13 +24,13 @@ export function trackMorphCta(slug, target, placement) {
  * calculator (GUIDE_CALCULATOR_ALIASES).
  */
 export function calculatorHref(slug) {
-  if (CALCULATOR_PAGES_BY_SLUG[slug]) return `/calculator/${slug}`;
-  const alias = GUIDE_CALCULATOR_ALIASES[slug];
-  if (alias && CALCULATOR_PAGES_BY_SLUG[alias]) return `/calculator/${alias}`;
+  if (hasCalculatorPage(slug)) return `/calculator/${slug}`;
+  const alias = Object.hasOwn(GUIDE_CALCULATOR_ALIASES, String(slug)) ? GUIDE_CALCULATOR_ALIASES[slug] : null;
+  if (alias && hasCalculatorPage(alias)) return `/calculator/${alias}`;
   for (const [engineId, guideSlug] of Object.entries(MORPH_GUIDE_SLUGS)) {
     if (guideSlug !== slug) continue;
     const calcSlug = engineId.replace(/_/g, '-');
-    if (CALCULATOR_PAGES_BY_SLUG[calcSlug]) return `/calculator/${calcSlug}`;
+    if (hasCalculatorPage(calcSlug)) return `/calculator/${calcSlug}`;
   }
   return '/calculator';
 }

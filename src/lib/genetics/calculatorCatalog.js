@@ -32,6 +32,8 @@
 // wild-type allele is copied here instead; calculator.test.js checks that
 // it still matches the engine's WILD_TYPE. Trait sources (engineTrait)
 // live in ./index.js, next to the engine.
+import { MORPH_GUIDE_SLUGS, GUIDE_CALCULATOR_ALIASES } from './guideSlugs.js';
+
 const WILD_TYPE = 'wild_type';
 
 export const COMPLEX_LOCUS = 'SABLE_COMPLEX';
@@ -617,32 +619,10 @@ export const PAIRING_PAGES_BY_SLUG = Object.fromEntries(
 // combo, for "read more" links on calculator outcomes, the pairing pages
 // and the calculator's gene rows. Every slug must be a real page (a test
 // checks them against MORPHS), and each gene links to its own page:
-// Whiteout to /MorphGuide/whiteout, Sable to /MorphGuide/sable. Until
-// 16 Oct 2026 whiteout pointed at White Wall and sable had no entry, so
-// those outcome links never reached the new pages.
-
-export const MORPH_GUIDE_SLUGS = {
-  lilly_white: 'lilly-white',
-  cappuccino: 'cappuccino',
-  sable: 'sable',
-  axanthic: 'axanthic',
-  hypo: 'hypo',
-  softscale: 'soft-scale',
-  whiteout: 'whiteout',
-  phantom: 'phantom',
-  empty_back: 'empty-back',
-  highway: 'highway',
-  harlequin: 'harlequin',
-  pinstripe: 'pinstripe',
-  dalmatian: 'dalmatian',
-  tiger: 'tiger',
-  flame: 'flame',
-  // combos
-  frappuccino: 'frappuccino',
-  luwak: 'luwak',
-  tricolor: 'tricolor',
-  patternless: 'patternless',
-};
+// Which Morph Guide page each engine trait links to, and the guide pages
+// that link to another gene's calculator, live in ./guideSlugs.js so the
+// Morph Guide's public pages can read them without this whole catalog.
+export { MORPH_GUIDE_SLUGS, GUIDE_CALCULATOR_ALIASES };
 
 // The Morph Guide entry whose price range values an outcome
 // (outcomeValue.js). Kept apart from the links above so fixing a link
@@ -654,12 +634,4 @@ export const MORPH_PRICE_SLUGS = {
   whiteout: 'white-wall',
 };
 
-// Morph Guide pages with no calculator page of their own whose look the
-// calculator reads as another gene: a White Wall tag counts as Whiteout
-// (decision D13), so the White Wall page keeps its /calculator/whiteout
-// button. Phantom Pinstripe is left out: its page says the label does not
-// prove the Phantom gene. Used by morphguide/morphCta.js and the server
-// HTML (scripts/prerender.mjs).
-export const GUIDE_CALCULATOR_ALIASES = {
-  'white-wall': 'whiteout',
-};
+

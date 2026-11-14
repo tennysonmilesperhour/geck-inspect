@@ -169,7 +169,7 @@ What to know when running them:
 ### Elsewhere
 
 - A scheduled "Weekly agent review" Claude session on Mondays after `agent-traffic` (`docs/planning/agent-access-2026-10.md`). The review recommends running it monthly.
-- The geck-data scraper (separate repository) that fills `geck_data`. `refresh-market-matviews` has run clean since 20 October, but the full US pass has stalled: on 28 October the last complete pass was 19 October (0.4% of live listings seen again in 48 hours) and the US Price Index's last full day was 6 October. Since `20261028015600_market_health_full_pass.sql` (applied 28 October), `daily-canary` fails every day until the feed runs again; restarting it is Tennyson's call (`docs/planning/market-habit-2026-09-30.md`).
+- The geck-data scraper (separate repository) that fills `geck_data`. The full US pass stalled from 19 to 30 October (on 28 October 0.4% of live listings had been seen again in 48 hours) and is running again: on 14 November the last complete pass was 10 November, the US Price Index's last full day was 13 November and 92.7% of listings had been seen in 3 days. `daily-canary` fails while either is more than 9 days old (`20261028015600_market_health_full_pass.sql`); it has passed every day since 31 October. Restarting the feed if it stalls again is Tennyson's call (`docs/planning/market-habit-2026-09-30.md`).
 
 ## 6. Weekly checklist (Mondays, about 30 minutes)
 

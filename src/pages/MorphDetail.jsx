@@ -52,11 +52,13 @@ import RelatedMorphs, { MorphPrevNext } from '@/components/morphguide/RelatedMor
 import MorphSectionNav from '@/components/morphguide/MorphSectionNav';
 import Reveal from '@/components/morphguide/Reveal';
 import { calculatorHref, trackMorphCta } from '@/components/morphguide/morphCta';
+// The badges, not the whole calculator catalog (this page has a size
+// budget): scripts/write-calculator-links.mjs writes them from it.
 import {
-  CALCULATOR_PAGES_BY_SLUG,
-  COMPLEX_OPTIONS_BY_VALUE,
-  SIMPLE_TRAITS,
-} from '@/lib/genetics/calculatorCatalog';
+  CALCULATOR_PAGE_BADGES,
+  COMPLEX_OPTION_BADGES,
+  SUPER_LABEL_BADGES,
+} from '@/lib/genetics/calculatorLinkData';
 import MorphText from '@/components/morphguide/MorphText';
 import { MorphImageContext, morphInitials } from '@/components/morphguide/MorphPreviewCard';
 import MorphGeneticsDemo, { geneticsDemoFor } from '@/components/morphguide/MorphGeneticsDemo';
@@ -95,12 +97,11 @@ const MorphEyeStudyPanel = lazyOptional(() =>
  * (Super Empty Back takes Empty Back's badge).
  */
 export function calculatorBadge(slug) {
-  const page = CALCULATOR_PAGES_BY_SLUG[slug];
-  if (page) return page.confidence;
-  const option = COMPLEX_OPTIONS_BY_VALUE[String(slug).replace(/-/g, '_')];
-  if (option?.confidence) return option.confidence;
-  const gene = SIMPLE_TRAITS.find((t) => t.super_label?.toLowerCase().replace(/\s+/g, '-') === slug);
-  return gene?.confidence || null;
+  const key = String(slug);
+  if (Object.hasOwn(CALCULATOR_PAGE_BADGES, key)) return CALCULATOR_PAGE_BADGES[key];
+  const complex = key.replace(/-/g, '_');
+  if (Object.hasOwn(COMPLEX_OPTION_BADGES, complex)) return COMPLEX_OPTION_BADGES[complex];
+  return Object.hasOwn(SUPER_LABEL_BADGES, key) ? SUPER_LABEL_BADGES[key] || null : null;
 }
 
 const RARITY_LABELS = {

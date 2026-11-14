@@ -66,6 +66,7 @@ How to read the "What runs it" column:
 | `test-clock-drift.mjs` | Reruns the unit tests 400 days ahead and 400 days back, to catch a test that reads today's date | `pnpm test:clock-drift`; the `ci` workflow | Nothing |
 | `test_safe_image_download.py` | Tests for `safe_image_download.py` | By hand, with Python's unittest | Nothing |
 | `vite-plugins/` | Two build-only plugins that make the icon and date libraries smaller in the built site | Loaded by `vite.config.js` | Nothing |
+| `write-calculator-links.mjs` | Writes the calculator page and badge for each morph that the Morph Guide's pages read, so those public pages do not load the whole calculator catalog | By hand after changing `src/lib/genetics/calculatorCatalog.js`; `src/lib/__tests__/calculatorLinkData.test.js` fails until you do | `src/lib/genetics/calculatorLinkData.js` (committed) |
 | `write-known-paths.mjs` | Writes the list of real addresses that the edge uses to answer 404 for anything else | Run by `build-vercel-json.mjs` | `api/_lib/known-path-patterns.js` (committed) |
 
 Not scripts, but in the same place: this `README.md`.

@@ -20,7 +20,6 @@ import { blockIfGuest, isGuestMode } from '@/lib/guestMode';
 let guestMocksPromise = null;
 const loadGuestMocks = () => (guestMocksPromise ||= import('@/lib/guestMockData'));
 import { PUBLIC_READ_COLUMNS, EVERYONE_READ_COLUMNS } from '@/lib/publicColumns';
-import { noteEntityCreated } from '@/lib/activation';
 
 /**
  * If a Supabase query fails with a JWT / auth error, try refreshing the
@@ -507,7 +506,8 @@ function createEntityClient(entityName) {
           .single()
       );
       if (error) throw error;
-      noteEntityCreated(entityName);
+      // The usage event loads with the first save, not with the app.
+      void import('@/lib/activation').then((m) => m.noteEntityCreated(entityName)).catch(() => {});
       return data;
     },
 
