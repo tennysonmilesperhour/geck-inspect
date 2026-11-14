@@ -147,13 +147,16 @@ declare
 begin
   for t in
     select * from (values
-      ('geckos', 'id, created_by, created_date'),
+      -- Geckos and breeding plans by owner_profile_id too: signed-in
+      -- accounts, admins included, lose created_by there since
+      -- 20261114023856_owner_emails_step2.sql (decision E16).
+      ('geckos', 'id, owner_profile_id, created_date'),
       -- Photos and forum rows by owner_profile_id: members, admins
       -- included, lose created_by there (Part E item E1 4, step 2).
       ('gecko_images', 'id, owner_profile_id, created_date'),
       ('forum_posts', 'id, owner_profile_id, created_date'),
       ('forum_comments', 'id, owner_profile_id, created_date'),
-      ('breeding_plans', 'id, created_by, created_date'),
+      ('breeding_plans', 'id, owner_profile_id, created_date'),
       ('direct_messages', 'id, sender_email, created_date')
     ) as v(tbl, cols)
   loop

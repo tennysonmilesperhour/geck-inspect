@@ -1,14 +1,15 @@
 -- Owner email addresses off rows other members can read, step 2 of 2.
 -- Owner decision E16; plan and status in docs/planning/owner-emails-2026-11.md.
 --
--- WAITING in supabase/pending: move it to supabase/migrations (with a
--- timestamp later than every migration there) no sooner than 3 days after
--- step 1's app change is live, and only after the API logs show no request
--- that still names created_by on these tables or reads them with select *
--- (a tab opened before step 1 does, and this file makes that request
--- fail). The doc above says how to check. Its test is
--- supabase/tests/owner_emails_step2_regressions.sql; when the file moves,
--- change the \ir path there.
+-- Step 1's app change went live on 13 November 2026 at about 23:20 UTC.
+-- This file waited in supabase/pending because a tab opened before then
+-- still asks for created_by or select * on these tables, and this file
+-- makes that request fail. Tennyson asked for it on 14 November, before the
+-- planned 3 days were up. The API logs for the 24 hours before the move
+-- showed 34 signed-in requests in all, from one session, the last at about
+-- 20:00 UTC on 13 November, and none at all since step 1 went live; no
+-- phone app build is live (the next iPhone build is made from this main).
+-- Its test is supabase/tests/owner_emails_step2_regressions.sql.
 --
 -- What it does: signed-in members lose SELECT on created_by, the owner's
 -- email, on the seven tables whose owner is an email:

@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 // Sell and hand over on one sheet (experience review, section 8 item 2):
-// sale price and date, then the transfer to the buyer. Each step saves by
-// itself, each can be skipped, and closing early keeps what was saved.
-// The sheet offers no passport: making one makes the gecko public, and
-// other members can read a public gecko's sold price. The database is
-// faked at the edges, so the test sees every write.
+// sale price and date, its passport, then the transfer to the buyer. Each
+// step saves by itself, each after the first can be skipped, and closing
+// early keeps what was saved. The passport step (owner decision E15, on
+// since 14 November 2026) says what a passport makes public and makes one
+// only when asked. The database is faked at the edges, so the test sees
+// every write.
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { installDomHarness } from '@/lib/__tests__/domHarness';
@@ -45,6 +46,8 @@ vi.mock('@/lib/supabaseClient', () => ({
 }));
 
 import SellHandoverSheet, { OFFER_PASSPORT_AT_SALE } from '../SellHandoverSheet';
+import { Gecko } from '@/entities/all';
+import { passportPublicNote } from '@/lib/makePassport';
 import { todayLocalISO } from '@/lib/dateUtils';
 
 installDomHarness();
@@ -88,13 +91,14 @@ beforeEach(() => {
 });
 
 describe('the sold sheet', () => {
-  it('goes through the two steps in order, saving at each one', async () => {
+  it('goes through the three steps in order, saving at each one', async () => {
+    expect(OFFER_PASSPORT_AT_SALE).toBe(true);
     const { onClose, onSaveSale, onChanged } = mount();
 
     // Step 1: sale price and date.
     expect(currentStep()).toContain('Sale price and date');
-    expect(stepStates()).toEqual(['todo', 'todo']);
-    expect(sheet().textContent).toContain('Two short steps.');
+    expect(stepStates()).toEqual(['todo', 'todo', 'todo']);
+    expect(sheet().textContent).toContain('Three short steps.');
     expect(panel('sale').textContent).toContain('Both are optional');
     // The asking price is offered as the sold price, and today as the date.
     expect(screen.getByLabelText('Sold for ($)').value).toBe('450');
@@ -104,12 +108,24 @@ describe('the sold sheet', () => {
     expect(state.writes).toEqual([]);
     click('Archive as sold');
 
-    // Step 2: the existing transfer step and form, inside the sheet.
-    await waitFor(() => expect(panel('handover').textContent).toContain('Send Mango to the buyer'));
-    expect(currentStep()).toContain('Hand it to the buyer');
+    // Step 2: the passport, which says what it makes public.
+    await waitFor(() => expect(currentStep()).toContain('Make its passport'));
     expect(onSaveSale).toHaveBeenCalledTimes(1);
     expect(state.writes).toEqual([['sale', { sold_price: 300, sale_category: null, archived_date: '2026-11-12' }]]);
-    expect(stepStates()).toEqual(['done', 'todo']);
+    expect(stepStates()).toEqual(['done', 'todo', 'todo']);
+    expect(panel('passport').textContent).toContain("Give the buyer Mango's full history.");
+    expect(sheet().querySelector('[data-sell-passport-warning]').textContent).toBe(passportPublicNote('Mango'));
+    click('Make its passport');
+    await waitFor(() => expect(panel('passport').querySelector('[data-sell-passport="done"]')).not.toBeNull());
+    expect(state.writes[1]).toEqual(['gecko', 'g1', { passport_code: expect.stringMatching(/^GI-\d{4}-[A-Z0-9]{4}$/), is_public: true }]);
+    expect(onChanged).toHaveBeenCalledWith({ passport_code: state.writes[1][2].passport_code, is_public: true });
+    expect(stepStates()).toEqual(['done', 'done', 'todo']);
+    expect(panel('passport').textContent).toContain(`Mango has a passport (${state.writes[1][2].passport_code}).`);
+    click('Next');
+
+    // Step 3: the existing transfer step and form, inside the sheet.
+    await waitFor(() => expect(panel('handover').textContent).toContain('Send Mango to the buyer'));
+    expect(currentStep()).toContain('Hand it to the buyer');
     expect(panel('handover').textContent).toContain('The sale price ($300) goes on the transfer');
     click('Send to the buyer');
     expect(panel('handover').textContent).toContain('Transfer Mango');
@@ -117,14 +133,12 @@ describe('the sold sheet', () => {
     // The form's own warnings are all still there.
     expect(panel('handover').textContent).toContain('Share it only with the new owner.');
     expect(panel('handover').textContent).toContain('Private gecko notes stay with you');
-    expect(state.writes).toHaveLength(1);
+    expect(state.writes).toHaveLength(2);
     click('Create QR link');
     await waitFor(() => expect(panel('handover').textContent).toContain('Transfer started'));
-    expect(state.writes[1]).toEqual(['create_transfer', expect.objectContaining({ p_animal_id: 'g1', p_animal_type: 'gecko', p_to_email: null, p_sale_price: 300 })]);
-    // The sale and the transfer, and nothing else: the gecko is never
-    // given a passport or made public.
-    expect(state.writes).toHaveLength(2);
-    expect(onChanged).not.toHaveBeenCalled();
+    expect(state.writes[2]).toEqual(['create_transfer', expect.objectContaining({ p_animal_id: 'g1', p_animal_type: 'gecko', p_to_email: null, p_sale_price: 300 })]);
+    // The sale, the passport and the transfer, and nothing else.
+    expect(state.writes).toHaveLength(3);
     // The QR code and the link come from that one transfer.
     expect(panel('handover').querySelector('svg[data-qr]').getAttribute('data-qr')).toMatch(/\/claim\/opaque-token$/);
     expect(screen.getByLabelText('Claim link').value).toMatch(/\/claim\/opaque-token$/);
@@ -135,36 +149,51 @@ describe('the sold sheet', () => {
 
     click('Done');
     expect(onClose).toHaveBeenCalledTimes(1);
-    expect(state.events.map(([event, props]) => props.action || event)).toEqual(['shown', 'send', 'transfer_started']);
-    expect(state.events[0][1]).toEqual({ action: 'shown', has_passport: false, has_price: true, has_pending: false });
+    expect(state.events.map(([event, props]) => props.action || event)).toEqual(['passport_created', 'shown', 'send', 'transfer_started']);
+    expect(state.events[0]).toEqual(['passport_created', { surface: 'sold_sheet', was_public: false }]);
+    expect(state.events[1][1]).toEqual({ action: 'shown', has_passport: true, has_price: true, has_pending: false });
     expect(state.events.at(-1)).toEqual(['transfer_started', { method: 'link', has_price: true, animal_type: 'gecko', surface: 'sold_step' }]);
   });
 
-  it('never shows a passport step, offers one or makes one', async () => {
-    expect(OFFER_PASSPORT_AT_SALE).toBe(false);
-    // A gecko with no passport, start to finish.
-    const first = mount();
-    expect(sheet().querySelectorAll('[data-sell-step-state]')).toHaveLength(2);
-    expect(sheet().textContent).not.toMatch(/passport|public/i);
+  it('skipping the passport makes nothing public', async () => {
+    const { onClose, onChanged } = mount();
     click('Archive as sold');
+    await waitFor(() => expect(currentStep()).toContain('Make its passport'));
+    click('Skip');
     await waitFor(() => expect(panel('handover').textContent).toContain('Send Mango to the buyer'));
-    expect(panel('passport')).toBeNull();
-    expect(sheet().querySelector('[data-sell-passport-warning]')).toBeNull();
-    expect(within(sheet()).queryByRole('button', { name: /passport/i })).toBeNull();
-    expect(sheet().textContent).not.toMatch(/passport|public/i);
+    expect(stepStates()).toEqual(['done', 'skipped', 'todo']);
     click('Not now');
-    expect(first.onClose).toHaveBeenCalledTimes(1);
-    // No write but the sale, and no passport_created from any surface.
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onChanged).not.toHaveBeenCalled();
+    // No write but the sale, and no passport_created.
     expect(state.writes.map(([what]) => what)).toEqual(['sale']);
     expect(state.events.map(([event]) => event)).not.toContain('passport_created');
-    expect(JSON.stringify(state.events)).not.toContain('sold_sheet');
+    expect(state.events[0][1]).toMatchObject({ action: 'shown', has_passport: false });
   });
 
-  it('says nothing about a passport the gecko already has', async () => {
-    mount({ gecko: { ...SOLD, passport_code: 'GI-2026-ABCD', is_public: true }, saleSaved: true });
+  it('stays on the passport step and says so when the passport could not be made', async () => {
+    Gecko.update.mockRejectedValueOnce(new Error('network'));
+    const { onChanged } = mount({ gecko: SOLD, saleSaved: true });
+    expect(currentStep()).toContain('Make its passport');
+    click('Make its passport');
+    await waitFor(() => expect(within(sheet()).getByRole('alert').textContent).toContain('The passport was not made, so nothing has changed.'));
+    expect(stepStates()).toEqual(['done', 'todo', 'todo']);
+    expect(onChanged).not.toHaveBeenCalled();
+    expect(state.events.map(([event]) => event)).not.toContain('passport_created');
+    // It can still be skipped.
+    click('Skip');
     await waitFor(() => expect(panel('handover').textContent).toContain('Send Mango to the buyer'));
-    expect(stepStates()).toEqual(['done', 'todo']);
-    expect(sheet().textContent).not.toMatch(/passport|public|GI-2026-ABCD/i);
+  });
+
+  it('says a gecko already has its passport and makes nothing', async () => {
+    mount({ gecko: { ...SOLD, passport_code: 'GI-2026-ABCD', is_public: true }, saleSaved: true });
+    expect(currentStep()).toContain('Make its passport');
+    expect(stepStates()).toEqual(['done', 'done', 'todo']);
+    expect(panel('passport').textContent).toContain('Mango has a passport (GI-2026-ABCD).');
+    expect(sheet().querySelector('[data-sell-passport-warning]')).toBeNull();
+    expect(within(sheet()).queryByRole('button', { name: 'Make its passport' })).toBeNull();
+    click('Next');
+    await waitFor(() => expect(panel('handover').textContent).toContain('Send Mango to the buyer'));
     expect(state.writes).toEqual([]);
   });
 
@@ -172,21 +201,22 @@ describe('the sold sheet', () => {
     mount();
     fireEvent.change(screen.getByLabelText('Sold for ($)'), { target: { value: '' } });
     click('Archive as sold');
-    await waitFor(() => expect(currentStep()).toContain('Hand it to the buyer'));
+    await waitFor(() => expect(currentStep()).toContain('Make its passport'));
     expect(state.writes).toEqual([['sale', { sold_price: null, sale_category: null, archived_date: todayLocalISO() }]]);
   });
 
-  it('opens on the hand-over after "Archive as sold", which can be skipped, changing nothing', async () => {
+  it('opens on the passport after "Archive as sold"; skipping both steps changes nothing', async () => {
     const { onClose, onChanged } = mount({ gecko: SOLD, saleSaved: true });
     // The sale was saved in the archive dialog, so step 1 is done.
-    expect(stepStates()).toEqual(['done', 'todo']);
-    expect(currentStep()).toContain('Hand it to the buyer');
-    await waitFor(() => expect(panel('handover').textContent).toContain('Send Mango to the buyer'));
+    expect(stepStates()).toEqual(['done', 'todo', 'todo']);
+    expect(currentStep()).toContain('Make its passport');
     expect(panel('sale')).toBeNull();
+    click('Skip');
+    await waitFor(() => expect(panel('handover').textContent).toContain('Send Mango to the buyer'));
     click('Not now');
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(onChanged).not.toHaveBeenCalled();
-    // No transfer, and nothing about the gecko changed.
+    // No passport, no transfer, and nothing about the gecko changed.
     expect(state.writes).toEqual([]);
     expect(state.events.map(([event, props]) => props.action || event)).toEqual(['shown', 'skipped']);
   });
@@ -194,7 +224,7 @@ describe('the sold sheet', () => {
   it('can be closed after step 1 and keeps the sale, with nothing else changed', async () => {
     const { onClose, onSaveSale } = mount();
     click('Archive as sold');
-    await waitFor(() => expect(panel('handover').textContent).toContain('Send Mango to the buyer'));
+    await waitFor(() => expect(currentStep()).toContain('Make its passport'));
     fireEvent.keyDown(document.activeElement || sheet(), { key: 'Escape', code: 'Escape' });
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
     expect(onSaveSale).toHaveBeenCalledTimes(1);
@@ -203,6 +233,7 @@ describe('the sold sheet', () => {
 
   it('can be closed in the middle of the hand-over, leaving no transfer', async () => {
     const { onClose } = mount({ gecko: SOLD, saleSaved: true });
+    click('Skip');
     await waitFor(() => expect(panel('handover').textContent).toContain('Send Mango to the buyer'));
     click('Send to the buyer');
     expect(panel('handover').textContent).toContain('Transfer Mango');
@@ -224,23 +255,27 @@ describe('the sold sheet', () => {
     click('Archive as sold');
     await waitFor(() => expect(within(sheet()).getByRole('alert').textContent).toContain('The sale was not saved'));
     expect(currentStep()).toContain('Sale price and date');
-    expect(stepStates()).toEqual(['todo', 'todo']);
+    expect(stepStates()).toEqual(['todo', 'todo', 'todo']);
     expect(onClose).not.toHaveBeenCalled();
   });
 
   it('tells a collection editor that only the owner can hand the gecko over', async () => {
     const { onClose } = mount({ gecko: SOLD, saleSaved: true, canTransfer: false });
-    expect(panel('handover').textContent).toContain("Only Mango's owner can hand it to a buyer.");
+    click('Skip');
+    await waitFor(() => expect(panel('handover').textContent).toContain("Only Mango's owner can hand it to a buyer."));
     expect(within(sheet()).queryByRole('button', { name: 'Send to the buyer' })).toBeNull();
     click('Done');
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(state.writes).toEqual([]);
   });
 
-  it('lets a guest see both steps and saves nothing', async () => {
+  it('lets a guest see all three steps and saves nothing', async () => {
     const { onClose, onSaveSale } = mount({ guest: true, canTransfer: false });
     expect(sheet().querySelector('[data-sell-guest]').textContent).toContain('nothing here is saved');
     expect(within(sheet()).queryByRole('button', { name: 'Archive as sold' })).toBeNull();
+    click('Next');
+    expect(currentStep()).toContain('Make its passport');
+    expect(within(sheet()).queryByRole('button', { name: 'Make its passport' })).toBeNull();
     click('Next');
     expect(currentStep()).toContain('Hand it to the buyer');
     expect(panel('handover').textContent).toContain('The buyer scans a QR code or opens a link');

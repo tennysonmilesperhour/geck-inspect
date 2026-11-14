@@ -50,7 +50,7 @@ Open `com.geckinspect.app`, tick **Sign in with Apple**, Save. If Xcode uses aut
 
 ### 2. Build and upload build 15
 
-On the Mac, from the repo on the latest `main` (13 November 2026 or later: the app bundles the website as it is when you build, so this picks up the week's screen changes, and the paths in steps 3 and 6 below are for that build):
+On the Mac, from the repo on the latest `main` (14 November 2026 or later: the app bundles the website as it is when you build, so this picks up the week's screen changes, and the paths in steps 3 and 6 below are for that build). An older build cannot load geckos any more: since 14 November signed-in members cannot read the owner's email column, and code from before 13 November asked for it (`docs/planning/owner-emails-2026-11.md`):
 
 ```
 NATIVE_AUTH_REDIRECT_VERIFIED=true NATIVE_BILLING_WEBHOOK_VERIFIED=true pnpm ios:release
@@ -58,7 +58,7 @@ NATIVE_AUTH_REDIRECT_VERIFIED=true NATIVE_BILLING_WEBHOOK_VERIFIED=true pnpm ios
 
 In Xcode: confirm Version 1.0, Build 15 (raise it if App Store Connect already has a 15 or higher), then Product > Archive > Distribute App > App Store Connect.
 
-Build 13 does not have the purchase fix from 24 October or the other changes merged since the last submission, so do not resubmit it.
+Build 13 does not have the purchase fix from 24 October or the other changes merged since the last submission, and it cannot load geckos since 14 November, so do not resubmit it.
 
 ### 3. Record the walkthrough Apple asked for
 

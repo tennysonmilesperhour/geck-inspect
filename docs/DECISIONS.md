@@ -82,9 +82,10 @@ Each status was set by reading the entry and checking the code or the later entr
 | 63 | Today is the home screen on every device | Live |  |
 | 64 | One screen for logging care | Live |  |
 | 65 | Five colour roles and a 12 px text floor in app screens | Live | Applied to eleven pages on 13 November. |
-| 66 | A sale never offers to make the gecko public | Live | Sold prices were made private the same day (67). Owner decision E15 (13 November): switch the passport step on once owner emails are held back too (68). |
+| 66 | A sale never offers to make the gecko public | Replaced by 69 | Its reasons went with 67 and 68; the sold sheet offers a passport since 14 November. |
 | 67 | Sale prices live in tables only the owner can read | Live |  |
-| 68 | Owner emails come off rows other members can read, in two steps | Live | Step 1 built 13 November; step 2 waits in `supabase/pending/`. |
+| 68 | Owner emails come off rows other members can read, in two steps | Live | Step 1 live 13 November, step 2 on 14 November. |
+| 69 | The sold sheet offers to make the gecko's passport | Live |  |
 
 > **Title note (15 October 2026).** This file was titled "Geck Inspect Landing Page: DECISIONS.md" because entries 1 to 16 were written in an April 2026 landing page session. From entry 17 on it records decisions about the whole product: pricing, billing, data, security, positioning and process. The title now says so. No entry's text was changed.
 
@@ -824,3 +825,12 @@ The Privacy Policy (18 Oct) says the sign-up box starts unticked in the EEA and 
 **Decision:** The same two steps used for photos and forum posts on 31 October (`20261031061000_member_email_columns_revoke.sql`). Step 1: the app reads named columns on the seven tables, finds "mine" and "whose" by `owner_profile_id`, and puts the member's own email back on their own rows (`src/lib/ownerRows.js`); four functions and three row rules that read the column some other way were moved off it, and two functions that run as their owner stopped handing it out (`20261113215000_owner_emails_step1.sql`, `20261113225505_owner_emails_functions.sql`). Step 2 (`supabase/pending/owner_emails_step2.sql`) takes the column from signed-in accounts, admins included, at least three days after step 1's app change is live.
 **Reasoning:** One step would have failed every `select *` in tabs that were already open. Putting the member's own email back on their own rows keeps the many "is this mine" checks working without touching each one.
 **Consequences:** A message to a gecko's owner goes by profile id (`MessageUserButton`, `/Messages?profile=`); the first reply tells each side the other's address, as any message does. Admin screens show owners' emails from their profiles. Once step 2 is live, a new column on one of the seven tables is not readable by members until a migration grants it (`docs/RULES.md`, section 5). The plan, checks and status are `docs/planning/owner-emails-2026-11.md`.
+
+### 69. The sold sheet offers to make the gecko's passport
+
+**Date:** 2026-11-14
+**Status:** Accepted (Tennyson took the recommendation for owner decision E15), replaces entry 66
+**Context:** Entry 66 kept the passport step off the sold sheet because a passport makes a gecko public, and a public gecko's row showed other members its sold price and its owner's email. The sold price moved off the row on 13 November (entry 67) and members lost the owner's email on 14 November (entry 68, step 2).
+**Decision:** The sheet has three steps: sale price and date, make its passport, hand it to the buyer (`OFFER_PASSPORT_AT_SALE` is true in `src/components/transfers/SellHandoverSheet.jsx`). The passport step says what a passport makes public, in the same words as the record's Share menu, and can be skipped; a gecko that already has one says so and makes nothing. "Archive as sold" in the archive dialog opens the sheet on the passport step.
+**Reasoning:** A passport travels with the gecko and gives the buyer its lineage and weigh-ins, and the moment of sale is when a seller thinks of it. With neither money nor an email address on the public row, making one at the sale shows other members nothing the seller has not chosen to show.
+**Consequences:** `passport_created` now also comes with `surface: sold_sheet`. The passport and transfer funnel counts both. Switching the step off again is one line, and the step is then not drawn or counted.

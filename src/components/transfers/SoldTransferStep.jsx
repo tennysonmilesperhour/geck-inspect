@@ -38,8 +38,9 @@ const dayOf = (iso) => {
  * seller keep it (and see it again) instead.
  *
  * Since 13 November 2026 it is the last step of the sold sheet
- * (SellHandoverSheet), which shows it inline. That sheet makes no
- * passport either (its OFFER_PASSPORT_AT_SALE says why).
+ * (SellHandoverSheet), which shows it inline. This step never makes a
+ * passport; the sheet's own step before it offers one (since 14 November,
+ * owner decision E15).
  *
  * Props:
  *   gecko    the gecko as just saved (archived, status Sold, sold_price)

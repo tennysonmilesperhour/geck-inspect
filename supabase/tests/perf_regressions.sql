@@ -121,9 +121,12 @@ begin
   perform pg_temp.as_member('breeder');
 
   -- The old read, as the API serves it: newest first, one 1,000-row page.
+  -- By owner_profile_id: members cannot filter on created_by since
+  -- 20261114023856_owner_emails_step2.sql (decision E16).
   select count(distinct gecko_id) into v_old_read
-  from (select gecko_id from public.weight_records where created_by = pg_temp.who('breeder')
-        order by record_date desc limit 1000) page;
+  from (select gecko_id from public.weight_records
+         where owner_profile_id = (select p.id from public.profiles p where p.email = pg_temp.who('breeder'))
+         order by record_date desc limit 1000) page;
   if v_old_read >= 60 then
     raise exception 'FAIL: the test data no longer reproduces the 1,000-row cap (old read covered % geckos)', v_old_read;
   end if;

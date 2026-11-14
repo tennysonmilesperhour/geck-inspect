@@ -202,9 +202,11 @@ begin
      or not has_column_privilege('anon', 'public.forum_posts', 'title', 'select') then
     raise exception 'FAIL: the signed-out grants changed';
   end if;
-  -- Not in this step: geckos.created_by (identity migration, E4 32).
-  if not has_column_privilege('authenticated', 'public.geckos', 'created_by', 'select') then
-    raise exception 'FAIL: geckos.created_by was taken from members, which every owner check needs';
+  -- Not in this step: geckos.created_by. It was taken from members later,
+  -- by 20261114023856_owner_emails_step2.sql (decision E16), whose own test
+  -- is supabase/tests/owner_emails_step2_regressions.sql.
+  if has_column_privilege('authenticated', 'public.geckos', 'created_by', 'select') then
+    raise exception 'FAIL: members can read geckos.created_by again (decision E16 took it away)';
   end if;
 end
 $t$;

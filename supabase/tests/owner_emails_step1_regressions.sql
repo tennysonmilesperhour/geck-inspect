@@ -218,8 +218,15 @@ begin
   if v_row.estimated_hatch_year is distinct from 2024 or v_row.hatch_date is not null then
     raise exception 'FAIL: a hatch year on its own was not saved (year %, date %)', v_row.estimated_hatch_year, v_row.hatch_date;
   end if;
-  if v_row.created_by is distinct from pg_temp.who('alice') then
-    raise exception 'FAIL: before step 2 the owner should still read her own email on the saved row';
+  -- Before step 2 the owner reads her own email on the saved row; since
+  -- step 2 (20261114023856) nobody does, and the app puts it back
+  -- (src/lib/ownerRows.js).
+  if has_column_privilege('authenticated', 'public.geckos', 'created_by', 'SELECT') then
+    if v_row.created_by is distinct from pg_temp.who('alice') then
+      raise exception 'FAIL: before step 2 the owner should still read her own email on the saved row';
+    end if;
+  elsif v_row.created_by is not null then
+    raise exception 'FAIL: after step 2 the saved row still carries the owner''s email';
   end if;
   if v_row.owner_profile_id is distinct from pg_temp.pid('alice') or v_row.is_public then
     raise exception 'FAIL: the saved row is wrong: owner %, public %', v_row.owner_profile_id, v_row.is_public;

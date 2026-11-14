@@ -710,3 +710,13 @@ Migrations: `20261113215000_owner_emails_step1.sql` (pushed and applied first, a
 **Checked after the database push.** Every row of the six tables has its owner id and none disagrees with `created_by`; the functions and rules are the new ones; a read-only probe as a real member read their own 253 weigh-ins and none of anyone else's, their sale prices and listing details, and all 325 public geckos.
 
 **If something breaks.** "My Geckos is empty" or "my gecko shows as someone else's": the member's profile id could not be read (src/lib/ownerRows.js, whoAmI), or a row has no owner id (check `select count(*) from geckos where owner_profile_id is null and created_by is not null`, which should be 0). Step 2 is not applied, so nothing a member reads is refused yet.
+
+## 14 November: owner emails, step 2, and the passport step on the sold sheet (decisions E16 and E15)
+
+Migration: `20261114023856_owner_emails_step2.sql` (it waited in `supabase/pending/` since 13 November). No edge function changed. The plan, the checks and why it moved before the planned 3 days are `docs/planning/owner-emails-2026-11.md`, section 5.
+
+**What it does.** Signed-in accounts, admins included, lose `select` on `created_by` (the owner's email) on geckos, breeding plans and the weight, feeding, shed, vet and ownership records; every other column stays granted. The same push switches the sold sheet's passport step on (`OFFER_PASSPORT_AT_SALE`, decision 69).
+
+**Checked before the push.** The API logs for the 24 hours before: 34 signed-in requests in all, from one session, none since step 1's app went live, so no open tab or app asks for the column. No phone build is live (the next iPhone build must be made from this `main`: `docs/OWNER-STEPS.md`, B3). Locally: the harness built all 330 migrations with step 2; all 44 SQL test files passed (four older ones updated, see the plan) and the race checks passed; lint, the whole unit suite and the clock-moved runs, all browser tests (the fake database already behaved like step 2) and the size check.
+
+**If something breaks.** A screen that shows "permission denied for table geckos" (or one of the other six) is asking for `created_by` or `select *` on that table: find it with `src/lib/__tests__/ownerRows.test.js`'s scan, or give the column back in an emergency with `grant select (created_by) on public.<table> to authenticated;` in the SQL editor (step 1 keeps working either way). To take the passport step off the sold sheet, set `OFFER_PASSPORT_AT_SALE` to false.

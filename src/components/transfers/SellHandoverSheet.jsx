@@ -7,18 +7,17 @@ import { makePassport, passportPublicNote } from '@/lib/makePassport';
 import SoldTransferStep from './SoldTransferStep';
 
 // Whether the sheet offers "Make its passport" between the sale and the
-// hand-over. Off. A passport makes the gecko's record public, and any
-// signed-in member can read a public gecko's row. It was switched off on
-// 13 November 2026 because that row carried the sale price. The sale
-// price has since been moved out of the row, where only the gecko's
-// keepers can read it (src/lib/geckoSalePrices.js), so that reason is
-// gone. What a public row still shows other members is the owner's email
-// address (created_by). Switching this on is Tennyson's decision
-// (docs/OWNER-STEPS.md, E15): either now, accepting what every public
-// gecko already shows, or once the email is held back too. While it is
-// off the step is not drawn, not counted, and makePassport cannot be
-// reached from here.
-export const OFFER_PASSPORT_AT_SALE = false;
+// hand-over. On since 14 November 2026 (owner decision E15). A passport
+// makes the gecko's record public, and any signed-in member can read a
+// public gecko's row. It was switched off on 13 November because that row
+// carried the sale price and the owner's email address. Both are gone from
+// it now: the price lives where only the gecko's keepers can read it
+// (src/lib/geckoSalePrices.js, decision 67) and members cannot read the
+// owner's email (decision 68). The step says what a passport makes public
+// (passportPublicNote) and can be skipped. Set this to false to take the
+// step out again: it is then not drawn, not counted, and makePassport
+// cannot be reached from here.
+export const OFFER_PASSPORT_AT_SALE = true;
 
 const STEPS = [
   { id: 'sale', label: 'Sale price and date' },
@@ -32,18 +31,17 @@ const AFTER_SALE = OFFER_PASSPORT_AT_SALE ? 'passport' : 'handover';
 /**
  * Sell and hand over, on one sheet (experience review, section 8 item
  * 2). Marking a gecko Sold used to lead to separate places for the sale
- * price and the transfer. Here they are two short steps:
+ * price, the passport and the transfer. Here they are three short steps:
  *
  *   1. Sale price and date. Both optional. Saved with the sold status,
  *      by the same save "Archive as sold" has always used (onSaveSale).
- *   2. Hand it to the buyer. The existing step and transfer form
+ *   2. Make its passport, so the buyer gets the gecko's history. Says what
+ *      that makes public, and can be skipped. A gecko that already has one
+ *      just says so. (OFFER_PASSPORT_AT_SALE above can take this step out.)
+ *   3. Hand it to the buyer. The existing step and transfer form
  *      (SoldTransferStep, TransferDialog), shown inline, so the QR code
  *      and link come from the one transfer code path, with every
  *      warning and confirmation it has.
- *
- * A passport step between the two is written but switched off: see
- * OFFER_PASSPORT_AT_SALE above. The sheet says nothing about passports,
- * for a gecko that has one or not.
  *
  * Each step saves by itself. Closing the sheet at any point keeps what
  * was saved and changes nothing else. Nothing here is a new page.
@@ -55,8 +53,7 @@ const AFTER_SALE = OFFER_PASSPORT_AT_SALE ? 'passport' : 'handover';
  *                 hand-over
  *   onSaveSale    (saleFields) => the saved gecko, or null when the save
  *                 failed (the caller has already said why)
- *   onChanged     (fields) => void, after the passport step saved (only
- *                 when that step is switched on)
+ *   onChanged     (fields) => void, after the passport step saved
  *   canTransfer   only the owner can hand a gecko over
  *   guest         the demo: every step can be seen, nothing is saved
  *   onClose       the sheet is finished or was closed

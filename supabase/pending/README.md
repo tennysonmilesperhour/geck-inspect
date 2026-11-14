@@ -6,10 +6,18 @@ written but must not run yet, and say why in the table below.
 
 | File | Why it is here |
 |---|---|
-| `owner_emails_step2.sql` | Step 2 of owner decision E16: signed-in members lose `created_by` (the owner's email) on geckos, breeding plans and the weight, feeding, shed, vet and ownership records. It makes a request from a tab opened before step 1's app change fail, so it waits until that change has been live for at least 3 days and the API logs show no request still naming the column. Then it moves to `supabase/migrations/` with a new timestamp, and the `\ir` path in `supabase/tests/owner_emails_step2_regressions.sql` changes with it. Plan and status: `docs/planning/owner-emails-2026-11.md`. |
+| (none) | Nothing is waiting. |
 
 ## Retired
 
+- `owner_emails_step2.sql` (moved 14 Nov 2026). Step 2 of owner decision E16,
+  which takes `created_by` (the owner's email) on geckos, breeding plans and
+  the weight, feeding, shed, vet and ownership records away from signed-in
+  accounts, waited here after step 1's app change went live on 13 November.
+  Tennyson asked for it on 14 November; the API logs showed no signed-in
+  request since step 1 went live. It is now
+  `supabase/migrations/20261114023856_owner_emails_step2.sql`, with its test in
+  `supabase/tests/owner_emails_step2_regressions.sql`.
 - `member_email_columns_revoke.sql` and `member_email_columns_revoke_regressions.sql`
   (moved 31 Oct 2026). Step 2 of Part E item E1 4, which takes the columns
   that hold another member's email address away from signed-in accounts,

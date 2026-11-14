@@ -1,10 +1,11 @@
 -- Owner email addresses off rows other members can read, step 2.
--- Regression checks for supabase/pending/owner_emails_step2.sql (decision
--- E16). When that file moves to supabase/migrations, change the \ir path
--- below to the new name; src/lib/__tests__/ownerRows.test.js checks both.
+-- Regression checks for
+-- supabase/migrations/20261114023856_owner_emails_step2.sql (decision E16).
+-- src/lib/__tests__/ownerRows.test.js checks that the path below is right.
 --
--- The SQL harness runs it with every other file in supabase/tests. It
--- applies step 2 inside its own transaction, so everything rolls back.
+-- The SQL harness runs it with every other file in supabase/tests, on a
+-- template that already has step 2. The file runs it a second time inside
+-- its own transaction (no change), so everything rolls back.
 --
 -- What it proves:
 --   * a signed-in read of created_by on any of the seven tables is refused,
@@ -23,7 +24,7 @@
 -- Each block raises "FAIL: ..." when a rule is broken.
 begin;
 
-\ir ../pending/owner_emails_step2.sql
+\ir ../migrations/20261114023856_owner_emails_step2.sql
 
 create temp table _who (tag text primary key, uid uuid not null, email text not null, pid text) on commit drop;
 grant all on _who to public;
@@ -238,7 +239,7 @@ begin
 end $$;
 
 -- 5. A second run changes nothing.
-\ir ../pending/owner_emails_step2.sql
+\ir ../migrations/20261114023856_owner_emails_step2.sql
 do $$
 begin
   if has_column_privilege('authenticated', 'public.geckos', 'created_by', 'SELECT')

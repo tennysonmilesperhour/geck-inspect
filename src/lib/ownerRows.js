@@ -5,11 +5,11 @@
  * Seven tables carry the owner's email in created_by: geckos,
  * breeding_plans, and the weight, feeding, shed, vet and ownership
  * records. Members could read it on any public gecko or plan and on the
- * records of a public passport. Step 2 of the plan takes that column away
- * from signed-in accounts, so the app must never ask for it. This module
- * makes that true for every read that goes through the entity layer
- * (src/api/supabaseEntities.js sends the seven entities through ownedCall
- * below):
+ * records of a public passport. Since step 2 (14 November 2026) signed-in
+ * accounts cannot read that column, so the app must never ask for it.
+ * This module makes that true for every read that goes through the entity
+ * layer (src/api/supabaseEntities.js sends the seven entities through
+ * ownedCall below):
  *
  *   - members read a named list of columns, every column but created_by
  *     (OWNED_MEMBER_EXTRAS, added to the entity layer's lists on load);

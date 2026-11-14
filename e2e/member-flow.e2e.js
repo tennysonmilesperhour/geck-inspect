@@ -158,7 +158,7 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
     await page.getByRole('dialog', { name: 'Transfer started' }).getByRole('button', { name: 'Done' }).click();
   });
 
-  await test.step('mark the gecko sold and send it to the buyer from the next step', async () => {
+  await test.step('mark the gecko sold, make its passport and send it to the buyer', async () => {
     // Still on Mango's record. Archive as sold, with what it sold for.
     await page.getByRole('button', { name: 'Archive (sold, passed away or other)' }).click();
     const archive = page.getByRole('dialog', { name: 'Archive Mango' });
@@ -167,17 +167,27 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
     await archive.getByRole('button', { name: 'Archive as sold' }).click();
 
     // The sold sheet carries on from the sale just saved (its step 1) with
-    // its second and last step, the hand-over, which can be skipped. The
-    // link emailed to the buyer a moment ago is still open, so the step
-    // says plainly that a new one replaces it and offers to keep it. The
-    // sheet says nothing about a passport or going public: a public gecko
-    // shows its sold price to other members.
+    // its passport step (owner decision E15), which says what a passport
+    // makes public. Neither the sale price nor the owner's email is on a
+    // public row any more, so making one shows other members neither.
     const sheet = page.getByRole('dialog', { name: 'Sell and hand over Mango' });
     await expect(sheet).toBeVisible();
-    await expect(sheet.locator('[data-sell-step-state]')).toHaveCount(2);
+    await expect(sheet.locator('[data-sell-step-state]')).toHaveCount(3);
     await expect(sheet.locator('[data-sell-step-state="done"]')).toHaveCount(1);
-    await expect(sheet.locator('[data-sell-step="passport"]')).toHaveCount(0);
-    await expect(sheet.getByText(/passport|public/i)).toHaveCount(0);
+    const passportStep = sheet.locator('[data-sell-step="passport"]');
+    await expect(passportStep.locator('[data-sell-passport-warning]'))
+      .toHaveText("A public page and QR card with its lineage and weigh-ins. This makes Mango's record public so the link works.");
+    expect(mango().passport_code ?? null).toBeNull();
+    await passportStep.getByRole('button', { name: 'Make its passport' }).click();
+    await expect(passportStep.locator('[data-sell-passport="done"]')).toBeVisible();
+    expect(mango().passport_code).toMatch(/^GI-\d{4}-[A-Z0-9]{4}$/);
+    expect(mango().is_public).toBe(true);
+    await expect(sheet.locator('[data-sell-step-state="done"]')).toHaveCount(2);
+    await passportStep.getByRole('button', { name: 'Next' }).click();
+
+    // Its third and last step, the hand-over, which can be skipped. The
+    // link emailed to the buyer a moment ago is still open, so the step
+    // says plainly that a new one replaces it and offers to keep it.
     const step = sheet.locator('[data-sell-step="handover"]');
     await expect(step.getByRole('heading', { name: 'Send Mango to the buyer' })).toBeVisible();
     await expect(step.getByText(new RegExp(`You already emailed ${BUYER} a transfer link for Mango on [A-Z][a-z]+ \\d{1,2}\\.`))).toBeVisible();
@@ -186,7 +196,7 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
     await expect(step.getByText(/passport|public/i)).toHaveCount(0);
     expect(mango()).toMatchObject({ archived: true, archive_reason: 'sold', status: 'Sold' });
     // What Mango sold for is kept apart from its row, which every signed-in
-    // member can read once a gecko is public; the column itself reads null.
+    // member can read now Mango is public; the column itself reads null.
     expect(mango().sold_price ?? null).toBeNull();
     expect(fake.table('gecko_sale_prices')).toEqual([expect.objectContaining({ gecko_id: mango().id, sold_price: 300 })]);
     // Showing the step changes nothing: the emailed link is still pending.
@@ -203,29 +213,31 @@ test('a new member signs up, adds a gecko, logs a feeding, starts a transfer and
     await transfer.getByRole('button', { name: 'Create QR link' }).click();
     await expect(page.getByText('Transfer started')).toBeVisible();
 
-    // Only the transfer was made: no passport, and Mango stays private.
-    expect(mango().passport_code ?? null).toBeNull();
-    expect(mango().is_public ?? false).toBe(false);
+    // The passport and the transfer: Mango is public, its price is not.
+    expect(mango().is_public).toBe(true);
+    expect(mango().sold_price ?? null).toBeNull();
     const latest = fake.table('transfer_requests').at(-1);
     expect(latest).toMatchObject({ animal_id: mango().id, claim_mode: 'link', sale_price: 300, status: 'pending' });
     // The emailed link was replaced, after the member was told and chose to.
     expect(fake.table('transfer_requests').map((t) => t.status)).toEqual(['cancelled', 'pending']);
 
-    // The funnel events, with no email, name or code in them, and no
-    // passport_created: the sheet never makes one.
+    // The funnel events, with no email, name or code in them: the
+    // passport made on the sold sheet, then the hand-over.
     const funnel = ['sold_transfer_step', 'passport_created', 'transfer_started'];
     // Events are written after the page is idle, so wait for the last one.
     await expect.poll(() => fake.table('user_events')
       .some((e) => e.event_name === 'transfer_started' && e.properties?.surface === 'sold_step')).toBe(true);
     const events = fake.table('user_events').filter((e) => funnel.includes(e.event_name));
-    expect(events.map((e) => e.event_name)).not.toContain('passport_created');
     expect(events.map((e) => [e.event_name, e.properties.action || e.properties.surface])).toEqual(expect.arrayContaining([
+      ['passport_created', 'sold_sheet'],
       ['sold_transfer_step', 'shown'],
       ['sold_transfer_step', 'send'],
       ['transfer_started', 'sold_step'],
     ]));
     const shown = events.find((e) => e.event_name === 'sold_transfer_step' && e.properties.action === 'shown');
-    expect(shown.properties).toMatchObject({ has_passport: false, has_price: true, has_pending: true });
+    expect(shown.properties).toMatchObject({ has_passport: true, has_price: true, has_pending: true });
+    const props0 = JSON.stringify(events.map((e) => e.properties));
+    expect(props0).not.toContain(mango().passport_code);
     const started = events.find((e) => e.event_name === 'transfer_started' && e.properties.surface === 'sold_step');
     expect(started.properties).toMatchObject({ method: 'link', has_price: true });
     const props = JSON.stringify(events.map((e) => e.properties));
